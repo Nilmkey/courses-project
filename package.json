@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "build:back": "pnpm tsc --build",
-    "start:back": "pnpm build:bacl && node ./dist/app/backend/index.js"
+    "dev:back": "tsx watch backend/index.ts",
+    "build:back": "tsc",
+    "start:back": "node dist/index.js"
   },
   "dependencies": {
     "dotenv": "^17.2.4",
@@ -27,6 +28,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
