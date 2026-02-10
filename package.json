@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build:back": "pnpm tsc --build",
+    "start:back": "pnpm build:bacl && node ./dist/app/backend/index.js"
   },
   "dependencies": {
     "dotenv": "^17.2.4",
