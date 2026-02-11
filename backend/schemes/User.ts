@@ -1,12 +1,7 @@
 import mongoose from "mongoose";
-interface IUser {
-  name: string;
-  email: string;
-  password: string;
-  role: "student" | "teacher" | "admin";
-  enrolledCourses: mongoose.Types.ObjectId[];
-}
-const User = new mongoose.Schema<IUser>({
+import { UserRegistrationInput } from "../validation/UserScheme";
+
+const User = new mongoose.Schema<UserRegistrationInput>({
   name: { type: String, required: true },
   email: {
     type: String,
@@ -22,6 +17,6 @@ const User = new mongoose.Schema<IUser>({
     default: "student",
   },
   enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
-});
+}, {timestamps: true});
 
-export default mongoose.model<IUser>("User", User);
+export default mongoose.model<UserRegistrationInput>("User", User);
