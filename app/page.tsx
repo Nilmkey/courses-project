@@ -61,34 +61,36 @@ export default function Home() {
   const features: Feature[] = [
     {
       icon: <Code className="w-12 h-12 text-blue-600" />,
-      title: "Интерактивные уроки",
+      title: "Интерактивные уроки —",
       description:
         "Учитесь программированию на практике с встроенным редактором кода",
     },
     {
       icon: <Play className="w-12 h-12 text-blue-600" />,
-      title: "Компилятор в браузере",
+      title: "Тестируйте свои навыки не выходя из браузера!",
       description: "Запускайте код прямо в браузере без установки программ",
     },
-    {
-      icon: <Flame className="w-12 h-12 text-blue-600" />,
-      title: "Геймификация",
-      description: "Поддерживайте огонек и зарабатывайте достижения",
-    },
+
     {
       icon: <Trophy className="w-12 h-12 text-blue-600" />,
-      title: "Отслеживание прогресса",
+      title: "Отслеживание прогресса —",
       description: "Следите за своим прогрессом по каждому курсу",
     },
     {
       icon: <BookOpen className="w-12 h-12 text-blue-600" />,
-      title: "Множество курсов",
-      description: "HTML, CSS, JavaScript, C#, C++, Python и другие",
+      title: "Множество курсов —",
+      description: "Выбирайте на свой вкус и цвет!",
     },
     {
       icon: <Users className="w-12 h-12 text-blue-600" />,
-      title: "Бесплатное обучение",
+      title: "Бесплатное обучение —",
       description: "Все курсы доступны бесплатно после регистрации",
+    },
+    {
+      icon: <Flame className="w-12 h-12 text-blue-600" />,
+      title: "Тысячи отзывов —",
+      description:
+        "У всех пользователей осталось много положительных эмоций после прохождения наших курсов!",
     },
   ];
 
@@ -132,14 +134,14 @@ export default function Home() {
                     Профиль
                   </Button>
                 </Link>
-                {streak > 0 && (
+                {/* {streak > 0 && (
                   <div className="flex items-center gap-1 px-3 py-1 bg-orange-100 rounded-full">
                     <Flame className="w-4 h-4 text-orange-500" />
                     <span className="text-sm font-bold text-orange-600">
                       {streak}
                     </span>
                   </div>
-                )}
+                )} */}
                 <Button variant="outline" onClick={handleLogout} className="bg-blue-500 active:bg-blue-900">
                   Выйти
                 </Button>
@@ -167,12 +169,12 @@ export default function Home() {
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-5xl font-bold text-gray-900 mb-6">
-            Научись программировать{" "}
-            <span className="text-blue-600">правильно</span>
+            Построй свой путь в IT благодаря {" "}
+            <span className="text-blue-600">нашим курсам</span>
           </h2>
           <p className="text-xl text-gray-600 mb-8">
-            Интерактивная платформа для изучения программирования с компилятором
-            в браузере. Учись на практике, отслеживай прогресс и достигай целей!
+            CodeLearn - это увлекательная платформа по IT-курсам, где ты сможешь понять как и из чего состоит программирование,
+            а так же именно <span className="text-blue-600">ты</span> сможешь найти себя в данной сфере
           </p>
           <div className="flex gap-4 justify-center">
             <Link href={user ? "/courses" : "/login"}>
