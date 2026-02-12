@@ -7,4 +7,3 @@ const router = Router();
 router.post("/user", TestController.test);
 
 export default router;
-  

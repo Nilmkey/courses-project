@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import express from "express";
 import dotenv from "dotenv";
 import router from "./TestRouter";
+import { auth } from "./auth";
+import { toNodeHandler } from "better-auth/node";
 dotenv.config();
 
 const DB_URL: string = process.env.DB_URL || "";
@@ -13,6 +15,7 @@ const app = express();
 // });
 app.use(express.json());
 app.use("/test", router);
+app.all("/api/auth/*", toNodeHandler(auth));
 
 const startApp = async () => {
   app.listen(PORT, "0.0.0.0", () => {
