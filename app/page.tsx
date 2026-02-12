@@ -40,23 +40,11 @@ interface Feature {
 interface Stat {
   number: string;
   label: string;
+  description:string;
 }
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
-  const [streak, setStreak] = useState<number>(0);
 
-  useEffect(() => {
-    const currentUser = localStorage.getItem("currentUser");
-    if (currentUser) {
-      const userData: User = JSON.parse(currentUser);
-      setUser(userData);
-      const userProgress: UserProgress = JSON.parse(
-        localStorage.getItem(`progress_${userData.email}`) || "{}",
-      );
-      setStreak(userProgress.streak || 0);
-    }
-  }, []);
 
   const features: Feature[] = [
     {
@@ -90,21 +78,15 @@ export default function Home() {
       icon: <Flame className="w-12 h-12 text-blue-600" />,
       title: "Тысячи отзывов —",
       description:
-        "У всех пользователей осталось много положительных эмоций после прохождения наших курсов!",
+        "У всех пользователей осталось много положительных эмоций после прохождения наших курсов! ",
     },
   ];
 
   const stats: Stat[] = [
-    { number: "6+", label: "Курсов" },
-    { number: "100+", label: "Уроков" },
-    { number: "1000+", label: "Учеников" },
+    { number: "6+", label: "Курсов", description: "Вы точно найдете на свой вкус!" },
+    { number: "100+", label: "Уроков", description: "Никакой лишней информации!" },
+    { number: "1000+", label: "Учеников", description: "И все они остались довольны!" },
   ];
-
-  const handleLogout = (): void => {
-    localStorage.removeItem("currentUser");
-    setUser(null);
-    window.location.reload();
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
@@ -116,7 +98,7 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-blue-600">CodeLearn</h1>
           </div>
           <nav className="flex gap-4 items-center">
-            {user ? (
+            {(
               <>
                 <Link href="/courses">
                   <Button
@@ -142,11 +124,15 @@ export default function Home() {
                     </span>
                   </div>
                 )} */}
-                <Button variant="outline" onClick={handleLogout} className="bg-blue-500 active:bg-blue-900">
+                <Button
+                  variant="outline"
+                  
+                  className="bg-blue-500 active:bg-blue-900 hover:bg-blue-700"
+                >
                   Выйти
                 </Button>
               </>
-            ) : (
+            )}
               <>
                 <Link href="/login">
                   <Button
@@ -157,10 +143,12 @@ export default function Home() {
                   </Button>
                 </Link>
                 <Link href="/login">
-                  <Button className="text-black active:bg-gray-300">Начать обучение</Button>
+                  <Button className="text-black active:bg-gray-300">
+                    Начать обучение
+                  </Button>
                 </Link>
               </>
-            )}
+            
           </nav>
         </div>
       </header>
@@ -169,23 +157,25 @@ export default function Home() {
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-5xl font-bold text-gray-900 mb-6">
-            Построй свой путь в IT благодаря {" "}
+            Построй свой путь в IT благодаря{" "}
             <span className="text-blue-600">нашим курсам</span>
           </h2>
           <p className="text-xl text-gray-600 mb-8">
-            CodeLearn - это увлекательная платформа по IT-курсам, где ты сможешь понять как и из чего состоит программирование,
-            а так же именно <span className="text-blue-600">ты</span> сможешь найти себя в данной сфере
+            CodeLearn — это увлекательная платформа по IT-курсам, где ты сможешь
+            понять как и из чего состоит программирование, а так же именно{" "}
+            <span className="text-blue-600">ты</span> сможешь найти себя в
+            данной сфере
           </p>
           <div className="flex gap-4 justify-center">
-            <Link href={user ? "/courses" : "/login"}>
+            <Link href={"/courses"}>
               <Button
                 size="lg"
-                className="text-lg px-8 bg-blue-500 active:bg-blue-900"
+                className="text-lg px-8 bg-blue-500 active:bg-blue-900 hover:bg-blue-700"
               >
                 Начать бесплатно
               </Button>
             </Link>
-            <Link href="/courses">
+            {/* <Link href="/courses">
               <Button
                 size="lg"
                 variant="outline"
@@ -193,7 +183,7 @@ export default function Home() {
               >
                 Посмотреть курсы
               </Button>
-            </Link>
+            </Link> */}
           </div>
         </div>
       </section>
@@ -206,7 +196,8 @@ export default function Home() {
                 <div className="text-4xl font-bold text-blue-600 mb-2">
                   {stat.number}
                 </div>
-                <div className="text-gray-600">{stat.label}</div>
+                <div className="text-gray-600 mb-2">{stat.label}</div>
+                <div className="text-gray-900">{stat.description}</div>
               </CardContent>
             </Card>
           ))}
@@ -246,11 +237,11 @@ export default function Home() {
             Присоединяйся к тысячам учеников, которые уже начали изучать
             программирование
           </p>
-          <Link href={user ? "/courses" : "/login"}>
+          <Link href={"/courses"}>
             <Button
               size="lg"
               variant="secondary"
-              className="text-lg px-8 bg-white text-black active:bg-gray-300"
+              className="text-lg px-8 bg-white text-black hover:bg-gray-200 active:bg-gray-300"
             >
               Начать сейчас бесплатно
             </Button>
@@ -261,7 +252,7 @@ export default function Home() {
       {/* футер */}
       <footer className="bg-gray-50 border-t py-8">
         <div className="container mx-auto px-4 text-center text-gray-600">
-          <p>© 2025 CodeLearn. Все права защищены.</p>
+          <p>© 2025 CodeLearn</p>
         </div>
       </footer>
     </div>
