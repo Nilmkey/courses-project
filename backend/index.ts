@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import router from "./TestRouter";
 import { auth } from "./auth";
 import { toNodeHandler } from "better-auth/node";
+import cors from "cors";
+
 dotenv.config();
 
 const DB_URL: string = process.env.DB_URL || "";
@@ -15,7 +17,16 @@ const app = express();
 // });
 app.use(express.json());
 app.use("/test", router);
-app.all("/api/auth/*", toNodeHandler(auth));
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Адрес твоего Next.js приложения
+    credentials: true, // ОБЯЗАТЕЛЬНО для Better Auth
+    methods: ["GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+
+app.all("/api/auth/{*path}", toNodeHandler(auth));
 
 const startApp = async () => {
   app.listen(PORT, "0.0.0.0", () => {
