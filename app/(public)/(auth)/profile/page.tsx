@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client"; // Твой клиент Better Auth
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -47,20 +47,17 @@ const coursesInfo: Record<string, CourseInfo> = {
 export default function ProfilePage() {
   const router = useRouter();
 
-  // 1. Получаем реальную сессию
   const { data: session, isPending } = authClient.useSession();
 
   const [progress, setProgress] = useState<Record<string, CourseProgress>>({});
   const [streak, setStreak] = useState<number>(0);
 
   useEffect(() => {
-    // Если загрузка завершена и юзера нет — на выход
     if (!isPending && !session) {
       router.push("/login");
       return;
     }
 
-    // Если юзер есть, подтягиваем его прогресс из localStorage (пока он там)
     if (session?.user?.email) {
       const savedProgress = localStorage.getItem(
         `progress_${session.user.email}`,
@@ -73,7 +70,6 @@ export default function ProfilePage() {
     }
   }, [session, isPending, router]);
 
-  // Пока проверяем сессию — показываем экран загрузки
   if (isPending) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -82,7 +78,6 @@ export default function ProfilePage() {
     );
   }
 
-  // Если сессии нет, не рендерим ничего (useEffect сделает редирект)
   if (!session) return null;
 
   const startedCourses = Object.keys(progress).length;

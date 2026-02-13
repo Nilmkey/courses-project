@@ -1,9 +1,9 @@
-import Router from "express";
+// import Router from "express";
 
-import TestController from "./TestController";
+// import TestController from "./TestController";
 
-const router = Router();
+// const router = Router();
 
-router.post("/user", TestController.test);
+// router.post("/user", TestController.test);
 
-export default router;
+// export default router;

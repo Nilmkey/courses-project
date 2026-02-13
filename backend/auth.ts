@@ -21,5 +21,5 @@ export const auth = betterAuth({
       },
     },
   },
-  secret: process.env.BETTER_AUTH_BASE_URL,
+  secret: process.env.BETTER_AUTH_SECRET,
 });
