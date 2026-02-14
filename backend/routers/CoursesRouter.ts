@@ -1,15 +1,16 @@
 import { Router } from "express";
 import CourseController from "../controllers/CourseController";
+import { adminOnly } from "@/app/middleware/adminMiddleware";
 
 const router = Router();
 
-// Открытые эндпоинты
+// Публичные (видят все)
 router.get("/", CourseController.getAll);
 router.get("/:slug", CourseController.getBySlug);
 
-// Админские (нужно будет защитить Middleware)
-router.post("/", CourseController.create);
-router.put("/:id", CourseController.update);
-router.delete("/:id", CourseController.delete);
+// Защищенные (только для админа)
+router.post("/", adminOnly, CourseController.create);
+router.put("/:id", adminOnly, CourseController.update);
+router.delete("/:id", adminOnly, CourseController.delete);
 
 export default router;
