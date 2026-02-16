@@ -240,32 +240,27 @@ const CoursesPage = () => {
         </div>
       </section>
 
-      <footer className="bg-white border-t border-slate-200 py-12 mt-20">
-        <div className="max-w-6xl mx-auto px-4">
+      <footer className="bg-white border-t border-slate-100 py-12">
+        <div className="container mx-auto px-4 max-w-5xl">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Code className="text-white w-5 h-5" />
-              </div>
-              <span className="text-lg font-black tracking-tight text-slate-800 uppercase">
+            <div className="flex items-center gap-2">
+              <Code className="w-6 h-6 text-blue-600" />
+              <span className="text-xl font-black tracking-tight text-slate-800">
                 CodeLearn
               </span>
-            </Link>
-
-            <p className="text-slate-400 font-medium text-sm">
-              © {new Date().getFullYear()} CodeLearn Academy. Все права
-              защищены.
+            </div>
+            <p className="text-slate-400 font-medium">
+              © {new Date().getFullYear()} CodeLearn. Все права защищены.
             </p>
-
-            <div className="flex gap-6 text-slate-500 font-bold text-xs uppercase tracking-widest">
+            <div className="flex gap-6 text-slate-400 font-bold text-sm">
               <a href="#" className="hover:text-blue-600 transition-colors">
-                Помощь
+                Политика
               </a>
               <a href="#" className="hover:text-blue-600 transition-colors">
-                Контакты
+                Условия
               </a>
               <a href="#" className="hover:text-blue-600 transition-colors">
-                Блог
+                Поддержка
               </a>
             </div>
           </div>
