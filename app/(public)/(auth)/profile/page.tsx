@@ -150,7 +150,6 @@ export default function ProfilePage() {
             <span className="hidden sm:inline">К курсам</span>
           </Link>
 
-          {/* Центральное лого-кнопка */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="relative flex items-center justify-center w-9 h-9 bg-[#3b5bdb] rounded-xl shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
               <Code size={20} className="text-white" />
@@ -218,7 +217,6 @@ export default function ProfilePage() {
                     {session.user.name}
                   </h1>
 
-                  {/* ХАЙПОВАЯ ПЛАШКА РОЛИ */}
                   {userRole === "admin" ? (
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-orange-500/20">
                       <ShieldCheck size={12} /> Admin
@@ -237,7 +235,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Сетка статистики */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             icon={<Flame size={22} className="text-orange-500" />}
