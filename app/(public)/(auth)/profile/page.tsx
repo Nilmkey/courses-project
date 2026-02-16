@@ -208,7 +208,6 @@ export default function ProfilePage() {
                     <User size={44} className="text-[#3b5bdb]" />
                   )}
                 </div>
-                <div className="absolute bottom-1 right-1 bg-emerald-400 w-5 h-5 border-[3px] border-white dark:border-slate-900 rounded-full animate-pulse"></div>
               </div>
 
               <div className="flex-1 text-center sm:text-left mb-2">
