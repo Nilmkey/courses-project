@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,137 +14,68 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Code, AlertCircle } from "lucide-react";
+import { Code, AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface User {
-  email: string;
-  password: string;
-  name: string;
-  registeredAt: string;
-}
-
-interface UserProgress {
-  streak: number;
-  lastVisit: string | null;
-  courses: Record<string, CourseProgress>;
-}
-
-interface CourseProgress {
-  completed: number;
-  total: number;
-  percentage: number;
-}
-
-export default function LoginPage() {
+export default function AuthPage() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [name, setName] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setSuccess("");
-
-    if (!email || !password || (!isLogin && !name)) {
-      setError("Заполните все поля");
-      return;
-    }
+    setLoading(true);
 
     if (isLogin) {
-      const users: User[] = JSON.parse(localStorage.getItem("users") || "[]");
-      const user = users.find(
-        (u) => u.email === email && u.password === password,
-      );
-
-      if (user) {
-        localStorage.setItem("currentUser", JSON.stringify(user));
-        setSuccess("Вход выполнен успешно!");
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 1000);
-        //позже поменять на setTimeout(() => router.push("/courses"), 1000);!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      } else {
-        setError("Неверный email или пароль");
-      }
-    } else {
-      const users: User[] = JSON.parse(localStorage.getItem("users") || "[]");
-
-      if (users.find((u) => u.email === email)) {
-        setError("Пользователь с таким email уже существует");
-        return;
-      }
-
-      const newUser: User = {
-        email,
-        password,
-        name,
-        registeredAt: new Date().toISOString(),
-      };
-      users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(users));
-
-      const initialProgress: UserProgress = {
-        streak: 0,
-        lastVisit: null,
-        courses: {},
-      };
-      localStorage.setItem(
-        `progress_${email}`,
-        JSON.stringify(initialProgress),
-      );
-
-      setSuccess("Регистрация успешна! Теперь войдите");
-      setTimeout(() => {
-        setIsLogin(true);
-        setPassword("");
-      }, 1500);
-    }
-  };
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const users: User[] = JSON.parse(localStorage.getItem("users") || "[]");
-      if (!users.find((u) => u.email === "test@test.com")) {
-        const testUser: User = {
-          email: "test@test.com",
-          password: "password",
-          name: "Тестовый пользователь",
-          registeredAt: new Date().toISOString(),
-        };
-        users.push(testUser);
-        localStorage.setItem("users", JSON.stringify(users));
-
-        const testProgress: UserProgress = {
-          streak: 5,
-          lastVisit: new Date().toISOString(),
-          courses: {
-            html: { completed: 2, total: 5, percentage: 40 },
-            javascript: { completed: 1, total: 6, percentage: 16 },
+      // ЛОГИН ЧЕРЕЗ BETTER AUTH
+      const { data, error: authError } = await authClient.signIn.email(
+        {
+          email,
+          password,
+          callbackURL: "/", // куда редиректить после входа
+        },
+        {
+          onRequest: () => setLoading(true),
+          onResponse: () => setLoading(false),
+          onError: (ctx) => setError(ctx.error.message || "Ошибка входа"),
+          onSuccess: () => {
+            setSuccess("Вход выполнен успешно!");
+            setTimeout(() => router.push("/"), 1000);
           },
-        };
-        localStorage.setItem(
-          `progress_test@test.com`,
-          JSON.stringify(testProgress),
-        );
-      }
+        },
+      );
+    } else {
+      // РЕГИСТРАЦИЯ ЧЕРЕЗ BETTER AUTH
+      const { data, error: authError } = await authClient.signUp.email(
+        {
+          email,
+          password,
+          name,
+          // role: "student" // если ты добавил это поле в additionalFields на бэке
+        },
+        {
+          onRequest: () => setLoading(true),
+          onResponse: () => setLoading(false),
+          onError: (ctx) => setError(ctx.error.message || "Ошибка регистрации"),
+          onSuccess: () => {
+            setSuccess("Регистрация успешна! Теперь вы можете войти.");
+            setIsLogin(true);
+          },
+        },
+      );
     }
-  }, []);
-
-  const toggleMode = (): void => {
-    setIsLogin(!isLogin);
-    setError("");
-    setSuccess("");
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* логотип */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
             <Code className="w-10 h-10 text-blue-600" />
@@ -173,6 +105,7 @@ export default function LoginPage() {
                     placeholder="Ваше имя"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    required
                   />
                 </div>
               )}
@@ -185,6 +118,7 @@ export default function LoginPage() {
                   placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
 
@@ -196,6 +130,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
               </div>
 
@@ -214,7 +149,13 @@ export default function LoginPage() {
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full" size="lg">
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={loading}
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLogin ? "Войти" : "Зарегистрироваться"}
               </Button>
             </form>
@@ -222,22 +163,13 @@ export default function LoginPage() {
             <div className="mt-4 text-center">
               <button
                 type="button"
-                onClick={toggleMode}
+                onClick={() => setIsLogin(!isLogin)}
                 className="text-sm text-blue-600 hover:underline"
               >
                 {isLogin
                   ? "Нет аккаунта? Зарегистрироваться"
                   : "Уже есть аккаунт? Войти"}
               </button>
-            </div>
-
-            {/* инфа про тест аккаунт */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm font-semibold text-blue-900 mb-2">
-                Тестовый аккаунт:
-              </p>
-              <p className="text-xs text-blue-700">Email: test@test.com</p>
-              <p className="text-xs text-blue-700">Пароль: password</p>
             </div>
           </CardContent>
         </Card>

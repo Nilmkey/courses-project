@@ -4,6 +4,8 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 
 export const auth = betterAuth({
   database: mongodbAdapter(db),
+  baseURL: "http://localhost:7777",
+  trustedOrigins: ["http://localhost:3000"],
   emailAndPassword: {
     enabled: true,
   },
@@ -19,5 +21,5 @@ export const auth = betterAuth({
       },
     },
   },
-  secret: process.env.AUTH_SECRET
+  secret: process.env.BETTER_AUTH_SECRET,
 });
