@@ -16,7 +16,6 @@ import {
   Lock,
   User as UserIcon,
   CheckCircle2,
-  Sparkles,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
