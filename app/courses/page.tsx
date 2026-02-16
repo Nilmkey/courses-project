@@ -258,6 +258,9 @@ const CoursesPage = () => {
                 Политика
               </a>
               <a href="#" className="hover:text-blue-600 transition-colors">
+                Условия
+              </a>
+              <a href="#" className="hover:text-blue-600 transition-colors">
                 Поддержка
               </a>
             </div>
