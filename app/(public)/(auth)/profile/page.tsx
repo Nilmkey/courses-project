@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import { authClient } from "@/lib/auth-client";
 import {
   Code,
@@ -16,6 +17,9 @@ import {
   BookOpen,
   ChevronRight,
   Sparkles,
+  ShieldCheck,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 interface CourseProgress {
@@ -24,15 +28,7 @@ interface CourseProgress {
   percentage: number;
 }
 
-interface CourseInfo {
-  title: string;
-  gradient: string;
-  text: string;
-  icon: string;
-  shadow: string;
-}
-
-const coursesInfo: Record<string, CourseInfo> = {
+const coursesInfo: Record<string, any> = {
   html: {
     title: "HTML Основы",
     gradient: "from-orange-400 via-orange-500 to-amber-500",
@@ -79,11 +75,14 @@ const coursesInfo: Record<string, CourseInfo> = {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
   const [progress, setProgress] = useState<Record<string, CourseProgress>>({});
   const [streak, setStreak] = useState<number>(0);
 
   useEffect(() => {
+    setMounted(true);
     if (!isPending && !session) {
       router.push("/login");
       return;
@@ -100,9 +99,9 @@ export default function ProfilePage() {
     }
   }, [session, isPending, router]);
 
-  if (isPending) {
+  if (!mounted || isPending) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f0f5ff]">
+      <div className="min-h-screen flex items-center justify-center bg-[#f0f5ff] dark:bg-slate-950">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 animate-spin text-[#3b5bdb]" />
           <p className="text-sm font-medium text-slate-400 tracking-[0.2em] uppercase animate-pulse">
@@ -115,6 +114,7 @@ export default function ProfilePage() {
 
   if (!session) return null;
 
+  const userRole = (session.user as any).role || "user";
   const startedCourses = Object.keys(progress).length;
   const completedCourses = Object.values(progress).filter(
     (p) => p.percentage === 100,
@@ -134,14 +134,14 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f5ff] text-slate-800 font-sans selection:bg-[#3b5bdb] selection:text-white flex flex-col">
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-indigo-100/50 shadow-sm supports-[backdrop-filter]:bg-white/60">
+    <div className="min-h-screen bg-[#f0f5ff] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 flex flex-col">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-indigo-100/50 dark:border-slate-800 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link
             href="/courses"
-            className="group flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-[#3b5bdb] transition-colors"
+            className="group flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-[#3b5bdb] transition-colors"
           >
-            <div className="p-1.5 rounded-lg group-hover:bg-indigo-50 transition-colors">
+            <div className="p-1.5 rounded-lg group-hover:bg-indigo-50 dark:group-hover:bg-slate-800 transition-colors">
               <ArrowLeft
                 size={16}
                 className="transition-transform group-hover:-translate-x-1"
@@ -150,28 +150,42 @@ export default function ProfilePage() {
             <span className="hidden sm:inline">К курсам</span>
           </Link>
 
+          {/* Центральное лого-кнопка */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="relative flex items-center justify-center w-9 h-9 bg-[#3b5bdb] rounded-xl shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
               <Code size={20} className="text-white" />
-              <div className="absolute inset-0 bg-white/20 rounded-xl animate-pulse hidden group-hover:block" />
             </div>
-            <span className="text-xl font-black tracking-tight uppercase">
+            <span className="text-xl font-black tracking-tight uppercase dark:text-white">
               CodeLearn
             </span>
           </Link>
 
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-rose-500 bg-rose-50 border border-rose-100 rounded-full hover:bg-rose-100 hover:border-rose-200 transition-all active:scale-95"
-          >
-            <LogOut size={14} />
-            <span className="hidden sm:inline">Выйти</span>
-          </button>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button
+              onClick={() =>
+                setTheme(resolvedTheme === "dark" ? "light" : "dark")
+              }
+              className="p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              {resolvedTheme === "dark" ? (
+                <Sun size={18} className="text-yellow-400" />
+              ) : (
+                <Moon size={18} className="text-slate-600" />
+              )}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-rose-500 bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 rounded-full hover:bg-rose-100 transition-all active:scale-95"
+            >
+              <LogOut size={14} />
+              <span className="hidden sm:inline">Выйти</span>
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 mt-8 space-y-8 flex-grow pb-20">
-        <div className="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 border border-white overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-xl shadow-indigo-900/5 border border-white dark:border-slate-800 overflow-hidden">
           <div className="h-32 bg-gradient-to-br from-[#3b5bdb] via-[#5c7cfa] to-[#74c0fc] relative">
             <div
               className="absolute inset-0 opacity-[0.15]"
@@ -183,165 +197,158 @@ export default function ProfilePage() {
 
           <div className="px-6 pb-6 sm:px-10">
             <div className="flex flex-col sm:flex-row items-center sm:items-end -mt-12 gap-5">
-              <div className="relative p-1.5 rounded-full bg-white shadow-xl shadow-indigo-900/10">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center border border-indigo-100 overflow-hidden">
+              <div className="relative p-1.5 rounded-full bg-white dark:bg-slate-900 shadow-xl shadow-indigo-900/10">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-indigo-100 dark:border-slate-700 overflow-hidden">
                   {session.user.image ? (
                     <img
                       src={session.user.image}
-                      alt={session.user.name || "User"}
+                      alt="User"
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <User size={44} className="text-[#3b5bdb]" />
                   )}
                 </div>
-                <div className="absolute bottom-1 right-1 bg-emerald-400 w-5 h-5 border-[3px] border-white rounded-full"></div>
+                <div className="absolute bottom-1 right-1 bg-emerald-400 w-5 h-5 border-[3px] border-white dark:border-slate-900 rounded-full animate-pulse"></div>
               </div>
 
               <div className="flex-1 text-center sm:text-left mb-2">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">
-                  {session.user.name}
-                </h1>
-                <p className="text-slate-500 font-medium">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">
+                    {session.user.name}
+                  </h1>
+
+                  {/* ХАЙПОВАЯ ПЛАШКА РОЛИ */}
+                  {userRole === "admin" ? (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-orange-500/20">
+                      <ShieldCheck size={12} /> Admin
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-[#3b5bdb] text-[10px] font-bold uppercase tracking-widest rounded-lg border border-indigo-100/50 dark:border-indigo-500/20">
+                      <Sparkles size={12} /> Student
+                    </div>
+                  )}
+                </div>
+                <p className="text-slate-500 dark:text-slate-400 font-medium">
                   {session.user.email}
                 </p>
-              </div>
-
-              <div className="hidden sm:block mb-3">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-[#3b5bdb] text-sm font-bold rounded-xl border border-indigo-100/50">
-                  <Sparkles size={16} />
-                  <span>Student</span>
-                </div>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Сетка статистики */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             icon={<Flame size={22} className="text-orange-500" />}
-            bg="bg-orange-50 hover:bg-orange-100"
-            border="border-orange-100"
+            bg="bg-orange-50 dark:bg-orange-500/10"
+            border="border-orange-100 dark:border-orange-500/20"
             value={streak}
             label="Дней подряд"
             suffix="🔥"
           />
           <StatCard
             icon={<Target size={22} className="text-[#3b5bdb]" />}
-            bg="bg-indigo-50 hover:bg-indigo-100"
-            border="border-indigo-100"
+            bg="bg-indigo-50 dark:bg-indigo-500/10"
+            border="border-indigo-100 dark:border-indigo-500/20"
             value={startedCourses}
             label="Активные курсы"
           />
           <StatCard
             icon={<Trophy size={22} className="text-emerald-500" />}
-            bg="bg-emerald-50 hover:bg-emerald-100"
-            border="border-emerald-100"
+            bg="bg-emerald-50 dark:bg-emerald-500/10"
+            border="border-emerald-100 dark:border-emerald-500/20"
             value={completedCourses}
             label="Завершено"
           />
           <StatCard
             icon={<Code size={22} className="text-violet-500" />}
-            bg="bg-violet-50 hover:bg-violet-100"
-            border="border-violet-100"
+            bg="bg-violet-50 dark:bg-violet-500/10"
+            border="border-violet-100 dark:border-violet-500/20"
             value={`${totalPercentage}%`}
-            label="Общий прогресс"
+            label="Прогресс"
           />
         </div>
 
-        <div className="bg-white rounded-[2rem] border border-white shadow-xl shadow-indigo-900/5 overflow-hidden">
-          <div className="px-6 py-6 sm:px-8 border-b border-slate-100 flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-white dark:border-slate-800 shadow-xl shadow-indigo-900/5 overflow-hidden">
+          <div className="px-6 py-6 sm:px-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#3b5bdb] to-[#5c7cfa] flex items-center justify-center shadow-lg shadow-blue-500/20 text-white">
                 <BookOpen size={20} />
               </div>
-              <h2 className="text-xl font-bold text-slate-800">Моё обучение</h2>
+              <h2 className="text-xl font-bold dark:text-white">
+                Моё обучение
+              </h2>
             </div>
             {startedCourses > 0 && (
               <Link
                 href="/courses"
-                className="text-sm font-semibold text-[#3b5bdb] hover:text-indigo-600 hover:underline decoration-2 underline-offset-4"
+                className="text-sm font-semibold text-[#3b5bdb] hover:underline decoration-2 underline-offset-4"
               >
-                Каталог курсов
+                Каталог
               </Link>
             )}
           </div>
 
-          <div className="p-6 sm:p-8 bg-slate-50/30 min-h-[300px]">
+          <div className="p-6 sm:p-8 bg-slate-50/30 dark:bg-slate-900/30 min-h-[300px]">
             {startedCourses === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm mb-6 border border-slate-100">
+                <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm mb-6 border border-slate-100 dark:border-slate-700">
                   <BookOpen size={32} className="text-slate-300" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800 mb-2">
+                <h3 className="text-lg font-bold mb-2 dark:text-white">
                   Курсы не найдены
                 </h3>
-                <p className="text-slate-500 max-w-xs mb-8">
-                  Ты пока не начал ни одного курса. Самое время прокачать
-                  навыки!
-                </p>
                 <Link
                   href="/courses"
-                  className="inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold text-white transition-all bg-[#3b5bdb] rounded-xl hover:bg-[#2f4bbf] hover:shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:translate-y-0"
+                  className="px-8 py-3.5 text-sm font-bold text-white bg-[#3b5bdb] rounded-xl hover:bg-[#2f4bbf] transition-all"
                 >
-                  Выбрать первый курс
+                  Начать обучение
                 </Link>
               </div>
             ) : (
               <div className="space-y-4">
                 {Object.entries(progress).map(([courseId, courseProgress]) => {
-                  const info = coursesInfo[courseId];
-                  if (!info) return null;
+                  const info = coursesInfo[courseId] || coursesInfo.html;
                   return (
                     <div
                       key={courseId}
-                      className="group relative flex flex-col sm:flex-row sm:items-center gap-5 p-5 bg-white rounded-2xl border border-slate-100 hover:border-indigo-200 shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 transition-all duration-300"
+                      className="group relative flex flex-col sm:flex-row sm:items-center gap-5 p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-indigo-200 shadow-sm transition-all duration-300"
                     >
                       <div
                         className={`w-14 h-14 shrink-0 rounded-xl bg-gradient-to-br ${info.gradient} p-[1px] ${info.shadow}`}
                       >
-                        <div className="w-full h-full bg-white rounded-[11px] flex items-center justify-center text-2xl relative overflow-hidden">
+                        <div className="w-full h-full bg-white dark:bg-slate-900 rounded-[11px] flex items-center justify-center text-2xl relative overflow-hidden">
                           <div
-                            className={`absolute inset-0 bg-gradient-to-br ${info.gradient} opacity-10 group-hover:opacity-20 transition-opacity`}
-                          ></div>
+                            className={`absolute inset-0 bg-gradient-to-br ${info.gradient} opacity-10`}
+                          />
                           {info.icon}
                         </div>
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-bold text-slate-800 text-lg leading-tight group-hover:text-[#3b5bdb] transition-colors">
+                          <h4 className="font-bold text-lg leading-tight group-hover:text-[#3b5bdb] transition-colors dark:text-white">
                             {info.title}
                           </h4>
-                          <span className={`sm:hidden font-bold ${info.text}`}>
+                          <span className={`font-bold ${info.text}`}>
                             {courseProgress.percentage}%
                           </span>
                         </div>
-                        <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-3">
-                          {courseProgress.completed} из {courseProgress.total}{" "}
-                          уроков
-                        </p>
-
-                        <div className="relative h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                           <div
-                            className={`absolute top-0 left-0 h-full rounded-full bg-gradient-to-r ${info.gradient} transition-all duration-1000 ease-out`}
+                            className={`absolute h-full bg-gradient-to-r ${info.gradient} transition-all duration-1000`}
                             style={{ width: `${courseProgress.percentage}%` }}
                           />
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4 pl-2">
-                        <span
-                          className={`hidden sm:block text-xl font-extrabold ${info.text}`}
-                        >
-                          {courseProgress.percentage}%
-                        </span>
+                      <div className="flex items-center gap-4">
                         <Link
                           href={`/course/${courseId}`}
-                          className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#3b5bdb] bg-indigo-50 rounded-xl hover:bg-[#3b5bdb] hover:text-white transition-all active:scale-95"
+                          className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#3b5bdb] bg-indigo-50 dark:bg-indigo-500/10 rounded-xl hover:bg-[#3b5bdb] hover:text-white transition-all"
                         >
-                          Продолжить
-                          <ChevronRight size={16} />
+                          Продолжить <ChevronRight size={16} />
                         </Link>
                       </div>
                     </div>
@@ -353,65 +360,37 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      <footer className="bg-white border-t border-slate-100 py-12">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="flex items-center gap-2">
-              <Code className="w-6 h-6 text-blue-600" />
-              <span className="text-xl font-black tracking-tight text-slate-800">
-                CodeLearn
-              </span>
-            </div>
-            <p className="text-slate-400 font-medium">
-              © {new Date().getFullYear()} CodeLearn. Все права защищены.
-            </p>
-            <div className="flex gap-6 text-slate-400 font-bold text-sm">
-              <a href="#" className="hover:text-blue-600 transition-colors">
-                Политика
-              </a>
-              <a href="#" className="hover:text-blue-600 transition-colors">
-                Условия
-              </a>
-              <a href="#" className="hover:text-blue-600 transition-colors">
-                Поддержка
-              </a>
-            </div>
+      <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12">
+        <div className="container mx-auto px-4 max-w-5xl flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex items-center gap-2">
+            <Code className="w-6 h-6 text-blue-600" />
+            <span className="text-xl font-black text-slate-800 dark:text-white uppercase">
+              CodeLearn
+            </span>
           </div>
+          <p className="text-slate-400 font-medium">
+            © {new Date().getFullYear()} CodeLearn. Все права защищены.
+          </p>
         </div>
       </footer>
     </div>
   );
 }
 
-function StatCard({
-  icon,
-  bg,
-  border,
-  value,
-  label,
-  suffix,
-}: {
-  icon: React.ReactNode;
-  bg: string;
-  border: string;
-  value: string | number;
-  label: string;
-  suffix?: string;
-}) {
+function StatCard({ icon, bg, border, value, label, suffix }: any) {
   return (
     <div
-      className={`flex flex-col items-center justify-center p-5 rounded-2xl bg-white border ${border} shadow-sm transition-all duration-300 hover:-translate-y-1 group`}
+      className={`flex flex-col items-center justify-center p-5 rounded-2xl bg-white dark:bg-slate-900 border ${border} shadow-sm transition-all duration-300 hover:-translate-y-1 group`}
     >
       <div
-        className={`w-12 h-12 rounded-xl ${bg} flex items-center justify-center mb-3 transition-colors`}
+        className={`w-12 h-12 rounded-xl ${bg} flex items-center justify-center mb-3`}
       >
         {icon}
       </div>
-      <div className="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-1">
+      <div className="text-2xl font-extrabold text-slate-800 dark:text-white flex items-center gap-1">
         {value} {suffix && <span className="text-lg">{suffix}</span>}
       </div>
-
-      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider text-center mt-1">
+      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
         {label}
       </div>
     </div>
