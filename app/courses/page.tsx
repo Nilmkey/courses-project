@@ -58,7 +58,7 @@ const CoursesPage = () => {
     filter === "all" ? courses : courses.filter((c) => c.type === filter);
 
   return (
-    <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-20 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-[#f8faff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
       <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
@@ -108,7 +108,7 @@ const CoursesPage = () => {
         </div>
       </nav>
 
-      <section className="py-16 px-4 max-w-6xl mx-auto text-center">
+      <section className="flex-grow py-16 px-4 max-w-6xl mx-auto text-center">
         <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
           Выбери свой путь в <span className="text-blue-600">IT</span>
         </h1>
@@ -139,8 +139,7 @@ const CoursesPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
           {loading
-            ? 
-              [1, 2, 3].map((i) => (
+            ? [1, 2, 3].map((i) => (
                 <div
                   key={i}
                   className="h-96 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 animate-pulse flex items-center justify-center"
