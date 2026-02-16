@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,18 +17,28 @@ import {
   Lock,
   User as UserIcon,
   CheckCircle2,
+  Eye,
+  EyeOff,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function AuthPage() {
   const router = useRouter();
+  const { setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [name, setName] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
+
+  useEffect(() => setMounted(true), []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -72,184 +83,215 @@ export default function AuthPage() {
     }
   };
 
+  if (!mounted) return null;
+
   return (
-    <div className="min-h-screen bg-[#f0f5ff] flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/40 rounded-full blur-[120px] -z-10" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-200/30 rounded-full blur-[120px] -z-10" />
+    <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 flex flex-col transition-colors duration-300 relative overflow-hidden">
+      {/* Background Blobs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/40 dark:bg-indigo-900/20 rounded-full blur-[120px] -z-10" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-200/30 dark:bg-blue-900/10 rounded-full blur-[120px] -z-10" />
 
-      <div className="w-full max-w-[440px] relative">
-        <div className="text-center mb-10">
-          <Link href="/" className="inline-flex items-center gap-3 group">
-            <div className="w-12 h-12 bg-[#3b5bdb] rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20 group-hover:scale-110 transition-transform duration-300">
-              <Code className="w-7 h-7 text-white" />
-            </div>
-            <span className="text-xl font-black tracking-tight uppercase text-black">
-              CodeLearn
-            </span>
-          </Link>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl shadow-indigo-900/10 border border-white p-8 md:p-10">
-          <div className="mb-8">
-            <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2">
-              {isLogin ? "С возвращением!" : "Создать аккаунт"}
-            </h2>
-            <p className="text-slate-500 font-medium">
-              {isLogin
-                ? "Продолжай свой путь к вершинам IT"
-                : "Начни учиться программированию бесплатно"}
-            </p>
+      {/* Header with Theme Toggle and Centered Logo */}
+      <header className="p-6 relative max-w-7xl mx-auto w-full flex items-center justify-between">
+        <div className="w-10 h-10" /> {/* Spacer */}
+        <Link
+          href="/"
+          className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 group"
+        >
+          <div className="w-11 h-11 bg-[#3b5bdb] rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
+            <Code className="w-6 h-6 text-white" />
           </div>
+          <span className="text-xl font-black tracking-tight uppercase dark:text-white">
+            CodeLearn
+          </span>
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          className="rounded-full hover:bg-white dark:hover:bg-slate-900 shadow-sm"
+        >
+          {resolvedTheme === "dark" ? (
+            <Sun size={20} className="text-yellow-400" />
+          ) : (
+            <Moon size={20} className="text-slate-600" />
+          )}
+        </Button>
+      </header>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {!isLogin && (
+      <main className="flex-grow flex items-center justify-center px-4 pb-20">
+        <div className="w-full max-w-[440px] animate-in fade-in zoom-in duration-500">
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl shadow-indigo-900/10 dark:shadow-none border border-white dark:border-slate-800 p-8 md:p-10">
+            <div className="mb-8 text-center">
+              <h2 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight mb-2">
+                {isLogin ? "С возвращением!" : "Создать аккаунт"}
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 font-medium">
+                {isLogin
+                  ? "Продолжай свой путь к вершинам IT"
+                  : "Начни учиться программированию бесплатно"}
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="name"
+                    className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1"
+                  >
+                    Имя
+                  </Label>
+                  <div className="relative group">
+                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#3b5bdb] transition-colors" />
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="Ваше имя"
+                      className="h-14 pl-12 bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-[#3b5bdb] transition-all dark:text-white"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label
-                  htmlFor="name"
-                  className="text-sm font-bold text-slate-700 ml-1"
+                  htmlFor="email"
+                  className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1"
                 >
-                  Имя
+                  Email
                 </Label>
-                <div className="relative">
-                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#3b5bdb] transition-colors" />
                   <Input
-                    id="name"
-                    type="text"
-                    placeholder="Имя"
-                    className="h-14 pl-12 bg-white/50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#3b5bdb] focus:border-transparent transition-all text-black"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    className="h-14 pl-12 bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-[#3b5bdb] transition-all dark:text-white"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
               </div>
-            )}
 
-            <div className="space-y-2">
-              <Label
-                htmlFor="email"
-                className="text-sm font-bold text-slate-700 ml-1"
-              >
-                Email
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  className="h-14 pl-12 bg-white/50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#3b5bdb] focus:border-transparent transition-all text-black"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center ml-1">
-                <Label
-                  htmlFor="password"
-                  className="text-sm font-bold text-slate-700"
-                >
-                  Пароль
-                </Label>
-                {isLogin && (
-                  <button
-                    type="button"
-                    className="text-xs font-bold text-[#3b5bdb] hover:underline"
+              <div className="space-y-2">
+                <div className="flex justify-between items-center ml-1">
+                  <Label
+                    htmlFor="password"
+                    className="text-xs font-black uppercase tracking-widest text-slate-400"
                   >
-                    Забыли?
-                  </button>
-                )}
+                    Пароль
+                  </Label>
+                  {isLogin && (
+                    <button
+                      type="button"
+                      className="text-[10px] font-black uppercase tracking-wider text-[#3b5bdb] hover:underline"
+                    >
+                      Забыли?
+                    </button>
+                  )}
+                </div>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#3b5bdb] transition-colors" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="h-14 pl-12 pr-12 bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-[#3b5bdb] transition-all dark:text-white [&::-ms-reveal]:hidden [&::-webkit-password-reveal]:hidden"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  {password.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#3b5bdb] transition-colors p-1"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  className="h-14 pl-12 bg-white/50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#3b5bdb] focus:border-transparent transition-all text-black"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
 
-            {error && (
-              <Alert
-                variant="destructive"
-                className="rounded-2xl bg-rose-50 border-rose-100 text-rose-600"
+              {error && (
+                <Alert
+                  variant="destructive"
+                  className="rounded-2xl bg-rose-50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/30 text-rose-600 dark:text-rose-400"
+                >
+                  <AlertCircle className="h-5 w-5" />
+                  <AlertDescription className="font-medium ml-2">
+                    {error}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {success && (
+                <Alert className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <AlertDescription className="font-medium ml-2">
+                    {success}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full h-14 bg-[#3b5bdb] hover:bg-[#2f4bbf] text-white text-lg font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] disabled:opacity-70"
+                disabled={loading}
               >
-                <AlertCircle className="h-5 w-5" />
-                <AlertDescription className="font-medium ml-2">
-                  {error}
-                </AlertDescription>
-              </Alert>
-            )}
+                {loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : isLogin ? (
+                  "Войти в аккаунт"
+                ) : (
+                  "Создать аккаунт"
+                )}
+              </Button>
+            </form>
 
-            {success && (
-              <Alert className="rounded-2xl bg-emerald-50 border-emerald-100 text-emerald-600">
-                <CheckCircle2 className="h-5 w-5" />
-                <AlertDescription className="font-medium ml-2">
-                  {success}
-                </AlertDescription>
-              </Alert>
-            )}
+            <div className="mt-8 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setError("");
+                  setSuccess("");
+                }}
+                className="text-slate-500 dark:text-slate-400 font-medium hover:text-[#3b5bdb] transition-colors"
+              >
+                {isLogin ? (
+                  <>
+                    Нет аккаунта?{" "}
+                    <span className="font-bold text-[#3b5bdb]">
+                      Зарегистрироваться
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Уже есть аккаунт?{" "}
+                    <span className="font-bold text-[#3b5bdb]">Войти</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
 
-            <Button
-              type="submit"
-              className="w-full h-14 bg-[#3b5bdb] hover:bg-[#2f4bbf] text-white text-lg font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] disabled:opacity-70"
-              disabled={loading}
+          <div className="text-center mt-8">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-slate-400 hover:text-[#3b5bdb] font-bold text-sm transition-colors group"
             >
-              {loading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
-              ) : (
-                <span className="flex items-center gap-2">
-                  {isLogin ? "Войти в аккаунт" : "Создать аккаунт"}
-                </span>
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-8 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setError("");
-                setSuccess("");
-              }}
-              className="text-slate-500 font-medium hover:text-[#3b5bdb] transition-colors"
-            >
-              {isLogin ? (
-                <>
-                  Нет аккаунта?{" "}
-                  <span className="font-bold text-[#3b5bdb]">
-                    Зарегистрироваться
-                  </span>
-                </>
-              ) : (
-                <>
-                  Уже есть аккаунт?{" "}
-                  <span className="font-bold text-[#3b5bdb]">Войти</span>
-                </>
-              )}
-            </button>
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+              Вернуться на главную
+            </Link>
           </div>
         </div>
-
-        <div className="text-center mt-8">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-600 font-bold text-sm transition-colors group"
-          >
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-            Вернуться на главную
-          </Link>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
