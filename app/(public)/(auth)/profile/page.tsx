@@ -4,15 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
   Code,
   Flame,
@@ -21,6 +12,10 @@ import {
   ArrowLeft,
   User,
   Loader2,
+  LogOut,
+  BookOpen,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
 
 interface CourseProgress {
@@ -31,24 +26,60 @@ interface CourseProgress {
 
 interface CourseInfo {
   title: string;
-  color: string;
+  gradient: string;
+  text: string;
   icon: string;
+  shadow: string;
 }
 
 const coursesInfo: Record<string, CourseInfo> = {
-  html: { title: "HTML Основы", color: "bg-orange-500", icon: "🌐" },
-  css: { title: "CSS Стилизация", color: "bg-blue-500", icon: "🎨" },
-  javascript: { title: "JavaScript", color: "bg-yellow-500", icon: "⚡" },
-  python: { title: "Python", color: "bg-green-500", icon: "🐍" },
-  csharp: { title: "C#", color: "bg-purple-500", icon: "💜" },
-  cpp: { title: "C++", color: "bg-indigo-500", icon: "⚙️" },
+  html: {
+    title: "HTML Основы",
+    gradient: "from-orange-400 via-orange-500 to-amber-500",
+    text: "text-orange-600",
+    shadow: "shadow-orange-500/20",
+    icon: "🌐",
+  },
+  css: {
+    title: "CSS Стилизация",
+    gradient: "from-blue-400 via-blue-500 to-cyan-500",
+    text: "text-blue-600",
+    shadow: "shadow-blue-500/20",
+    icon: "🎨",
+  },
+  javascript: {
+    title: "JavaScript",
+    gradient: "from-yellow-400 via-yellow-500 to-orange-500",
+    text: "text-yellow-700",
+    shadow: "shadow-yellow-500/20",
+    icon: "⚡",
+  },
+  python: {
+    title: "Python",
+    gradient: "from-emerald-400 via-emerald-500 to-teal-500",
+    text: "text-emerald-600",
+    shadow: "shadow-emerald-500/20",
+    icon: "🐍",
+  },
+  csharp: {
+    title: "C#",
+    gradient: "from-purple-400 via-purple-500 to-violet-500",
+    text: "text-purple-600",
+    shadow: "shadow-purple-500/20",
+    icon: "💜",
+  },
+  cpp: {
+    title: "C++",
+    gradient: "from-indigo-400 via-indigo-500 to-blue-600",
+    text: "text-indigo-600",
+    shadow: "shadow-indigo-500/20",
+    icon: "⚙️",
+  },
 };
 
 export default function ProfilePage() {
   const router = useRouter();
-
   const { data: session, isPending } = authClient.useSession();
-
   const [progress, setProgress] = useState<Record<string, CourseProgress>>({});
   const [streak, setStreak] = useState<number>(0);
 
@@ -57,7 +88,6 @@ export default function ProfilePage() {
       router.push("/login");
       return;
     }
-
     if (session?.user?.email) {
       const savedProgress = localStorage.getItem(
         `progress_${session.user.email}`,
@@ -72,8 +102,13 @@ export default function ProfilePage() {
 
   if (isPending) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+      <div className="min-h-screen flex items-center justify-center bg-[#f0f5ff]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 animate-spin text-[#3b5bdb]" />
+          <p className="text-sm font-medium text-slate-400 tracking-[0.2em] uppercase animate-pulse">
+            Загрузка профиля
+          </p>
+        </div>
       </div>
     );
   }
@@ -84,7 +119,6 @@ export default function ProfilePage() {
   const completedCourses = Object.values(progress).filter(
     (p) => p.percentage === 100,
   ).length;
-
   const totalPercentage =
     startedCourses > 0
       ? Math.round(
@@ -95,190 +129,291 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => router.push("/"),
-      },
+      fetchOptions: { onSuccess: () => router.push("/") },
     });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
-      {/* хедер */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/courses" className="flex items-center gap-2 group">
-            <ArrowLeft className="w-5 h-5 text-black group-hover:-translate-x-1 transition-transform" />
-            <span className="font-semibold text-black">К курсам</span>
-          </Link>
-          <Link href="/" className="flex items-center gap-2">
-            <Code className="w-8 h-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-blue-600">CodeLearn</h1>
-          </Link>
-          <Button
-            variant="outline"
-            onClick={handleLogout}
-            className="border-red-200 text-red-600 hover:bg-red-50"
+    <div className="min-h-screen bg-[#f0f5ff] text-slate-800 font-sans selection:bg-[#3b5bdb] selection:text-white flex flex-col">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-indigo-100/50 shadow-sm supports-[backdrop-filter]:bg-white/60">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link
+            href="/courses"
+            className="group flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-[#3b5bdb] transition-colors"
           >
-            Выйти
-          </Button>
+            <div className="p-1.5 rounded-lg group-hover:bg-indigo-50 transition-colors">
+              <ArrowLeft
+                size={16}
+                className="transition-transform group-hover:-translate-x-1"
+              />
+            </div>
+            <span className="hidden sm:inline">К курсам</span>
+          </Link>
+
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="relative flex items-center justify-center w-9 h-9 bg-[#3b5bdb] rounded-xl shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
+              <Code size={20} className="text-white" />
+              <div className="absolute inset-0 bg-white/20 rounded-xl animate-pulse hidden group-hover:block" />
+            </div>
+            <span className="text-xl font-black tracking-tight uppercase">
+              CodeLearn
+            </span>
+          </Link>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-rose-500 bg-rose-50 border border-rose-100 rounded-full hover:bg-rose-100 hover:border-rose-200 transition-all active:scale-95"
+          >
+            <LogOut size={14} />
+            <span className="hidden sm:inline">Выйти</span>
+          </button>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* инфо про юзера */}
-          <Card className="border-2 border-blue-100 overflow-hidden">
-            <div className="h-24 bg-blue-600 w-full" />
-            <CardHeader className="relative pt-0">
-              <div className="flex flex-col md:flex-row items-end md:items-center gap-4 -mt-10">
-                <div className="w-24 h-24 bg-white p-1 rounded-full shadow-lg">
-                  <div className="w-full h-full bg-blue-100 rounded-full flex items-center justify-center">
-                    <User className="w-12 h-12 text-blue-600" />
-                  </div>
-                </div>
-                <div className="flex-1 text-center md:text-left pt-2">
-                  <CardTitle className="text-3xl font-bold text-black">
-                    {session.user.name}
-                  </CardTitle>
-                  <CardDescription className="text-lg text-gray-500">
-                    {session.user.email}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          {/* стата */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatsCard
-              icon={<Flame className="text-orange-500" />}
-              value={streak}
-              label="Дней подряд"
-              color="orange"
-            />
-            <StatsCard
-              icon={<Target className="text-blue-600" />}
-              value={startedCourses}
-              label="Начато курсов"
-              color="blue"
-            />
-            <StatsCard
-              icon={<Trophy className="text-green-600" />}
-              value={completedCourses}
-              label="Завершено"
-              color="green"
-            />
-            <StatsCard
-              icon={<Code className="text-purple-600" />}
-              value={`${totalPercentage}%`}
-              label="Прогресс"
-              color="purple"
+      <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 mt-8 space-y-8 flex-grow pb-20">
+        <div className="bg-white rounded-[2rem] shadow-xl shadow-indigo-900/5 border border-white overflow-hidden">
+          <div className="h-32 bg-gradient-to-br from-[#3b5bdb] via-[#5c7cfa] to-[#74c0fc] relative">
+            <div
+              className="absolute inset-0 opacity-[0.15]"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`,
+              }}
             />
           </div>
 
-          {/* прогресс курсов */}
-          <Card className="border-2 border-blue-100">
-            <CardHeader>
-              <CardTitle className="text-2xl text-black">
-                Твое обучение
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {startedCourses === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 mb-6 text-lg">
-                    Вы ещё не начали ни одного курса. Пора это исправить!
-                  </p>
-                  <Link href="/courses">
-                    <Button className="bg-blue-600 hover:bg-blue-700 px-8">
-                      Выбрать курс
-                    </Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid gap-6">
-                  {Object.entries(progress).map(
-                    ([courseId, courseProgress]) => {
-                      const info = coursesInfo[courseId];
-                      if (!info) return null;
-                      return (
-                        <div
-                          key={courseId}
-                          className="p-4 border rounded-xl hover:shadow-md transition-shadow bg-white"
-                        >
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-4">
-                              <span
-                                className={`text-3xl p-3 rounded-lg ${info.color} bg-opacity-10`}
-                              >
-                                {info.icon}
-                              </span>
-                              <div>
-                                <h4 className="font-bold text-lg text-black">
-                                  {info.title}
-                                </h4>
-                                <p className="text-sm text-gray-500">
-                                  {courseProgress.completed} из{" "}
-                                  {courseProgress.total} уроков
-                                </p>
-                              </div>
-                            </div>
-                            <span className="text-2xl font-black text-blue-600">
-                              {courseProgress.percentage}%
-                            </span>
-                          </div>
-                          <Progress
-                            value={courseProgress.percentage}
-                            className="h-2 mb-4"
-                          />
-                          <Link href={`/course/${courseId}`}>
-                            <Button className="w-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors">
-                              Продолжить обучение
-                            </Button>
-                          </Link>
-                        </div>
-                      );
-                    },
+          <div className="px-6 pb-6 sm:px-10">
+            <div className="flex flex-col sm:flex-row items-center sm:items-end -mt-12 gap-5">
+              <div className="relative p-1.5 rounded-full bg-white shadow-xl shadow-indigo-900/10">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center border border-indigo-100 overflow-hidden">
+                  {session.user.image ? (
+                    <img
+                      src={session.user.image}
+                      alt={session.user.name || "User"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User size={44} className="text-[#3b5bdb]" />
                   )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <div className="absolute bottom-1 right-1 bg-emerald-400 w-5 h-5 border-[3px] border-white rounded-full"></div>
+              </div>
+
+              <div className="flex-1 text-center sm:text-left mb-2">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">
+                  {session.user.name}
+                </h1>
+                <p className="text-slate-500 font-medium">
+                  {session.user.email}
+                </p>
+              </div>
+
+              <div className="hidden sm:block mb-3">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-[#3b5bdb] text-sm font-bold rounded-xl border border-indigo-100/50">
+                  <Sparkles size={16} />
+                  <span>Student</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            icon={<Flame size={22} className="text-orange-500" />}
+            bg="bg-orange-50 hover:bg-orange-100"
+            border="border-orange-100"
+            value={streak}
+            label="Дней подряд"
+            suffix="🔥"
+          />
+          <StatCard
+            icon={<Target size={22} className="text-[#3b5bdb]" />}
+            bg="bg-indigo-50 hover:bg-indigo-100"
+            border="border-indigo-100"
+            value={startedCourses}
+            label="Активные курсы"
+          />
+          <StatCard
+            icon={<Trophy size={22} className="text-emerald-500" />}
+            bg="bg-emerald-50 hover:bg-emerald-100"
+            border="border-emerald-100"
+            value={completedCourses}
+            label="Завершено"
+          />
+          <StatCard
+            icon={<Code size={22} className="text-violet-500" />}
+            bg="bg-violet-50 hover:bg-violet-100"
+            border="border-violet-100"
+            value={`${totalPercentage}%`}
+            label="Общий прогресс"
+          />
+        </div>
+
+        <div className="bg-white rounded-[2rem] border border-white shadow-xl shadow-indigo-900/5 overflow-hidden">
+          <div className="px-6 py-6 sm:px-8 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#3b5bdb] to-[#5c7cfa] flex items-center justify-center shadow-lg shadow-blue-500/20 text-white">
+                <BookOpen size={20} />
+              </div>
+              <h2 className="text-xl font-bold text-slate-800">Моё обучение</h2>
+            </div>
+            {startedCourses > 0 && (
+              <Link
+                href="/courses"
+                className="text-sm font-semibold text-[#3b5bdb] hover:text-indigo-600 hover:underline decoration-2 underline-offset-4"
+              >
+                Каталог курсов
+              </Link>
+            )}
+          </div>
+
+          <div className="p-6 sm:p-8 bg-slate-50/30 min-h-[300px]">
+            {startedCourses === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm mb-6 border border-slate-100">
+                  <BookOpen size={32} className="text-slate-300" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 mb-2">
+                  Курсы не найдены
+                </h3>
+                <p className="text-slate-500 max-w-xs mb-8">
+                  Ты пока не начал ни одного курса. Самое время прокачать
+                  навыки!
+                </p>
+                <Link
+                  href="/courses"
+                  className="inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold text-white transition-all bg-[#3b5bdb] rounded-xl hover:bg-[#2f4bbf] hover:shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  Выбрать первый курс
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {Object.entries(progress).map(([courseId, courseProgress]) => {
+                  const info = coursesInfo[courseId];
+                  if (!info) return null;
+                  return (
+                    <div
+                      key={courseId}
+                      className="group relative flex flex-col sm:flex-row sm:items-center gap-5 p-5 bg-white rounded-2xl border border-slate-100 hover:border-indigo-200 shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 transition-all duration-300"
+                    >
+                      <div
+                        className={`w-14 h-14 shrink-0 rounded-xl bg-gradient-to-br ${info.gradient} p-[1px] ${info.shadow}`}
+                      >
+                        <div className="w-full h-full bg-white rounded-[11px] flex items-center justify-center text-2xl relative overflow-hidden">
+                          <div
+                            className={`absolute inset-0 bg-gradient-to-br ${info.gradient} opacity-10 group-hover:opacity-20 transition-opacity`}
+                          ></div>
+                          {info.icon}
+                        </div>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-bold text-slate-800 text-lg leading-tight group-hover:text-[#3b5bdb] transition-colors">
+                            {info.title}
+                          </h4>
+                          <span className={`sm:hidden font-bold ${info.text}`}>
+                            {courseProgress.percentage}%
+                          </span>
+                        </div>
+                        <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-3">
+                          {courseProgress.completed} из {courseProgress.total}{" "}
+                          уроков
+                        </p>
+
+                        <div className="relative h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className={`absolute top-0 left-0 h-full rounded-full bg-gradient-to-r ${info.gradient} transition-all duration-1000 ease-out`}
+                            style={{ width: `${courseProgress.percentage}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 pl-2">
+                        <span
+                          className={`hidden sm:block text-xl font-extrabold ${info.text}`}
+                        >
+                          {courseProgress.percentage}%
+                        </span>
+                        <Link
+                          href={`/course/${courseId}`}
+                          className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#3b5bdb] bg-indigo-50 rounded-xl hover:bg-[#3b5bdb] hover:text-white transition-all active:scale-95"
+                        >
+                          Продолжить
+                          <ChevronRight size={16} />
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      <footer className="bg-white border-t border-slate-100 py-12">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="flex items-center gap-2">
+              <Code className="w-6 h-6 text-blue-600" />
+              <span className="text-xl font-black tracking-tight text-slate-800">
+                CodeLearn
+              </span>
+            </div>
+            <p className="text-slate-400 font-medium">
+              © {new Date().getFullYear()} CodeLearn. Все права защищены.
+            </p>
+            <div className="flex gap-6 text-slate-400 font-bold text-sm">
+              <a href="#" className="hover:text-blue-600 transition-colors">
+                Политика
+              </a>
+              <a href="#" className="hover:text-blue-600 transition-colors">
+                Условия
+              </a>
+              <a href="#" className="hover:text-blue-600 transition-colors">
+                Поддержка
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
 
-// Маленький вспомогательный компонент для карточек статистики
-function StatsCard({
+function StatCard({
   icon,
+  bg,
+  border,
   value,
   label,
-  color,
+  suffix,
 }: {
   icon: React.ReactNode;
+  bg: string;
+  border: string;
   value: string | number;
   label: string;
-  color: string;
+  suffix?: string;
 }) {
-  const colors: Record<string, string> = {
-    orange: "border-orange-100 from-orange-50",
-    blue: "border-blue-100 from-blue-50",
-    green: "border-green-100 from-green-50",
-    purple: "border-purple-100 from-purple-50",
-  };
   return (
-    <Card className={`border-2 bg-gradient-to-br ${colors[color]} to-white`}>
-      <CardContent className="pt-6 text-center">
-        <div className="flex justify-center mb-2">{icon}</div>
-        <div className="text-2xl md:text-3xl font-bold text-gray-900">
-          {value}
-        </div>
-        <div className="text-xs md:text-sm text-gray-500 font-medium uppercase">
-          {label}
-        </div>
-      </CardContent>
-    </Card>
+    <div
+      className={`flex flex-col items-center justify-center p-5 rounded-2xl bg-white border ${border} shadow-sm transition-all duration-300 hover:-translate-y-1 group`}
+    >
+      <div
+        className={`w-12 h-12 rounded-xl ${bg} flex items-center justify-center mb-3 transition-colors`}
+      >
+        {icon}
+      </div>
+      <div className="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-1">
+        {value} {suffix && <span className="text-lg">{suffix}</span>}
+      </div>
+
+      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider text-center mt-1">
+        {label}
+      </div>
+    </div>
   );
 }
