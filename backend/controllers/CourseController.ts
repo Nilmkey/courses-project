@@ -43,7 +43,9 @@ class CourseController {
   static async update(req: Request, res: Response) {
     try {
       // { new: true } вернет уже обновленный объект
-      const updated = await Course.findByIdAndUpdate(req.params.id, req.body, { new: true });
+      const updated = await Course.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+      });
       if (!updated) return res.status(404).json({ message: "Курс не найден" });
       return res.status(200).json(updated);
     } catch (e) {

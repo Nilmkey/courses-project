@@ -1,71 +1,156 @@
 "use client";
-import { useEffect, useState } from "react";
-import { courseApi } from "@/lib/api-service";
-import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit } from "lucide-react";
-import Link from "next/link";
 
-export default function AdminCoursesPage() {
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Code,
+  Plus,
+  Trash2,
+  Edit,
+  Home,
+  LayoutDashboard,
+  BookOpen,
+  ArrowLeft,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { courseApi } from "@/lib/api-service"; // Твой сервис запросов
+
+export default function AdminDashboard() {
   const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadCourses();
   }, []);
 
   const loadCourses = async () => {
-    const data = await courseApi.getAll();
-    setCourses(data);
+    try {
+      const data = await courseApi.getAll();
+      setCourses(data);
+    } catch (err) {
+      console.error("Ошибка загрузки:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Точно удаляем?")) {
+  const deleteCourse = async (id: string) => {
+    if (confirm("Удалить этот курс навсегда?")) {
       await courseApi.delete(id);
-      loadCourses(); // Обновляем список
+      loadCourses();
     }
   };
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Управление курсами</h1>
-        <Link href="/admin/courses/new">
-          <Button className="bg-green-600 hover:bg-green-700">
-            <Plus className="mr-2 h-4 w-4" /> Добавить курс
-          </Button>
-        </Link>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
+      {/* Хедер Админки */}
+      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Code className="w-8 h-8 text-blue-600" />
+              <h1 className="text-2xl font-bold text-blue-600">
+                CodeLearn{" "}
+                <span className="text-gray-400 font-light">Admin</span>
+              </h1>
+            </div>
 
-      <div className="bg-white border rounded-lg overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="p-4">Название</th>
-              <th className="p-4">Slug</th>
-              <th className="p-4 text-right">Действия</th>
-            </tr>
-          </thead>
-          <tbody>
-            {courses.map((course: any) => (
-              <tr key={course._id} className="border-b hover:bg-gray-50">
-                <td className="p-4 font-medium">{course.title}</td>
-                <td className="p-4 text-gray-500">{course.slug}</td>
-                <td className="p-4 text-right space-x-2">
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(course._id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            {/* Кнопка возврата на главную */}
+            <Link href="/">
+              <Button
+                variant="ghost"
+                className="text-gray-600 hover:text-blue-600 flex gap-2"
+              >
+                <Home className="w-4 h-4" /> На главную
+              </Button>
+            </Link>
+          </div>
+
+          <Link href="/admin/courses/new">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all">
+              <Plus className="w-4 h-4 mr-2" /> Создать курс
+            </Button>
+          </Link>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-12">
+        <div className="flex items-center gap-3 mb-8">
+          <LayoutDashboard className="w-6 h-6 text-blue-600" />
+          <h2 className="text-3xl font-bold text-gray-900">
+            Управление контентом
+          </h2>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {courses.length === 0 ? (
+              <Card className="border-dashed border-2 py-20 text-center">
+                <CardContent>
+                  <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">
+                    Курсов пока нет. Создайте свой первый шедевр!
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              courses.map((course: any) => (
+                <Card
+                  key={course._id}
+                  className="border-2 border-blue-100 hover:border-blue-300 transition-all overflow-hidden"
+                >
+                  <CardContent className="p-0">
+                    <div className="flex flex-col md:flex-row items-center p-4 gap-4">
+                      {/* Thumbnail Placeholder */}
+                      <div className="w-24 h-16 bg-blue-100 rounded-md flex items-center justify-center">
+                        <Code className="w-8 h-8 text-blue-400" />
+                      </div>
+
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {course.title}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          slug: /courses/{course.slug}
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                        >
+                          <Edit className="w-4 h-4 mr-2" /> Изменить
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => deleteCourse(course._id)}
+                          className="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border-none shadow-none"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* Футер такой же как на главной */}
+      <footer className="bg-gray-50 border-t py-8 mt-auto">
+        <div className="container mx-auto px-4 text-center text-gray-600">
+          <p>© {new Date().getFullYear()} CodeLearn Admin Panel</p>
+        </div>
+      </footer>
     </div>
   );
 }
