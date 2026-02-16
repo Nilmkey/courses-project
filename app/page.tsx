@@ -23,6 +23,7 @@ import {
   ChevronRight,
   ArrowRight,
   Sparkles,
+  User
 } from "lucide-react";
 
 interface Feature {
@@ -130,12 +131,9 @@ export default function Home() {
                   </Button>
                 </Link>
                 <Link href="/profile">
-                  <Button
-                    variant="ghost"
-                    className="font-semibold text-slate-600 hover:text-blue-600 hover:bg-blue-50/50"
-                  >
-                    Профиль
-                  </Button>
+                  <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center cursor-pointer hover:bg-slate-200 transition-colors">
+                    <User className="w-5 h-5 text-slate-600" />
+                  </div>
                 </Link>
                 <Button
                   onClick={handleSignOut}
