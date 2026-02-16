@@ -171,7 +171,6 @@ export default function Home() {
 
         <div className="container mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-sm font-bold mb-8 animate-fade-in">
-            <Sparkles size={16} />
             <span>Платформа №1 для будущих разработчиков</span>
           </div>
 
