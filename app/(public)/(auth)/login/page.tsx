@@ -116,7 +116,7 @@ export default function AuthPage() {
                   <Input
                     id="name"
                     type="text"
-                    placeholder="Александр"
+                    placeholder="Имя"
                     className="h-14 pl-12 bg-white/50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#3b5bdb] focus:border-transparent transition-all text-black"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
