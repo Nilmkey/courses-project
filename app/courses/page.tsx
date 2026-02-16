@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { courseApi } from "@/lib/api-service";
 
-// Маппинг для иконок из БД
 const iconMap: Record<string, React.ReactNode> = {
   Layout: <Layout className="w-8 h-8" />,
   Server: <Server className="w-8 h-8" />,
@@ -36,7 +35,6 @@ const CoursesPage = () => {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Ждем монтирования, чтобы избежать конфликтов гидратации при смене темы
   useEffect(() => {
     setMounted(true);
     loadCourses();
@@ -88,7 +86,6 @@ const CoursesPage = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Переключатель темы */}
             <button
               onClick={() =>
                 setTheme(resolvedTheme === "dark" ? "light" : "dark")
@@ -142,7 +139,7 @@ const CoursesPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
           {loading
-            ? // Скелетон загрузки
+            ? 
               [1, 2, 3].map((i) => (
                 <div
                   key={i}
@@ -232,7 +229,6 @@ const CoursesPage = () => {
                     </div>
                   </div>
 
-                  {/* Декоративный элемент сзади */}
                   <div
                     className={`absolute -right-12 -bottom-12 w-24 h-24 bg-gradient-to-br ${course.gradient} opacity-[0.03] rounded-full blur-2xl group-hover:scale-[3] transition-transform duration-700`}
                   />

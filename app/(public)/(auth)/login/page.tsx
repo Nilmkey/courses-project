@@ -87,13 +87,11 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 flex flex-col transition-colors duration-300 relative overflow-hidden">
-      {/* Background Blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/40 dark:bg-indigo-900/20 rounded-full blur-[120px] -z-10" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-200/30 dark:bg-blue-900/10 rounded-full blur-[120px] -z-10" />
 
-      {/* Header with Theme Toggle and Centered Logo */}
       <header className="p-6 relative max-w-7xl mx-auto w-full flex items-center justify-between">
-        <div className="w-10 h-10" /> {/* Spacer */}
+        <div className="w-10 h-10" />
         <Link
           href="/"
           className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 group"
