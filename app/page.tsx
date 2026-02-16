@@ -94,7 +94,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      {/* Хедер */}
       <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-blue-100/50 dark:border-slate-800">
         <div className="container mx-auto px-4 h-20 flex justify-between items-center">
           <div className="flex items-center gap-3 group">
@@ -107,7 +106,6 @@ export default function Home() {
           </div>
 
           <nav className="flex gap-3 items-center">
-            {/* Переключатель темы в стиле старого дизайна */}
             {mounted && (
               <Button
                 variant="ghost"
@@ -180,7 +178,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="relative pt-20 pb-32 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/40 dark:bg-blue-900/20 rounded-full blur-[120px]" />
@@ -189,7 +186,6 @@ export default function Home() {
 
         <div className="container mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-sm font-bold mb-8 shadow-sm">
-            <Sparkles className="w-4 h-4" />
             <span>Платформа №1 для будущих разработчиков</span>
           </div>
 
@@ -228,7 +224,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Статистика */}
       <section className="container mx-auto px-4 -mt-16 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {stats.map((stat, index) => (
@@ -250,7 +245,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Фичи */}
       <section className="container mx-auto px-4 py-32">
         <div className="text-center mb-20">
           <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
