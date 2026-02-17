@@ -19,7 +19,25 @@ export const auth = betterAuth({
         type: "string",
         defaultValue: "student",
       },
+      streak: {
+        type: "number",
+        defaultValue: 0,
+      },
     },
   },
   secret: process.env.BETTER_AUTH_SECRET,
 });
+
+import { authClient } from "@/lib/auth-client";
+
+export interface ExtendedUser {
+  id: string;
+  email: string;
+  name: string;
+  image?: string;
+  role: "user" | "admin";
+  streak: number;
+  createdAt?: Date;
+}
+
+export type SessionData = typeof authClient.useSession;
