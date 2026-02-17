@@ -45,9 +45,11 @@ const startApp = async () => {
       console.log(`🚀 SERVER STARTED ON http://localhost:${PORT}`);
       console.log(`📚 Courses API: http://localhost:${PORT}/api/courses`);
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("❌ ОШИБКА ПРИ ЗАПУСКЕ:");
-    console.log(e.message);
+    if (e instanceof Error) {
+      console.log(e.message);
+    }
     process.exit(1); // Если база не в сети, лучше упасть сразу
   }
 };

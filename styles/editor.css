@@ -1,0 +1,13 @@
+.milkdown .crepe-block-handle,
+.milkdown [draggable="true"],
+.milkdown .block-handler {
+  display: none !important;
+}
+
+.milkdown .block-provider {
+  display: none !important;
+}
+
+.milkdown .editor {
+  line-height: 0.2;
+}
