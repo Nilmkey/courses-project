@@ -20,7 +20,6 @@ import {
   ShieldCheck,
   Sun,
   Moon,
-  Sparkles,
 } from "lucide-react";
 
 export default function Home() {
