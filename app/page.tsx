@@ -9,12 +9,13 @@ import { ExtendedUser } from "@/backend/auth";
 import { Button } from "@/components/ui/button";
 import {
   Code,
-  Smile,
+  Flame,
   Trophy,
   Users,
   BookOpen,
   Play,
   Loader2,
+  ChevronRight,
   ArrowRight,
   User,
   ShieldCheck,
@@ -37,6 +38,7 @@ export default function Home() {
     });
     return () => cancelAnimationFrame(frame);
   }, []);
+
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
@@ -82,11 +84,11 @@ export default function Home() {
       color: "bg-sky-500",
     },
     {
-      icon: <Smile className="w-8 h-8" />,
+      icon: <Flame className="w-8 h-8" />,
       title: "Сообщество",
       description:
         "Тысячи довольных учеников уже изменили свою жизнь вместе с нами",
-      color: "bg-blue-400",
+      color: "bg-orange-500",
     },
   ];
 
@@ -307,16 +309,10 @@ export default function Home() {
                   {feature.description}
                 </p>
               </div>
-              <h4 className="text-xl font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                {feature.title}
-              </h4>
-              <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                {feature.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      </main>
 
       {/* --- Footer --- */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12">
