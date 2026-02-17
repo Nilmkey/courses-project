@@ -8,7 +8,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
   Code,
-  Flame,
+  Smile,
   Trophy,
   Users,
   BookOpen,
@@ -77,11 +77,11 @@ export default function Home() {
       color: "bg-sky-500",
     },
     {
-      icon: <Flame className="w-8 h-8" />,
+      icon: <Smile className="w-8 h-8" />,
       title: "Сообщество",
       description:
         "Тысячи довольных учеников уже изменили свою жизнь вместе с нами",
-      color: "bg-orange-500",
+      color: "bg-blue-400",
     },
   ];
 
