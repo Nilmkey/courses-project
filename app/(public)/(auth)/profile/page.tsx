@@ -367,6 +367,14 @@ export default function ProfilePage() {
           <p className="text-slate-400 font-medium">
             © {new Date().getFullYear()} CodeLearn. Все права защищены.
           </p>
+          <div className="flex gap-6 text-slate-400 font-bold text-sm">
+            <a href="#" className="hover:text-blue-600 transition-colors">
+              Политика
+            </a>
+            <a href="#" className="hover:text-blue-600 transition-colors">
+              Условия
+            </a>
+          </div>
         </div>
       </footer>
     </div>

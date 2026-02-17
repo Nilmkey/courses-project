@@ -314,7 +314,31 @@ export default function Home() {
         </section>
       </main>
 
-      {/* --- Footer --- */}
+      {!session && (
+        <section className="container mx-auto px-4 py-20">
+          <div className="relative bg-gradient-to-r from-blue-600 to-indigo-700 rounded-[3rem] p-12 md:p-20 overflow-hidden shadow-2xl shadow-blue-500/40">
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-white/10 skew-x-12 translate-x-1/2" />
+            <div className="relative z-10 max-w-2xl text-white">
+              <h3 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
+                Готов написать свой <br /> первый Hello World?
+              </h3>
+              <p className="text-xl text-blue-100 mb-10 font-medium leading-relaxed">
+                Присоединяйся к нашему комьюнити. Начни учиться сегодня, чтобы
+                завтра оффер нашел тебя сам.
+              </p>
+              <Link href="/login">
+                <Button
+                  size="lg"
+                  className="bg-white text-blue-600 hover:bg-blue-50 font-black text-lg px-10 h-16 rounded-2xl shadow-xl transition-all active:scale-95"
+                >
+                  Зарегистрироваться сейчас
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12">
         <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8 text-slate-400 font-bold uppercase tracking-widest text-[10px]">
           <div className="flex items-center gap-2">
@@ -324,7 +348,7 @@ export default function Home() {
             </span>
           </div>
           <p>© {new Date().getFullYear()} CodeLearn. Все права защищены.</p>
-          <div className="flex gap-6">
+          <div className="flex gap-6 text-slate-400 font-bold text-sm">
             <a href="#" className="hover:text-blue-600 transition-colors">
               Политика
             </a>
