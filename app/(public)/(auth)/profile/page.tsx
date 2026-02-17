@@ -364,7 +364,7 @@ export default function ProfilePage() {
               CodeLearn
             </span>
           </div>
-          <p className="text-slate-400 font-medium">
+          <p className="text-slate-400 font-medium снежанка + сашка = любовь">
             © {new Date().getFullYear()} CodeLearn. Все права защищены.
           </p>
           <div className="flex gap-6 text-slate-400 font-bold text-sm">
