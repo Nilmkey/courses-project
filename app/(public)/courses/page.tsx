@@ -29,7 +29,7 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 const CoursesPage = () => {
-  const { setTheme, resolvedTheme } = useTheme();
+  const {setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState("all");
   const [courses, setCourses] = useState<any[]>([]);
@@ -254,9 +254,6 @@ const CoursesPage = () => {
               </a>
               <a href="#" className="hover:text-blue-600 transition-colors">
                 Условия
-              </a>
-              <a href="#" className="hover:text-blue-600 transition-colors">
-                Поддержка
               </a>
             </div>
           </div>

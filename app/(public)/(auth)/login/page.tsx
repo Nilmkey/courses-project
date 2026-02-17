@@ -184,14 +184,6 @@ export default function AuthPage() {
                   >
                     Пароль
                   </Label>
-                  {isLogin && (
-                    <button
-                      type="button"
-                      className="text-[10px] font-black uppercase tracking-wider text-[#3b5bdb] hover:underline"
-                    >
-                      Забыли?
-                    </button>
-                  )}
                 </div>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#3b5bdb] transition-colors" />
@@ -253,6 +245,14 @@ export default function AuthPage() {
             </form>
 
             <div className="mt-8 text-center">
+              {isLogin && (
+                <button
+                  type="button"
+                  className="text-xs font-black uppercase tracking-wider text-[#3b5bdb] hover:underline outline-none focus:ring-1 focus:ring-blue-500 rounded p-1"
+                >
+                  Забыли пароль?
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
