@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const ContentBlockSchema = new Schema(
   {
@@ -48,7 +48,7 @@ const CourseSchema = new Schema(
     sections: [SectionSchema],
   },
   {
-    timestamps: true, // Автоматически createdAt, updatedAt
+    timestamps: true,
   },
 );
 
