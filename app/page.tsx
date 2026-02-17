@@ -14,7 +14,6 @@ import {
   BookOpen,
   Play,
   Loader2,
-  ChevronRight,
   ArrowRight,
   User,
   ShieldCheck,
@@ -267,7 +266,6 @@ export default function Home() {
               </div>
               <h4 className="text-xl font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2">
                 {feature.title}
-                <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
               </h4>
               <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
                 {feature.description}
