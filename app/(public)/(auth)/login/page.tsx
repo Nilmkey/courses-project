@@ -38,7 +38,12 @@ export default function AuthPage() {
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
 
-  useEffect(() => setMounted(true), []);
+   useEffect(() => {
+     const frame = requestAnimationFrame(() => {
+       setMounted(true);
+     });
+     return () => cancelAnimationFrame(frame);
+   }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
