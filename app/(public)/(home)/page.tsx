@@ -29,7 +29,6 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
 
-  // Приводим пользователя к нашему расширенному интерфейсу
   const user = session?.user as unknown as ExtendedUser | undefined;
 
   useEffect(() => {
@@ -208,7 +207,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* --- Main Content --- */}
       <main className="flex-1">
         <section className="relative pt-20 pb-32 overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">

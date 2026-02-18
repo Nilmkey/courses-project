@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { courseApi } from "@/lib/api-service";
 
-// Описываем структуру курса для устранения ошибки any
 interface Course {
   _id: string;
   title: string;
@@ -46,7 +45,6 @@ const CoursesPage = () => {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState("all");
-  // Заменяем any[] на Course[]
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
