@@ -83,3 +83,5 @@ const CourseSchema = new Schema(
 );
 
 export const Course = mongoose.model("Course", CourseSchema);
+
+
