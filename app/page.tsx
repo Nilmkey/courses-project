@@ -15,7 +15,6 @@ import {
   BookOpen,
   Play,
   Loader2,
-  ChevronRight,
   ArrowRight,
   User,
   ShieldCheck,
@@ -29,7 +28,6 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
 
-  // Приводим пользователя к нашему расширенному интерфейсу
   const user = session?.user as unknown as ExtendedUser | undefined;
 
   useEffect(() => {
@@ -100,7 +98,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f8faff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      {/* --- Header --- */}
       <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-blue-100/50 dark:border-slate-800">
         <div className="container mx-auto px-4 h-20 flex justify-between items-center">
           <div
@@ -116,7 +113,6 @@ export default function Home() {
           </div>
 
           <nav className="flex gap-3 items-center">
-            {/* Виджет огонька (streak) */}
             {mounted && user && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-full border border-orange-100 dark:border-orange-800/50 mr-2 group transition-all hover:scale-105">
                 <Flame
@@ -208,7 +204,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* --- Main Content --- */}
       <main className="flex-1">
         <section className="relative pt-20 pb-32 overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">
@@ -233,11 +228,7 @@ export default function Home() {
                 <>
                   Рады видеть тебя снова,{" "}
                   <span className="font-bold text-slate-900 dark:text-white">
-                    {user.name}
-                  </span>
-                  ! Твой прогресс ждет тебя. У тебя уже{" "}
-                  <span className="text-orange-500 font-black">
-                    {user.streak}🔥
+                    {user.name}!
                   </span>
                 </>
               ) : (
@@ -303,7 +294,6 @@ export default function Home() {
                 </div>
                 <h4 className="text-xl font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2">
                   {feature.title}
-                  <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                 </h4>
                 <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
                   {feature.description}
