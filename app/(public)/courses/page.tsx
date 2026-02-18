@@ -19,6 +19,20 @@ import {
 } from "lucide-react";
 import { courseApi } from "@/lib/api-service";
 
+// Описываем структуру курса для устранения ошибки any
+interface Course {
+  _id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  type: string;
+  difficulty?: "Легкий" | "Средний" | "Сложный";
+  iconName: string;
+  gradient?: string;
+  target?: string;
+  status: "open" | "closed";
+}
+
 const iconMap: Record<string, React.ReactNode> = {
   Layout: <Layout className="w-8 h-8" />,
   Server: <Server className="w-8 h-8" />,
@@ -29,10 +43,11 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 const CoursesPage = () => {
-  const {setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState("all");
-  const [courses, setCourses] = useState<any[]>([]);
+  // Заменяем any[] на Course[]
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
