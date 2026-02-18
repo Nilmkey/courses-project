@@ -14,7 +14,6 @@ interface MenuLinkProps {
   onClick: () => void;
 }
 
-// Вынес кнопку в отдельный подкомпонент для чистоты
 function MenuOption({ icon, label, description, onClick }: MenuLinkProps) {
   return (
     <button
@@ -39,7 +38,7 @@ export function AddItemButton() {
 
   const handleAddBlock = (type: BlockType) => {
     setBlocks((prev) => [...prev, createNewBlock(type)]);
-    setIsOpen(false); // Закрываем меню после добавления
+    setIsOpen(false)
   };
 
   useEffect(() => {

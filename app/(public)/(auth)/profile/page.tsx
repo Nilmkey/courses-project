@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { ExtendedUser } from "@/backend/auth";
-import { authClient } from "@/lib/auth-client"; // Вернул обратно, так как api-client не найден
+import { authClient } from "@/lib/auth-client";
 import {
   Code,
   Flame,
