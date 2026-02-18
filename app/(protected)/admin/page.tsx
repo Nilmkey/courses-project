@@ -8,22 +8,29 @@ import {
   Plus,
   Trash2,
   Edit,
-  Home,
   LayoutDashboard,
   BookOpen,
   Sun,
   Moon,
   Loader2,
-  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { courseApi } from "@/lib/api-service";
 
+// Добавляем интерфейс для типизации курса
+interface AdminCourse {
+  _id: string;
+  title: string;
+  slug: string;
+  gradient?: string;
+}
+
 export default function AdminDashboard() {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [courses, setCourses] = useState([]);
+  // Заменяем any на AdminCourse[]
+  const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,8 +54,10 @@ export default function AdminDashboard() {
     if (confirm("Удалить этот курс навсегда?")) {
       try {
         await courseApi.delete(id);
-        setCourses(courses.filter((c: any) => c._id !== id));
-      } catch (err) {
+        // Используем типизированный стейт без any
+        setCourses(courses.filter((c) => c._id !== id));
+      } catch {
+        // Убрали неиспользуемую переменную err
         alert("Ошибка при удалении");
       }
     }
@@ -60,25 +69,21 @@ export default function AdminDashboard() {
     /* Добавляем flex и min-h-screen для управления высотой */
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
       {/* --- Хедер --- */}
+      {/* --- Хедер --- */}
       <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            {/* Логотип теперь обернут в Link и работает как кнопка "На главную" */}
+            <Link
+              href="/"
+              className="flex items-center gap-2 group cursor-pointer"
+            >
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Code className="w-5 h-5 text-white" />
               </div>
               <h1 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
                 CodeLearn <span className="text-blue-600">Admin</span>
               </h1>
-            </div>
-            <Link href="/">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hidden sm:flex text-slate-500 hover:text-blue-600 font-bold gap-2"
-              >
-                <Home className="w-4 h-4" /> На главную
-              </Button>
             </Link>
           </div>
 
@@ -138,7 +143,8 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             ) : (
-              courses.map((course: any) => (
+              // Убрали any из map
+              courses.map((course) => (
                 <Card
                   key={course._id}
                   className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
