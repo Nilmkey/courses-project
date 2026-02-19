@@ -5,13 +5,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  /* Добавим переменные для Shadcn компонентов, если они тебе нужны */
   --card: #ffffff;
   --card-foreground: #171717;
   --border: #e5e7eb;
 }
 
-/* Эта магия заставляет Tailwind v4 понимать класс .dark, который вешает next-themes */
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
@@ -26,7 +24,7 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-border: var(--border);
-  
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -35,5 +33,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
