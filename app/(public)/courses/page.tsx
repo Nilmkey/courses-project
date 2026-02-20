@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { ICourse } from "@/types/types";
 import {
   Code,
   ChevronRight,
@@ -10,7 +11,6 @@ import {
   Server,
   Globe,
   Laptop,
-  Users,
   Zap,
   User,
   Sun,
@@ -32,7 +32,7 @@ const CoursesPage = () => {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState("all");
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<ICourse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -153,21 +153,25 @@ const CoursesPage = () => {
                   className="group relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-8 flex flex-col h-full transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40 dark:hover:shadow-blue-900/20 overflow-hidden"
                 >
                   <div className="mb-6 flex justify-between items-center">
-                    {course.difficulty && (
+                    {course.level && (
                       <span
                         className={`px-4 py-1.5 rounded-full text-[10px] uppercase font-black tracking-widest border ${
-                          course.difficulty === "Легкий"
+                          course.level === "beginner"
                             ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-100 dark:border-emerald-900/30"
-                            : course.difficulty === "Средний"
+                            : course.level === "intermediate"
                               ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 border-blue-100 dark:border-blue-900/30"
                               : "bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-100 dark:border-rose-900/30"
                         }`}
                       >
-                        {course.difficulty}
+                        {course.level === "beginner"
+                          ? "Начальный"
+                          : course.level === "intermediate"
+                            ? "Средний"
+                            : "Продвинутый"}
                       </span>
                     )}
                     <div
-                      className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${course.gradient || "from-slate-400 to-slate-600"} flex items-center justify-center text-white shadow-lg shadow-blue-100 dark:shadow-none group-hover:rotate-12 transition-transform duration-500`}
+                      className={`w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white shadow-lg shadow-blue-100 dark:shadow-none group-hover:rotate-12 transition-transform duration-500`}
                     >
                       {iconMap[course.iconName] || <Code className="w-8 h-8" />}
                     </div>
@@ -185,17 +189,6 @@ const CoursesPage = () => {
                   </div>
 
                   <div className="mt-auto space-y-6">
-                    {course.target && (
-                      <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                        <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm">
-                          <Users className="w-4 h-4 text-slate-400 dark:text-slate-300" />
-                        </div>
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                          {course.target}
-                        </span>
-                      </div>
-                    )}
-
                     <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
                       <div className="flex items-center gap-2">
                         <div
@@ -229,7 +222,7 @@ const CoursesPage = () => {
                   </div>
 
                   <div
-                    className={`absolute -right-12 -bottom-12 w-24 h-24 bg-gradient-to-br ${course.gradient} opacity-[0.03] rounded-full blur-2xl group-hover:scale-[3] transition-transform duration-700`}
+                    className={`absolute -right-12 -bottom-12 w-24 h-24 bg-gradient-to-br opacity-[0.03] rounded-full blur-2xl group-hover:scale-[3] transition-transform duration-700`}
                   />
                 </div>
               ))}
@@ -254,9 +247,6 @@ const CoursesPage = () => {
               </a>
               <a href="#" className="hover:text-blue-600 transition-colors">
                 Условия
-              </a>
-              <a href="#" className="hover:text-blue-600 transition-colors">
-                Поддержка
               </a>
             </div>
           </div>

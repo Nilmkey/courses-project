@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { authClient } from "@/lib/auth-client";
+import { ExtendedUser } from "@/backend/auth";
 import { Button } from "@/components/ui/button";
 import {
   Code,
@@ -14,7 +15,6 @@ import {
   BookOpen,
   Play,
   Loader2,
-  ChevronRight,
   ArrowRight,
   User,
   ShieldCheck,
@@ -24,12 +24,17 @@ import {
 
 export default function Home() {
   const router = useRouter();
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
 
+  const user = session?.user as unknown as ExtendedUser | undefined;
+
   useEffect(() => {
-    setMounted(true);
+    const frame = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const handleSignOut = async () => {
@@ -92,10 +97,13 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="flex flex-col min-h-screen bg-[#f8faff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-blue-100/50 dark:border-slate-800">
         <div className="container mx-auto px-4 h-20 flex justify-between items-center">
-          <div className="flex items-center gap-3 group">
+          <div
+            className="flex items-center gap-3 group cursor-pointer"
+            onClick={() => router.push("/")}
+          >
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
               <Code className="w-6 h-6 text-white" />
             </div>
@@ -105,6 +113,17 @@ export default function Home() {
           </div>
 
           <nav className="flex gap-3 items-center">
+            {mounted && user && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-full border border-orange-100 dark:border-orange-800/50 mr-2 group transition-all hover:scale-105">
+                <Flame
+                  className={`w-5 h-5 ${user.streak > 0 ? "text-orange-500 animate-pulse" : "text-slate-300"}`}
+                />
+                <span className="text-sm font-black text-orange-600 dark:text-orange-400">
+                  {user.streak || 0}
+                </span>
+              </div>
+            )}
+
             {mounted && (
               <Button
                 variant="ghost"
@@ -124,13 +143,13 @@ export default function Home() {
 
             {isPending ? (
               <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-            ) : session ? (
+            ) : user ? (
               <>
-                {(session.user as any).role === "admin" && (
+                {user.role === "admin" && (
                   <Link href="/admin">
                     <Button
                       variant="outline"
-                      className="hidden md:flex border-blue-600 text-blue-600 hover:bg-blue-50 rounded-full px-5 gap-2"
+                      className="hidden md:flex border-blue-600 text-blue-600 hover:bg-blue-50 rounded-full px-5 gap-2 font-bold"
                     >
                       <ShieldCheck className="w-4 h-4" /> Админ
                     </Button>
@@ -139,19 +158,27 @@ export default function Home() {
                 <Link href="/courses" className="hidden sm:block">
                   <Button
                     variant="ghost"
-                    className="font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600"
+                    className="font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600"
                   >
                     Курсы
                   </Button>
                 </Link>
                 <Link href="/profile">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-200 transition-colors">
-                    <User className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center cursor-pointer hover:border-blue-500 transition-all overflow-hidden shadow-inner">
+                    {user.image ? (
+                      <img
+                        src={user.image}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                    )}
                   </div>
                 </Link>
                 <Button
                   onClick={handleSignOut}
-                  className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 text-white rounded-full px-6 shadow-md active:scale-95"
+                  className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 text-white rounded-full px-6 shadow-md active:scale-95 font-bold"
                 >
                   Выйти
                 </Button>
@@ -177,120 +204,145 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="relative pt-20 pb-32 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/40 dark:bg-blue-900/20 rounded-full blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-200/30 dark:bg-indigo-900/20 rounded-full blur-[120px]" />
-        </div>
-
-        <div className="container mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-sm font-bold mb-8 shadow-sm">
-            <span>Платформа №1 для будущих разработчиков</span>
+      <main className="flex-1">
+        <section className="relative pt-20 pb-32 overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/40 dark:bg-blue-900/20 rounded-full blur-[120px]" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-200/30 dark:bg-indigo-900/20 rounded-full blur-[120px]" />
           </div>
 
-          <h2 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-8 tracking-tight leading-[1.1]">
-            Построй свой путь в IT <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600">
-              на реальной практике
-            </span>
-          </h2>
-
-          <p className="text-xl text-slate-500 dark:text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
-            {session ? (
-              <>
-                Рады видеть тебя снова,{" "}
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {session.user.name}
-                </span>
-                ! Твой прогресс ждет тебя.
-              </>
-            ) : (
-              "CodeLearn — это современная экосистема обучения. Мы учим создавать реальные продукты через практику в браузере."
-            )}
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/courses">
-              <Button
-                size="lg"
-                className="h-16 px-10 text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-xl shadow-blue-500/30 transition-all hover:-translate-y-1 active:translate-y-0 w-full sm:w-auto"
-              >
-                {session ? "Продолжить обучение" : "Начать обучение бесплатно"}
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="container mx-auto px-4 -mt-16 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-8 rounded-[2.5rem] border border-white dark:border-slate-800 shadow-xl text-center group hover:border-blue-200 transition-colors"
-            >
-              <div className="text-5xl font-black text-blue-600 mb-2 tracking-tighter group-hover:scale-110 transition-transform">
-                {stat.number}
-              </div>
-              <div className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-1">
-                {stat.label}
-              </div>
-              <div className="text-slate-500 dark:text-slate-400 text-sm font-medium">
-                {stat.description}
-              </div>
+          <div className="container mx-auto px-4 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-sm font-bold mb-8 shadow-sm">
+              <span>Платформа №1 для будущих разработчиков</span>
             </div>
-          ))}
-        </div>
-      </section>
 
-      <section className="container mx-auto px-4 py-32">
-        <div className="text-center mb-20">
-          <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
-            Почему выбирают нас?
-          </h3>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">
-            Мы создали идеальные условия для твоего старта в разработке
-          </p>
-        </div>
+            <h2 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-8 tracking-tight leading-[1.1]">
+              Построй свой путь в IT <br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600">
+                на реальной практике
+              </span>
+            </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="group p-8 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-500/50 hover:shadow-2xl transition-all duration-300"
-            >
+            <p className="text-xl text-slate-500 dark:text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+              {user ? (
+                <>
+                  Рады видеть тебя снова,{" "}
+                  <span className="font-bold text-slate-900 dark:text-white">
+                    {user.name}!
+                  </span>
+                </>
+              ) : (
+                "CodeLearn — это современная экосистема обучения. Мы учим создавать реальные продукты через практику в браузере."
+              )}
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link href="/courses">
+                <Button
+                  size="lg"
+                  className="h-16 px-10 text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-xl shadow-blue-500/30 transition-all hover:-translate-y-1 active:translate-y-0 w-full sm:w-auto"
+                >
+                  {user ? "Продолжить обучение" : "Начать обучение бесплатно"}
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="container mx-auto px-4 -mt-16 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {stats.map((stat, index) => (
               <div
-                className={`w-16 h-16 ${feature.color} rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-current/20 group-hover:scale-110 transition-transform duration-500`}
+                key={index}
+                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-8 rounded-[2.5rem] border border-white dark:border-slate-800 shadow-xl text-center group hover:border-blue-200 transition-colors"
               >
-                {feature.icon}
+                <div className="text-5xl font-black text-blue-600 mb-2 tracking-tighter group-hover:scale-110 transition-transform">
+                  {stat.number}
+                </div>
+                <div className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-1">
+                  {stat.label}
+                </div>
+                <div className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+                  {stat.description}
+                </div>
               </div>
-              <h4 className="text-xl font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                {feature.title}
-                <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-              </h4>
-              <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                {feature.description}
+            ))}
+          </div>
+        </section>
+
+        <section className="container mx-auto px-4 py-32">
+          <div className="text-center mb-20">
+            <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
+              Почему выбирают нас?
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 font-medium">
+              Мы создали идеальные условия для твоего старта в разработке
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className="group p-8 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-500/50 hover:shadow-2xl transition-all duration-300"
+              >
+                <div
+                  className={`w-16 h-16 ${feature.color} rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg group-hover:scale-110 transition-transform duration-500`}
+                >
+                  {feature.icon}
+                </div>
+                <h4 className="text-xl font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2">
+                  {feature.title}
+                </h4>
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      {!session && (
+        <section className="container mx-auto px-4 py-20">
+          <div className="relative bg-gradient-to-r from-blue-600 to-indigo-700 rounded-[3rem] p-12 md:p-20 overflow-hidden shadow-2xl shadow-blue-500/40">
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-white/10 skew-x-12 translate-x-1/2" />
+            <div className="relative z-10 max-w-2xl text-white">
+              <h3 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
+                Готов написать свой <br /> первый Hello World?
+              </h3>
+              <p className="text-xl text-blue-100 mb-10 font-medium leading-relaxed">
+                Присоединяйся к нашему комьюнити. Начни учиться сегодня, чтобы
+                завтра оффер нашел тебя сам.
               </p>
+              <Link href="/login">
+                <Button
+                  size="lg"
+                  className="bg-white text-blue-600 hover:bg-blue-50 font-black text-lg px-10 h-16 rounded-2xl shadow-xl transition-all active:scale-95"
+                >
+                  Зарегистрироваться сейчас
+                </Button>
+              </Link>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8 text-slate-400 font-medium">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8 text-slate-400 font-bold uppercase tracking-widest text-[10px]">
           <div className="flex items-center gap-2">
-            <Code className="w-6 h-6 text-blue-600" />
-            <span className="text-xl font-black text-slate-800 dark:text-white uppercase">
+            <Code className="w-5 h-5 text-blue-600" />
+            <span className="text-lg font-black text-slate-800 dark:text-white tracking-tight">
               CodeLearn
             </span>
           </div>
           <p>© {new Date().getFullYear()} CodeLearn. Все права защищены.</p>
-          <div className="flex gap-6 text-sm font-bold">
-            <a href="#" className="hover:text-blue-600">
+          <div className="flex gap-6 text-slate-400 font-bold text-sm">
+            <a href="#" className="hover:text-blue-600 transition-colors">
               Политика
             </a>
-            <a href="#" className="hover:text-blue-600">
+            <a href="#" className="hover:text-blue-600 transition-colors">
               Условия
             </a>
           </div>

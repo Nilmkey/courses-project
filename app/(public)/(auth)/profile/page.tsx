@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useTheme } from "next-themes";
+import { ExtendedUser } from "@/backend/auth";
 import { authClient } from "@/lib/auth-client";
 import {
   Code,
@@ -28,7 +30,15 @@ interface CourseProgress {
   percentage: number;
 }
 
-const coursesInfo: Record<string, any> = {
+interface CourseInfo {
+  title: string;
+  gradient: string;
+  text: string;
+  shadow: string;
+  icon: string;
+}
+
+const coursesInfo: Record<string, CourseInfo> = {
   html: {
     title: "HTML Основы",
     gradient: "from-orange-400 via-orange-500 to-amber-500",
@@ -75,26 +85,41 @@ const coursesInfo: Record<string, any> = {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
+
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
   const [progress, setProgress] = useState<Record<string, CourseProgress>>({});
-  const [streak, setStreak] = useState<number>(0);
+
+  const user = session?.user as unknown as ExtendedUser | undefined;
 
   useEffect(() => {
-    setMounted(true);
+    const frame = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
     if (!isPending && !session) {
       router.push("/login");
       return;
     }
+
     if (session?.user?.email) {
       const savedProgress = localStorage.getItem(
         `progress_${session.user.email}`,
       );
       if (savedProgress) {
-        const parsed = JSON.parse(savedProgress);
-        setProgress(parsed.courses || {});
-        setStreak(parsed.streak || 0);
+        try {
+          const parsed = JSON.parse(savedProgress);
+
+          setTimeout(() => {
+            setProgress(parsed.courses || {});
+          }, 0);
+        } catch (e) {
+          console.error("Error parsing progress", e);
+        }
       }
     }
   }, [session, isPending, router]);
@@ -114,7 +139,7 @@ export default function ProfilePage() {
 
   if (!session) return null;
 
-  const userRole = (session.user as any).role || "user";
+  const userRole = (session.user as { role?: string }).role || "user";
   const startedCourses = Object.keys(progress).length;
   const completedCourses = Object.values(progress).filter(
     (p) => p.percentage === 100,
@@ -199,9 +224,11 @@ export default function ProfilePage() {
               <div className="relative p-1.5 rounded-full bg-white dark:bg-slate-900 shadow-xl shadow-indigo-900/10">
                 <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-indigo-100 dark:border-slate-700 overflow-hidden">
                   {session.user.image ? (
-                    <img
+                    <Image
                       src={session.user.image}
                       alt="User"
+                      width={112}
+                      height={112}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -239,7 +266,7 @@ export default function ProfilePage() {
             icon={<Flame size={22} className="text-orange-500" />}
             bg="bg-orange-50 dark:bg-orange-500/10"
             border="border-orange-100 dark:border-orange-500/20"
-            value={streak}
+            value={user?.streak || 0}
             label="Дней подряд"
             suffix="🔥"
           />
@@ -367,13 +394,30 @@ export default function ProfilePage() {
           <p className="text-slate-400 font-medium">
             © {new Date().getFullYear()} CodeLearn. Все права защищены.
           </p>
+          <div className="flex gap-6 text-slate-400 font-bold text-sm">
+            <a href="#" className="hover:text-blue-600 transition-colors">
+              Политика
+            </a>
+            <a href="#" className="hover:text-blue-600 transition-colors">
+              Условия
+            </a>
+          </div>
         </div>
       </footer>
     </div>
   );
 }
 
-function StatCard({ icon, bg, border, value, label, suffix }: any) {
+interface StatCardProps {
+  icon: React.ReactNode;
+  bg: string;
+  border: string;
+  value: string | number;
+  label: string;
+  suffix?: string;
+}
+
+function StatCard({ icon, bg, border, value, label, suffix }: StatCardProps) {
   return (
     <div
       className={`flex flex-col items-center justify-center p-5 rounded-2xl bg-white dark:bg-slate-900 border ${border} shadow-sm transition-all duration-300 hover:-translate-y-1 group`}
