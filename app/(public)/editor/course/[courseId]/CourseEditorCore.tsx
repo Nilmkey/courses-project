@@ -18,7 +18,6 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Section, SectionLesson } from "@/types/types";
-import { useCourseConstructor } from "@/hooks/useCourseConstructor";
 import { SectionItem } from "./SectionItem";
 import { AddSectionButton } from "./AddSectionButton";
 import { useSection } from "@/hooks/useSection";
@@ -29,12 +28,14 @@ interface CourseEditorCoreProps {
   onSave?: (sections: Section[]) => void;
 }
 
-export function CourseEditorCore({ courseId, onSave }: CourseEditorCoreProps) {
+export function CourseEditorCore({
+  initialSections,
+  courseId,
+  onSave,
+}: CourseEditorCoreProps) {
   const { sections, setSections } = useSection();
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
-
-  const constructor = useCourseConstructor();
 
   // Sensors для DnD
   const sensors = useSensors(
@@ -58,7 +59,7 @@ export function CourseEditorCore({ courseId, onSave }: CourseEditorCoreProps) {
           const oldIndex = prev.findIndex((s) => s.id === active.id);
           const newIndex = prev.findIndex((s) => s.id === over.id);
 
-          if (oldIndex === -1 || newIndex === -1) return prev;
+          // if (oldIndex === -1 || newIndex === -1) return prev;
 
           return arrayMove(prev, oldIndex, newIndex);
         });
@@ -69,49 +70,70 @@ export function CourseEditorCore({ courseId, onSave }: CourseEditorCoreProps) {
     [setSections],
   );
 
-  // ========== Обработчики CRUD ==========
+  // ========== Обработчики CRUD для секций ==========
 
-  const handleAddSection = () => {
+  const handleAddSection = useCallback(() => {
     setSections((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
-        title: "новая секция",
+        title: "Новая секция",
         lessons: [],
       },
     ]);
-  };
+  }, [setSections]);
 
   const handleRemoveSection = useCallback(
     (sectionId: string) => {
-      setSections((prev) => constructor.removeSection(prev, sectionId));
+      setSections((prev) => prev.filter((section) => section.id !== sectionId));
     },
-    [constructor],
+    [setSections],
   );
 
   const handleTitleChange = useCallback(
     (sectionId: string, title: string) => {
       setSections((prev) =>
-        constructor.updateSectionTitle(prev, sectionId, title),
+        prev.map((section) =>
+          section.id === sectionId ? { ...section, title } : section,
+        ),
       );
     },
-    [constructor],
+    [setSections],
   );
+
+  // ========== Обработчики CRUD для уроков ==========
 
   const handleLessonChange = useCallback(
     (sectionId: string, lessons: SectionLesson[]) => {
       setSections((prev) =>
-        constructor.updateSectionLessons(prev, sectionId, lessons),
+        prev.map((section) =>
+          section.id === sectionId ? { ...section, lessons } : section,
+        ),
       );
     },
-    [constructor],
+    [setSections],
   );
 
   const handleAddLesson = useCallback(
     (sectionId: string) => {
-      setSections((prev) => constructor.addLesson(prev, sectionId));
+      setSections((prev) =>
+        prev.map((section) =>
+          section.id === sectionId
+            ? {
+                ...section,
+                lessons: [
+                  ...section.lessons,
+                  {
+                    lesson_id: crypto.randomUUID(),
+                    title: "Новый урок",
+                  },
+                ],
+              }
+            : section,
+        ),
+      );
     },
-    [constructor],
+    [setSections],
   );
 
   const handleEditLesson = useCallback((lessonId: string) => {
@@ -121,10 +143,19 @@ export function CourseEditorCore({ courseId, onSave }: CourseEditorCoreProps) {
   const handleRemoveLesson = useCallback(
     (sectionId: string, lessonId: string) => {
       setSections((prev) =>
-        constructor.removeLesson(prev, sectionId, lessonId),
+        prev.map((section) =>
+          section.id === sectionId
+            ? {
+                ...section,
+                lessons: section.lessons.filter(
+                  (lesson) => lesson.lesson_id !== lessonId,
+                ),
+              }
+            : section,
+        ),
       );
     },
-    [constructor],
+    [setSections],
   );
 
   // ========== Вычисляемые значения ==========

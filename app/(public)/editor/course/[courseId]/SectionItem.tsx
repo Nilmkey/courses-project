@@ -255,7 +255,7 @@ export const SectionItem = memo(function SectionItem({
               {section.lessons.length > 0 ? (
                 section.lessons.map((lesson) => (
                   <LessonItem
-                    key={lesson.lesson_id}
+                    key={`${section.id}-lesson-${lesson.lesson_id}`}
                     lesson={lesson}
                     sectionId={section.id}
                     onEdit={handleEditLesson}
