@@ -1,24 +1,36 @@
 "use client";
 
-import { ResultContext } from "@/contexts/ResultContext";
 import { useState } from "react";
 import { ConstructorContext } from "@/contexts/ConstructorContext";
-import { CourseBlock } from "@/types/types";
+import { CourseBlock, Section } from "@/types/types";
+import { SectionContext } from "@/contexts/SectionContext";
 
 export default function Provider({ children }: { children: React.ReactNode }) {
-  const [result, setResult] = useState("");
   const [blocks, setBlocks] = useState<CourseBlock[]>([]);
+  const [sections, setSections] = useState<Section[]>([
+    {
+      id: "section-1",
+      title: "Введение",
+      lessons: [
+        { lesson_id: "lesson-1", title: "Приветствие" },
+        { lesson_id: "lesson-2", title: "Описание курса" },
+      ],
+    },
+    {
+      id: "section-2",
+      title: "Основы",
+      lessons: [
+        { lesson_id: "lesson-3", title: "Базовые концепции" },
+        { lesson_id: "lesson-4", title: "Практика" },
+      ],
+    },
+  ]);
 
   return (
-    <ResultContext.Provider
-      value={{
-        result,
-        setResult,
-      }}
-    >
-      <ConstructorContext.Provider value={{ blocks, setBlocks }}>
+    <ConstructorContext.Provider value={{ blocks, setBlocks }}>
+      <SectionContext.Provider value={{ sections, setSections }}>
         {children}
-      </ConstructorContext.Provider>
-    </ResultContext.Provider>
+      </SectionContext.Provider>
+    </ConstructorContext.Provider>
   );
 }

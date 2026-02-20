@@ -43,6 +43,40 @@ export type QuizQuestion =
   | MultipleChoiceQuestion
   | TextQuestion;
 
+export interface SectionLesson {
+  lesson_id: string;
+  title: string;
+}
+
+export interface Section {
+  id: string;
+  title: string;
+  lessons: SectionLesson[];
+}
+
+export interface CourseMetadata {
+  _id: string;
+  title: string;
+  usersCount: number;
+  sectionIds: string[];
+}
+
+export interface SectionEditorProps {
+  courseId: string;
+}
+
+export interface SectionItemProps {
+  section: Section;
+  onSectionTitleChange: (id: string, title: string) => void;
+  onLessonChange: (sectionId: string, lessons: SectionLesson[]) => void;
+  onRemoveSection: (id: string) => void;
+}
+
+export interface LessonItemProps {
+  lesson: SectionLesson;
+  sectionId: string;
+  onLessonChange: (lessonId: string, title: string) => void;
+  onRemoveLesson: (lessonId: string) => void;
 // --- 5. ИНТЕРФЕЙСЫ ДЛЯ ТИПИЗАЦИИ (для фронтенда) ---
 export type CourseLevel = "beginner" | "intermediate" | "advanced";
 
