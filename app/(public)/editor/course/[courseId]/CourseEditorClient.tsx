@@ -1,16 +1,46 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { Section } from "@/types/types";
 import { useSection } from "@/hooks/useSection";
+import { db } from "@/lib/db";
+import debounce from "lodash/debounce";
+import { useParams } from "next/navigation";
 
-interface CourseEditorClientProps {
-  courseId: string;
-}
+export function CourseEditorClient() {
+  const { courseId } = useParams<{ courseId: string }>();
+  const { sections, setSections } = useSection();
+  const [isLoaded, setIsLoaded] = useState(false);
 
-export function CourseEditorClient({ courseId }: CourseEditorClientProps) {
-  const { sections } = useSection();
+  useEffect(() => {
+    db.courses
+      .get(courseId)
+      .then((lesson) => setSections(lesson?.sections ?? []))
+      .catch(console.error)
+      .finally(() => setIsLoaded(true));
+  }, [courseId, setSections]);
+
+  const debouncedSave = useMemo(
+    () =>
+      debounce(async (payload: { sections: typeof sections; now: number }) => {
+        await db.courses.put({
+          courseId,
+          sections: payload.sections,
+          updatedAt: payload.now,
+        });
+      }, 500),
+    [courseId],
+  );
+
+  useEffect(() => {
+    return () => debouncedSave.cancel();
+  }, [debouncedSave]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    debouncedSave({ sections, now: Date.now() });
+  }, [sections, isLoaded, debouncedSave]);
 
   const handleSave = useCallback(
     async (updatedSections: Section[]) => {
