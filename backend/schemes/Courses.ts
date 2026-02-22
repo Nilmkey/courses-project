@@ -1,8 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 
-// --- 1. BLOCK (Блок контента - теперь это ВЛОЖЕННАЯ СХЕМА) ---
-// Мы больше не экспортируем модель Block, так как это не отдельная таблица.
-// И мы удалили `lesson_id`, так как блок и так лежит внутри урока.
 const BlockSchema = new Schema(
   {
     title: { type: String, required: true },
@@ -17,15 +14,12 @@ const BlockSchema = new Schema(
       url: { type: String },
       questions: [{ type: Schema.Types.Mixed }],
     },
-    // УБРАЛИ required: true, чтобы избежать ошибки валидации Mongoose
-    // при создании урока (контроллер сам подставит индекс)
+
     order_index: { type: Number },
   },
-  { _id: true, timestamps: true }, // Оставляем _id блокам для удобства редактирования на фронте
+  { _id: true, timestamps: true },
 );
 
-// --- 2. LESSON (Урок) ---
-// Ссылается на Section
 const LessonSchema = new Schema(
   {
     section_id: {
@@ -37,8 +31,9 @@ const LessonSchema = new Schema(
     title: { type: String, required: true },
     slug: { type: String, required: true },
     is_free: { type: Boolean, default: false },
+    //опубликована ли урок в общий доступ или он остается черновиком
+    isDraft: { type: Boolean, default: false, required: true },
     order_index: { type: Number, required: true },
-    // ВОТ ОНО: Блоки теперь живут массивом прямо внутри урока
     content_blocks: [BlockSchema],
   },
   { timestamps: true },
@@ -46,8 +41,6 @@ const LessonSchema = new Schema(
 
 export const Lesson = mongoose.model("Lesson", LessonSchema);
 
-// --- 3. SECTION (Секция/Модуль) ---
-// Ссылается на Course
 const SectionSchema = new Schema(
   {
     course_id: {
@@ -58,18 +51,23 @@ const SectionSchema = new Schema(
     },
     title: { type: String, required: true },
     order_index: { type: Number, required: true },
+    //опубликованеа ли секция в общий доступ или он остается черновиком
+    isDraft: { type: Boolean, default: true, required: true },
+    //я тут добавил массив с уроками. если нужно получить title урока используй .populate()
+    lessons: [{ type: Schema.Types.ObjectId, ref: "Lesson" }],
   },
   { timestamps: true },
 );
 
 export const Section = mongoose.model("Section", SectionSchema);
 
-// --- 4. COURSE (Курс) ---
-// Верхний уровень
+//цена, isPublished
 const CourseSchema = new Schema(
   {
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true, index: true },
+    price: { type: Number, required: true, default: 0 },
+    isPublished: { type: Boolean, required: true, default: false },
     description: { type: String },
     thumbnail: { type: String },
     author_id: { type: Schema.Types.ObjectId, ref: "User", index: true },
@@ -83,5 +81,3 @@ const CourseSchema = new Schema(
 );
 
 export const Course = mongoose.model("Course", CourseSchema);
-
-
