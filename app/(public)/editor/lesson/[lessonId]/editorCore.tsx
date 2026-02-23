@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -23,14 +23,14 @@ import { AddItemButton } from "@/components/ui/addItemButton";
 import { useConstructor } from "@/hooks/useConstructor";
 import { EditorWindow } from "@/components/editor/EditorWindow";
 
-export default function CourseEditor() {
+export default function Editor() {
   const { blocks, setBlocks } = useConstructor();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 }, // Чтобы клики по кнопкам не считались началом тяги
+      activationConstraint: { distance: 8 },
     }),
   );
 
@@ -110,7 +110,7 @@ export default function CourseEditor() {
 
       {editingId && (
         <EditorWindow
-          isOpen={!!editingId} // Превращаем ID в boolean
+          isOpen={!!editingId}
           onClose={handleCloseModal}
           id={editingId}
         />

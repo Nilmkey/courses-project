@@ -42,3 +42,116 @@ export type QuizQuestion =
   | SingleChoiceQuestion
   | MultipleChoiceQuestion
   | TextQuestion;
+
+export interface SectionLesson {
+  lesson_id: string;
+  title: string;
+}
+
+export interface Section {
+  id: string;
+  title: string;
+  lessons: SectionLesson[];
+}
+
+export interface CourseMetadata {
+  _id: string;
+  title: string;
+  usersCount: number;
+  sectionIds: string[];
+}
+
+export interface SectionEditorProps {
+  courseId: string;
+}
+
+export interface SectionItemProps {
+  section: Section;
+  onSectionTitleChange: (id: string, title: string) => void;
+  onLessonChange: (sectionId: string, lessons: SectionLesson[]) => void;
+  onRemoveSection: (id: string) => void;
+}
+
+export interface LessonItemProps {
+  lesson: SectionLesson;
+  sectionId: string;
+  onLessonChange: (lessonId: string, title: string) => void;
+  onRemoveLesson: (lessonId: string) => void;
+// --- 5. ИНТЕРФЕЙСЫ ДЛЯ ТИПИЗАЦИИ (для фронтенда) ---
+export type CourseLevel = "beginner" | "intermediate" | "advanced";
+
+// Структура одного вопроса в тесте
+export interface IQuizQuestion {
+  id: string;
+  questionText: string;
+  options: string[]; // Список вариантов ответов
+  correctAnswerIndex: number; // Индекс правильного ответа
+  explanation?: string; // Необязательное пояснение
+}
+export interface IBaseBlock {
+  _id: string;
+  title: string;
+  order_index?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ITextBlock extends IBaseBlock {
+  type: "text";
+  content: {
+    text: string; // Для текстового блока текст обязателен
+  };
+}
+
+export interface IVideoBlock extends IBaseBlock {
+  type: "video";
+  content: {
+    titleVideo?: string;
+    url: string; // Для видео URL обязателен
+  };
+}
+
+export interface IQuizBlock extends IBaseBlock {
+  type: "quiz";
+  content: {
+    questions: IQuizQuestion[]; // Массив строго типизированных вопросов
+  };
+}
+
+// Финальный тип блока
+export type IBlock = ITextBlock | IVideoBlock | IQuizBlock;
+export interface ILesson {
+  _id: string;
+  section_id: string; // В интерфейсах для фронта обычно оставляем string
+  title: string;
+  slug: string;
+  is_free: boolean;
+  order_index: number;
+  content_blocks: IBlock[]; // Использует наше строгое объединение выше
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ISection {
+  _id: string;
+  course_id: string;
+  title: string;
+  order_index: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ICourse {
+  _id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  thumbnail?: string;
+  author_id?: string;
+  level: CourseLevel;
+  createdAt: string;
+  updatedAt: string;
+  iconName: string;
+  status: string;
+  type: string;
+}
