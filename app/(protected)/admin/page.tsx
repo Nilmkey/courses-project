@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import {
@@ -17,8 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { courseApi } from "@/lib/api-service";
+import { useToast } from "@/hooks/useToast";
 
-// Добавляем интерфейс для типизации курса
 interface AdminCourse {
   _id: string;
   title: string;
@@ -28,52 +28,49 @@ interface AdminCourse {
 
 export default function AdminDashboard() {
   const { setTheme, resolvedTheme } = useTheme();
+  const toast = useToast();
   const [mounted, setMounted] = useState(false);
-  // Заменяем any на AdminCourse[]
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setMounted(true);
-    loadCourses();
-  }, []);
-
-  const loadCourses = async () => {
+  const loadCourses = useCallback(async () => {
     try {
       setLoading(true);
       const data = await courseApi.getAll();
       setCourses(data || []);
     } catch (err) {
-      console.error("Ошибка загрузки:", err);
+      toast.error("Ошибка при загрузке курсов");
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    setMounted(true);
+    loadCourses();
+  }, [loadCourses]);
 
   const deleteCourse = async (id: string) => {
     if (confirm("Удалить этот курс навсегда?")) {
-      try {
-        await courseApi.delete(id);
-        // Используем типизированный стейт без any
-        setCourses(courses.filter((c) => c._id !== id));
-      } catch {
-        // Убрали неиспользуемую переменную err
-        alert("Ошибка при удалении");
-      }
+      const deletePromise = courseApi.delete(id).then(() => {
+        setCourses((prev) => prev.filter((c) => c._id !== id));
+      });
+
+      toast.promise(deletePromise, {
+        loading: "Удаление курса...",
+        success: "Курс успешно удален",
+        error: "Не удалось удалить курс",
+      });
     }
   };
 
   if (!mounted) return null;
 
   return (
-    /* Добавляем flex и min-h-screen для управления высотой */
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      {/* --- Хедер --- */}
-      {/* --- Хедер --- */}
       <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-6">
-            {/* Логотип теперь обернут в Link и работает как кнопка "На главную" */}
             <Link
               href="/"
               className="flex items-center gap-2 group cursor-pointer"
@@ -111,7 +108,6 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      {/* --- Основной контент (flex-1 заставляет этот блок занимать все свободное место) --- */}
       <main className="flex-1 container mx-auto px-4 py-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
           <div className="flex items-center gap-3">
@@ -143,7 +139,6 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             ) : (
-              // Убрали any из map
               courses.map((course) => (
                 <Card
                   key={course._id}
@@ -184,7 +179,6 @@ export default function AdminDashboard() {
         )}
       </main>
 
-      {/* --- Футер (теперь всегда внизу) --- */}
       <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 transition-colors">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-400 text-xs font-bold uppercase tracking-widest">
           <p>© {new Date().getFullYear()} CodeLearn Admin Dashboard</p>
