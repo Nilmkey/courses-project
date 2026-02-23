@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import {
@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { courseApi } from "@/lib/api-service";
+import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 
 interface AdminCourse {
@@ -28,46 +29,61 @@ interface AdminCourse {
 
 export default function AdminDashboard() {
   const { setTheme, resolvedTheme } = useTheme();
-  const toast = useToast();
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
-  const loadCourses = useCallback(async () => {
+  useEffect(() => {
+    setMounted(true);
+    loadCourses();
+  }, []);
+
+  const loadCourses = async () => {
     try {
       setLoading(true);
       const data = await courseApi.getAll();
       setCourses(data || []);
     } catch (err) {
-      toast.error("Ошибка при загрузке курсов");
+      console.error("Ошибка загрузки:", err);
+      toast.error("Не удалось загрузить курсы. Попробуйте позже.");
     } finally {
       setLoading(false);
     }
-  }, [toast]);
-
-  useEffect(() => {
-    setMounted(true);
-    loadCourses();
-  }, [loadCourses]);
+  };
 
   const deleteCourse = async (id: string) => {
-    if (confirm("Удалить этот курс навсегда?")) {
-      const deletePromise = courseApi.delete(id).then(() => {
-        setCourses((prev) => prev.filter((c) => c._id !== id));
-      });
-
-      toast.promise(deletePromise, {
-        loading: "Удаление курса...",
-        success: "Курс успешно удален",
-        error: "Не удалось удалить курс",
-      });
-    }
+    toast.confirm("Удалить этот курс навсегда?", async () => {
+      try {
+        await courseApi.delete(id);
+        setCourses(courses.filter((c) => c._id !== id));
+        toast.success("Курс успешно удалён.");
+      } catch {
+        toast.error("Ошибка при удалении.");
+      }
+    });
   };
 
   if (!mounted) return null;
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
+            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+            border:
+              resolvedTheme === "dark"
+                ? "1px solid #1e293b"
+                : "1px solid #e2e8f0",
+            borderRadius: "0.75rem",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+          },
+        }}
+      />
+
       <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-6">

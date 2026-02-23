@@ -9,12 +9,14 @@ export const useToast = () => {
   const success = (message: string) => {
     toast.success(message, {
       className: baseClassName,
+      duration: 2000,
     });
   };
 
   const error = (message: string) => {
     toast.error(message, {
       className: baseClassName,
+      duration: 2000,
     });
   };
 
