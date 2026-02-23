@@ -8,6 +8,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/useToast";
 import {
   Code,
   AlertCircle,
@@ -16,18 +17,19 @@ import {
   Mail,
   Lock,
   User as UserIcon,
-  CheckCircle2,
   Eye,
   EyeOff,
   Sun,
   Moon,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Toaster } from "react-hot-toast";
 
 export default function AuthPage() {
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const toast = useToast();
 
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const [email, setEmail] = useState<string>("");
@@ -36,19 +38,17 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-  const [success, setSuccess] = useState<string>("");
 
-   useEffect(() => {
-     const frame = requestAnimationFrame(() => {
-       setMounted(true);
-     });
-     return () => cancelAnimationFrame(frame);
-   }, []);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
     setLoading(true);
 
     if (isLogin) {
@@ -63,7 +63,7 @@ export default function AuthPage() {
           onResponse: () => setLoading(false),
           onError: (ctx) => setError(ctx.error.message || "Ошибка входа"),
           onSuccess: () => {
-            setSuccess("Вход выполнен успешно!");
+            toast.success("Вход выполнен успешно!");
             setTimeout(() => router.push("/"), 1000);
           },
         },
@@ -80,7 +80,7 @@ export default function AuthPage() {
           onResponse: () => setLoading(false),
           onError: (ctx) => setError(ctx.error.message || "Ошибка регистрации"),
           onSuccess: () => {
-            setSuccess("Регистрация успешна! Теперь вы можете войти.");
+            toast.success("Регистрация успешна! Теперь вы можете войти.");
             setIsLogin(true);
           },
         },
@@ -92,6 +92,7 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 flex flex-col transition-colors duration-300 relative overflow-hidden">
+      <Toaster />
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/40 dark:bg-indigo-900/20 rounded-full blur-[120px] -z-10" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-200/30 dark:bg-blue-900/10 rounded-full blur-[120px] -z-10" />
 
@@ -225,15 +226,6 @@ export default function AuthPage() {
                 </Alert>
               )}
 
-              {success && (
-                <Alert className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <AlertDescription className="font-medium ml-2">
-                    {success}
-                  </AlertDescription>
-                </Alert>
-              )}
-
               <Button
                 type="submit"
                 className="w-full h-14 bg-[#3b5bdb] hover:bg-[#2f4bbf] text-white text-lg font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] disabled:opacity-70"
@@ -263,7 +255,6 @@ export default function AuthPage() {
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setError("");
-                  setSuccess("");
                 }}
                 className="text-slate-500 dark:text-slate-400 font-medium hover:text-[#3b5bdb] transition-colors"
               >

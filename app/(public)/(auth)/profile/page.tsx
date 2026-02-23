@@ -268,7 +268,6 @@ export default function ProfilePage() {
             border="border-orange-100 dark:border-orange-500/20"
             value={user?.streak || 0}
             label="Дней подряд"
-            suffix="🔥"
           />
           <StatCard
             icon={<Target size={22} className="text-[#3b5bdb]" />}
