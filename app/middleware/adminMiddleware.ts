@@ -14,7 +14,9 @@ export const adminOnly = async (
 
   // Если сессии нет или роль не "admin" (или "teacher", смотря как ты назовешь)
   if (!session || session.user.role !== "admin") {
-    return res.status(403).json({ message: "Доступ запрещен. Требуются права администратора." });
+    return res
+      .status(403)
+      .json({ message: "Доступ запрещен. Требуются права администратора." });
   }
 
   // Если всё ок — идем дальше

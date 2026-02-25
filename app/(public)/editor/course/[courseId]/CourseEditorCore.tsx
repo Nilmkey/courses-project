@@ -21,6 +21,7 @@ import { Section, SectionLesson } from "@/types/types";
 import { SectionItem } from "./SectionItem";
 import { AddSectionButton } from "./AddSectionButton";
 import { useSection } from "@/hooks/useSection";
+import { useRouter } from "next/navigation";
 
 interface CourseEditorCoreProps {
   initialSections: Section[];
@@ -28,16 +29,12 @@ interface CourseEditorCoreProps {
   onSave?: (sections: Section[]) => void;
 }
 
-export function CourseEditorCore({
-  initialSections,
-  courseId,
-  onSave,
-}: CourseEditorCoreProps) {
+export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
   const { sections, setSections } = useSection();
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const router = useRouter();
 
-  // Sensors для DnD
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -70,18 +67,18 @@ export function CourseEditorCore({
     [setSections],
   );
 
-  // ========== Обработчики CRUD для секций ==========
-
   const handleAddSection = useCallback(() => {
     setSections((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
         title: "Новая секция",
+        order_index: sections.length + 1,
+        isDraft: true,
         lessons: [],
       },
     ]);
-  }, [setSections]);
+  }, [setSections, sections]);
 
   const handleRemoveSection = useCallback(
     (sectionId: string) => {
@@ -100,8 +97,6 @@ export function CourseEditorCore({
     },
     [setSections],
   );
-
-  // ========== Обработчики CRUD для уроков ==========
 
   const handleLessonChange = useCallback(
     (sectionId: string, lessons: SectionLesson[]) => {
@@ -136,9 +131,12 @@ export function CourseEditorCore({
     [setSections],
   );
 
-  const handleEditLesson = useCallback((lessonId: string) => {
-    setEditingLessonId(lessonId);
-  }, []);
+  const handleEditLesson = useCallback(
+    (lessonId: string) => {
+      router.push(`/editor/lesson/${lessonId}`);
+    },
+    [router],
+  );
 
   const handleRemoveLesson = useCallback(
     (sectionId: string, lessonId: string) => {

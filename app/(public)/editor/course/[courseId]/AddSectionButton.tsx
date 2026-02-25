@@ -6,10 +6,6 @@ interface AddSectionButtonProps {
   onAdd: () => void;
 }
 
-/**
- * Кнопка добавления новой секции
- * Минималистичный дизайн в стиле additemButton
- */
 export function AddSectionButton({ onAdd }: AddSectionButtonProps) {
   return (
     <button
@@ -23,13 +19,15 @@ export function AddSectionButton({ onAdd }: AddSectionButtonProps) {
         group flex items-center justify-center gap-3
       "
     >
-      <div className="
+      <div
+        className="
         p-3 bg-white rounded-full 
         shadow-sm border border-slate-200 
         text-slate-400 
         group-hover:text-blue-500 group-hover:scale-110 
         transition-all duration-200
-      ">
+      "
+      >
         <Plus size={24} />
       </div>
       <span className="text-sm font-medium text-slate-600 group-hover:text-slate-800">

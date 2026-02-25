@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -27,6 +27,7 @@ export default function Editor() {
   const { blocks, setBlocks } = useConstructor();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -59,11 +60,55 @@ export default function Editor() {
   const handleCloseModal = () => {
     setEditingId(null);
   };
+
   const activeBlock = blocks.find((b) => b.id === activeId);
+
+  // ========== Сохранение ==========
+
+  const handleSave = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      // TODO: реализовать вызов эндпоинта для сохранения урока
+      // await fetch(`/api/lessons/${lessonId}`, {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ blocks }),
+      // });
+      console.log("Saving lesson blocks:", blocks);
+    } catch (error) {
+      console.error("Failed to save lesson:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [blocks]);
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-slate-800">Редактор курса</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Редактор урока</h1>
+          <p className="text-slate-500 mt-1">
+            Перетаскивайте блоки для изменения порядка
+          </p>
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className={`
+            px-6 py-3 rounded-lg font-medium transition-all
+            shadow-sm hover:shadow-md
+            ${
+              isSaving
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }
+            text-white
+          `}
+        >
+          {isSaving ? "Сохранение..." : "Сохранить"}
+        </button>
+      </div>
 
       <DndContext
         sensors={sensors}

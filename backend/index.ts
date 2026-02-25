@@ -5,8 +5,8 @@ import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 
 import { auth } from "./auth";
-
 import router from "./routers/CoursesRouter";
+import { errorHandler, createError } from "./middleware/errorHandler";
 
 dotenv.config();
 
@@ -15,7 +15,7 @@ const PORT: number = parseInt(process.env.PORT || "7777");
 
 const app = express();
 
-// 1. Настройка CORS (Должна быть ПЕРВОЙ)
+// 1. CORS
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -25,19 +25,26 @@ app.use(
   }),
 );
 
-// 2. Better Auth обработчик
-// Используем '*', чтобы Better Auth сам разбирал пути внутри /api/auth
+// 2. Better Auth
 app.all("/api/auth/{*path}", toNodeHandler(auth));
 
-// 3. Middlewares для обычных роутов
+// 3. Middlewares
 app.use(express.json());
 
-app.use("/api/courses", router); // CRUD курсов
+// 4. Роуты
+app.use("/api/courses", router);
 
-// Функция запуска
+// 5. ErrorHandler (после всех роутов!)
+app.use(errorHandler);
+
+// 6. Обработка 404
+app.use((req, res, next) => {
+  next(createError.notFound(`Маршрут ${req.method} ${req.path} не найден`));
+});
+
+// Запуск
 const startApp = async () => {
   try {
-    // Сначала база, потом сервер — так надежнее
     await mongoose.connect(DB_URL);
     console.log("✅ БАЗА ДАННЫХ ПОДКЛЮЧЕНА");
 
@@ -50,7 +57,7 @@ const startApp = async () => {
     if (e instanceof Error) {
       console.log(e.message);
     }
-    process.exit(1); // Если база не в сети, лучше упасть сразу
+    process.exit(1);
   }
 };
 

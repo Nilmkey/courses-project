@@ -1,8 +1,9 @@
 import Dexie, { type EntityTable } from "dexie";
-import { CourseBlock, Section } from "@/types/types";
+import { CourseBlock, infoLesson, Section } from "@/types/types";
 
 export interface LessonBlocks {
   lessonId: string;
+  lessonInfo: infoLesson;
   blocks: CourseBlock[];
   updatedAt: number;
 }
@@ -20,7 +21,7 @@ type CourseDB = Dexie & {
 
 const db = new Dexie("CourseConstructor") as CourseDB;
 
-db.version(1).stores({
+db.version(3).stores({
   lessons: "lessonId, updatedAt",
   courses: "courseId, updatedAt",
 });

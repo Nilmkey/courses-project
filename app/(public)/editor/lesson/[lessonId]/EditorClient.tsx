@@ -17,11 +17,19 @@ export default function DndPage() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     db.lessons
       .get(lessonId)
-      .then((lesson) => setBlocks(lesson?.blocks ?? []))
-      .catch(console.error)
-      .finally(() => setIsLoaded(true));
+      .then((lesson) => {
+        if (!cancelled) {
+          setBlocks(lesson?.blocks ?? []);
+          setIsLoaded(true);
+        }
+      })
+      .catch(console.error);
+    return () => {
+      cancelled = true;
+    };
   }, [lessonId, setBlocks]);
 
   const debouncedSave = useMemo(

@@ -14,6 +14,13 @@ export interface CourseBlock {
   content: BlockContent;
 }
 
+export interface infoLesson {
+  title: string;
+  isDraft: boolean;
+  order_index: number;
+  sectionId: string;
+}
+
 export type QuestionType = "single" | "multiple" | "text";
 
 interface BaseQuestion {
@@ -44,13 +51,16 @@ export type QuizQuestion =
   | TextQuestion;
 
 export interface SectionLesson {
-  lesson_id: string;
   title: string;
+  lesson_id: string;
 }
 
 export interface Section {
   id: string;
   title: string;
+  order_index: number;
+  isDraft: boolean;
+  courseId: string;
   lessons: SectionLesson[];
 }
 
@@ -77,10 +87,10 @@ export interface LessonItemProps {
   sectionId: string;
   onLessonChange: (lessonId: string, title: string) => void;
   onRemoveLesson: (lessonId: string) => void;
-// --- 5. ИНТЕРФЕЙСЫ ДЛЯ ТИПИЗАЦИИ (для фронтенда) ---
+}
+
 export type CourseLevel = "beginner" | "intermediate" | "advanced";
 
-// Структура одного вопроса в тесте
 export interface IQuizQuestion {
   id: string;
   questionText: string;
@@ -137,6 +147,7 @@ export interface ISection {
   course_id: string;
   title: string;
   order_index: number;
+  isDraft: boolean;
   createdAt: string;
   updatedAt: string;
 }

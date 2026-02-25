@@ -23,11 +23,12 @@ import {
   ChevronDown,
   ChevronRight,
   Plus,
-  Pencil,
   Trash2,
+  FileText,
 } from "lucide-react";
 import { Section, SectionLesson } from "@/types/types";
 import { LessonItem } from "./LessonItem";
+import { useConstructor } from "@/hooks/useConstructor";
 
 export interface SectionItemProps {
   section: Section;
@@ -56,12 +57,13 @@ export const SectionItem = memo(function SectionItem({
 }: SectionItemProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+  const { lessonInfo } = useConstructor();
 
   // Sensors для внутреннего DnD (уроки)
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
-    })
+    }),
   );
 
   const {
@@ -88,7 +90,7 @@ export const SectionItem = memo(function SectionItem({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       onTitleChange?.(section.id, e.target.value);
     },
-    [section.id, onTitleChange]
+    [section.id, onTitleChange],
   );
 
   const handleRemove = useCallback(() => {
@@ -117,18 +119,18 @@ export const SectionItem = memo(function SectionItem({
         // Извлекаем lesson_id из уникального ID
         const activeLessonId = (active.id as string).replace(
           `${section.id}-lesson-`,
-          ""
+          "",
         );
         const overLessonId = (over.id as string).replace(
           `${section.id}-lesson-`,
-          ""
+          "",
         );
 
         const oldIndex = section.lessons.findIndex(
-          (l) => l.lesson_id === activeLessonId
+          (l) => l.lesson_id === activeLessonId,
         );
         const newIndex = section.lessons.findIndex(
-          (l) => l.lesson_id === overLessonId
+          (l) => l.lesson_id === overLessonId,
         );
 
         if (oldIndex !== -1 && newIndex !== -1) {
@@ -141,27 +143,27 @@ export const SectionItem = memo(function SectionItem({
 
       setActiveLessonId(null);
     },
-    [section.id, section.lessons, onLessonChange]
+    [section.id, section.lessons, onLessonChange],
   );
 
   const handleEditLesson = useCallback(
     (lessonId: string) => {
       onEditLesson?.(lessonId);
     },
-    [onEditLesson]
+    [onEditLesson],
   );
 
   const handleRemoveLesson = useCallback(
     (lessonId: string) => {
       onRemoveLesson?.(section.id, lessonId);
     },
-    [section.id, onRemoveLesson]
+    [section.id, onRemoveLesson],
   );
 
   // Находим активный урок для DragOverlay
   const activeLesson = activeLessonId
     ? section.lessons.find(
-        (l) => `${section.id}-lesson-${l.lesson_id}` === activeLessonId
+        (l) => `${section.id}-lesson-${l.lesson_id}` === activeLessonId,
       )
     : null;
 
@@ -175,9 +177,7 @@ export const SectionItem = memo(function SectionItem({
         transition-all duration-200
       `}
     >
-      {/* Header секции */}
       <div className="flex items-center gap-3 p-4 border-b border-slate-100">
-        {/* Drag handle для секции */}
         <div
           {...attributes}
           {...listeners}
@@ -190,19 +190,13 @@ export const SectionItem = memo(function SectionItem({
           <GripVertical size={20} className="text-slate-400" />
         </div>
 
-        {/* Кнопка раскрытия/сворачивания */}
         <button
           onClick={handleToggleExpand}
           className="p-1 hover:bg-slate-100 rounded transition-colors text-slate-500"
         >
-          {isExpanded ? (
-            <ChevronDown size={20} />
-          ) : (
-            <ChevronRight size={20} />
-          )}
+          {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
         </button>
 
-        {/* Заголовок секции */}
         <input
           type="text"
           value={section.title}
@@ -215,10 +209,23 @@ export const SectionItem = memo(function SectionItem({
           placeholder="Название секции"
         />
 
+        {section.isDraft && (
+          <div
+            className="flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700"
+            title="Черновик"
+          >
+            <FileText size={14} />
+            <span className="text-xs font-medium">Черновик</span>
+          </div>
+        )}
+
         {/* Количество уроков */}
         <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
-          {section.lessons.length} {section.lessons.length === 1 ? "урок" : "уроков"}
+          {section.lessons.length}{" "}
+          {section.lessons.length === 1 ? "урок" : "уроков"}
         </span>
+
+        {/* Индикатор черновика секции */}
 
         {/* Actions */}
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -248,7 +255,7 @@ export const SectionItem = memo(function SectionItem({
           >
             <SortableContext
               items={section.lessons.map(
-                (l) => `${section.id}-lesson-${l.lesson_id}`
+                (l) => `${section.id}-lesson-${l.lesson_id}`,
               )}
               strategy={verticalListSortingStrategy}
             >
@@ -260,6 +267,7 @@ export const SectionItem = memo(function SectionItem({
                     sectionId={section.id}
                     onEdit={handleEditLesson}
                     onRemove={handleRemoveLesson}
+                    isDraft={lessonInfo.isDraft}
                   />
                 ))
               ) : (

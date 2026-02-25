@@ -30,10 +30,11 @@ const LessonSchema = new Schema(
     },
     title: { type: String, required: true },
     slug: { type: String, required: true },
-    is_free: { type: Boolean, default: false },
-    //опубликована ли урок в общий доступ или он остается черновиком
-    isDraft: { type: Boolean, default: false, required: true },
     order_index: { type: Number, required: true },
+    //опубликована ли урок в общий доступ или он остается черновиком
+    //пускай останется здесь до лучших времен
+    // isDraft: { type: Boolean, default: true, required: true },
+    // order_index: { type: Number, required: true },
     content_blocks: [BlockSchema],
   },
   { timestamps: true },
@@ -51,7 +52,7 @@ const SectionSchema = new Schema(
     },
     title: { type: String, required: true },
     order_index: { type: Number, required: true },
-    //опубликованеа ли секция в общий доступ или он остается черновиком
+    //опубликована ли секция в общий доступ или он остается черновиком
     isDraft: { type: Boolean, default: true, required: true },
     //я тут добавил массив с уроками. если нужно получить title урока используй .populate()
     lessons: [{ type: Schema.Types.ObjectId, ref: "Lesson" }],

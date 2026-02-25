@@ -16,7 +16,16 @@ export function CourseEditorClient() {
   useEffect(() => {
     db.courses
       .get(courseId)
-      .then((lesson) => setSections(lesson?.sections ?? []))
+      .then((course) => {
+        const loadedSections = course?.sections ?? [];
+        // Нормализуем данные: добавляем isDraft=true, если поле отсутствует
+        const normalizedSections = loadedSections.map((section, index) => ({
+          ...section,
+          isDraft: section.isDraft ?? true,
+          order_index: section.order_index ?? index,
+        }));
+        setSections(normalizedSections);
+      })
       .catch(console.error)
       .finally(() => setIsLoaded(true));
   }, [courseId, setSections]);
@@ -60,7 +69,6 @@ export function CourseEditorClient() {
         alert("Курс успешно сохранён!");
       } catch (err) {
         console.error("Error saving course:", err);
-        // TODO: Заменить на toast notification
         alert("Ошибка при сохранении курса");
       }
     },

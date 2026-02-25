@@ -10,18 +10,16 @@ export interface LessonItemProps {
   lesson: SectionLesson;
   sectionId: string;
   isOverlay?: boolean;
+  isDraft?: boolean;
   onEdit?: (lessonId: string) => void;
   onRemove?: (lessonId: string) => void;
 }
 
-/**
- * Компонент урока внутри секции
- * Оптимизирован с React.memo для минимизации ререндеров
- */
 export const LessonItem = memo(function LessonItem({
   lesson,
   sectionId,
   isOverlay = false,
+  isDraft = true,
   onEdit,
   onRemove,
 }: LessonItemProps) {
@@ -66,7 +64,6 @@ export const LessonItem = memo(function LessonItem({
         ${isOverlay ? "shadow-xl border-blue-400 cursor-grabbing scale-105" : ""}
       `}
     >
-      {/* Drag handle */}
       <div
         {...attributes}
         {...listeners}
@@ -91,6 +88,17 @@ export const LessonItem = memo(function LessonItem({
         </h4>
         <p className="text-xs text-slate-500">Урок</p>
       </div>
+
+      {/* Индикатор черновика */}
+      {isDraft && (
+        <div
+          className="flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700"
+          title="Черновик"
+        >
+          <FileText size={12} />
+          {/* <span className="text-xs font-medium">Черновик</span> */}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
