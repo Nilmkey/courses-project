@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useConstructor } from "@/hooks/useConstructor";
 import { db } from "@/lib/db";
 import debounce from "lodash/debounce";
+import { infoLesson } from "@/types/types";
 
 const DndEditor = dynamic(() => import("./editorCore"), {
   ssr: false,
@@ -13,7 +14,7 @@ const DndEditor = dynamic(() => import("./editorCore"), {
 
 export default function DndPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
-  const { blocks, setBlocks } = useConstructor();
+  const { blocks, setBlocks, lessonInfo } = useConstructor();
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -34,13 +35,21 @@ export default function DndPage() {
 
   const debouncedSave = useMemo(
     () =>
-      debounce(async (payload: { blocks: typeof blocks; now: number }) => {
-        await db.lessons.put({
-          lessonId,
-          blocks: payload.blocks,
-          updatedAt: payload.now,
-        });
-      }, 500),
+      debounce(
+        async (payload: {
+          lessonInfo: infoLesson;
+          blocks: typeof blocks;
+          now: number;
+        }) => {
+          await db.lessons.put({
+            lessonId,
+            lessonInfo: payload.lessonInfo,
+            blocks: payload.blocks,
+            updatedAt: payload.now,
+          });
+        },
+        500,
+      ),
     [lessonId],
   );
 
@@ -50,8 +59,8 @@ export default function DndPage() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    debouncedSave({ blocks, now: Date.now() });
-  }, [blocks, isLoaded, debouncedSave]);
+    debouncedSave({ lessonInfo, blocks, now: Date.now() });
+  }, [lessonInfo, blocks, isLoaded, debouncedSave]);
 
   return (
     <div onMouseDown={(e) => e.stopPropagation()}>

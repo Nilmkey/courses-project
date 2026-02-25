@@ -1,5 +1,15 @@
-import { CourseEditorClient } from "./CourseEditorClient";
+import { CourseEditForm } from "./CourseEditForm";
 
-export default async function CourseEditorPage() {
-  return <CourseEditorClient />;
+export default function CourseEditorPage() {
+  return (
+    <CourseEditForm
+      initialData={{
+        title: "",
+        description: "",
+        level: "beginner",
+        price: 0,
+        isPublished: false,
+      }}
+    />
+  );
 }

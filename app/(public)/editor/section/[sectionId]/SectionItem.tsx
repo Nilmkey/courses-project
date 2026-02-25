@@ -24,11 +24,12 @@ import {
   ChevronRight,
   Plus,
   Trash2,
-  FileText,
+  CheckCircle2,
+  CircleDashed,
 } from "lucide-react";
 import { Section, SectionLesson } from "@/types/types";
 import { LessonItem } from "./LessonItem";
-import { useConstructor } from "@/hooks/useConstructor";
+// import { useConstructor } from "@/hooks/useConstructor";
 
 export interface SectionItemProps {
   section: Section;
@@ -39,6 +40,7 @@ export interface SectionItemProps {
   onAddLesson?: (sectionId: string) => void;
   onEditLesson?: (lessonId: string) => void;
   onRemoveLesson?: (sectionId: string, lessonId: string) => void;
+  onToggleDraft?: (sectionId: string) => void;
 }
 
 /**
@@ -54,10 +56,10 @@ export const SectionItem = memo(function SectionItem({
   onAddLesson,
   onEditLesson,
   onRemoveLesson,
+  onToggleDraft,
 }: SectionItemProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
-  const { lessonInfo } = useConstructor();
 
   // Sensors для внутреннего DnD (уроки)
   const sensors = useSensors(
@@ -104,6 +106,10 @@ export const SectionItem = memo(function SectionItem({
   const handleAddLesson = useCallback(() => {
     onAddLesson?.(section.id);
   }, [section.id, onAddLesson]);
+
+  const handleToggleDraft = useCallback(() => {
+    onToggleDraft?.(section.id);
+  }, [section.id, onToggleDraft]);
 
   // ========== Обработчики уроков (внутренний DnD) ==========
 
@@ -209,15 +215,33 @@ export const SectionItem = memo(function SectionItem({
           placeholder="Название секции"
         />
 
-        {section.isDraft && (
-          <div
-            className="flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700"
-            title="Черновик"
-          >
-            <FileText size={14} />
-            <span className="text-xs font-medium">Черновик</span>
-          </div>
-        )}
+        {/* Индикатор статуса с кликом */}
+        <button
+          onClick={handleToggleDraft}
+          className={`
+            flex items-center gap-1 px-2 py-1 rounded-full transition-colors
+            ${
+              section.isDraft
+                ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                : "bg-green-100 text-green-700 hover:bg-green-200"
+            }
+          `}
+          title={
+            section.isDraft ? "Опубликовать секцию" : "Вернуть в черновики"
+          }
+        >
+          {section.isDraft ? (
+            <>
+              <CircleDashed size={14} />
+              <span className="text-xs font-medium">Черновик</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 size={14} />
+              <span className="text-xs font-medium">Опубликовано</span>
+            </>
+          )}
+        </button>
 
         {/* Количество уроков */}
         <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
@@ -267,7 +291,6 @@ export const SectionItem = memo(function SectionItem({
                     sectionId={section.id}
                     onEdit={handleEditLesson}
                     onRemove={handleRemoveLesson}
-                    isDraft={lessonInfo.isDraft}
                   />
                 ))
               ) : (

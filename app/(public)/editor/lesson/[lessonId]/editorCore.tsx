@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import {
   DndContext,
   DragOverlay,
@@ -24,6 +26,7 @@ import { useConstructor } from "@/hooks/useConstructor";
 import { EditorWindow } from "@/components/editor/EditorWindow";
 
 export default function Editor() {
+  const router = useRouter();
   const { blocks, setBlocks } = useConstructor();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -63,6 +66,10 @@ export default function Editor() {
 
   const activeBlock = blocks.find((b) => b.id === activeId);
 
+  const handleGoBack = useCallback(() => {
+    router.back();
+  }, [router]);
+
   // ========== Сохранение ==========
 
   const handleSave = useCallback(async () => {
@@ -86,11 +93,19 @@ export default function Editor() {
     <div className="max-w-3xl mx-auto py-10 px-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Редактор урока</h1>
-          <p className="text-slate-500 mt-1">
-            Перетаскивайте блоки для изменения порядка
-          </p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleGoBack}
+            className="
+              flex items-center gap-2 px-4 py-2
+              text-slate-600 hover:text-slate-900
+              hover:bg-slate-100 rounded-lg
+              transition-colors
+            "
+          >
+            <ArrowLeft size={20} />
+            <span className="font-medium">Назад к секциям</span>
+          </button>
         </div>
         <button
           onClick={handleSave}
@@ -109,6 +124,11 @@ export default function Editor() {
           {isSaving ? "Сохранение..." : "Сохранить"}
         </button>
       </div>
+
+      <h1 className="text-3xl font-bold text-slate-900 mb-6">Редактор урока</h1>
+      <p className="text-slate-500 mb-8">
+        Перетаскивайте блоки для изменения порядка
+      </p>
 
       <DndContext
         sensors={sensors}

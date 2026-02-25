@@ -16,7 +16,7 @@ export interface CourseBlock {
 
 export interface infoLesson {
   title: string;
-  isDraft: boolean;
+  // isDraft: boolean;
   order_index: number;
   sectionId: string;
 }

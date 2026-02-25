@@ -25,7 +25,7 @@ import { useRouter } from "next/navigation";
 
 interface CourseEditorCoreProps {
   initialSections: Section[];
-  courseId: string;
+  sectionId: string;
   onSave?: (sections: Section[]) => void;
 }
 
@@ -156,6 +156,19 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
     [setSections],
   );
 
+  const handleToggleDraft = useCallback(
+    (sectionId: string) => {
+      setSections((prev) =>
+        prev.map((section) =>
+          section.id === sectionId
+            ? { ...section, isDraft: !section.isDraft }
+            : section,
+        ),
+      );
+    },
+    [setSections],
+  );
+
   // ========== Вычисляемые значения ==========
 
   const activeSection = useMemo(
@@ -216,6 +229,7 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
                 onAddLesson={handleAddLesson}
                 onEditLesson={handleEditLesson}
                 onRemoveLesson={handleRemoveLesson}
+                onToggleDraft={handleToggleDraft}
               />
             ))}
           </div>

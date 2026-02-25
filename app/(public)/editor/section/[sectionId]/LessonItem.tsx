@@ -90,15 +90,15 @@ export const LessonItem = memo(function LessonItem({
       </div>
 
       {/* Индикатор черновика */}
-      {isDraft && (
+      {/* {isDraft && (
         <div
           className="flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700"
           title="Черновик"
         >
           <FileText size={12} />
-          {/* <span className="text-xs font-medium">Черновик</span> */}
+          <span className="text-xs font-medium">Черновик</span>
         </div>
-      )}
+      )} */}
 
       {/* Actions */}
       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
