@@ -21,11 +21,12 @@ import { Section, SectionLesson } from "@/types/types";
 import { SectionItem } from "./SectionItem";
 import { AddSectionButton } from "./AddSectionButton";
 import { useSection } from "@/hooks/useSection";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 interface CourseEditorCoreProps {
   initialSections: Section[];
-  sectionId: string;
+  courseId: string;
   onSave?: (sections: Section[]) => void;
 }
 
@@ -34,12 +35,18 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
   const router = useRouter();
+  const params = useParams();
+  const { courseId } = params as { courseId: string };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
     }),
   );
+
+  const handleGoBack = useCallback(() => {
+    router.push(`/editor/course/${courseId}`);
+  }, [router, courseId]);
 
   // ========== Обработчики DnD для секций ==========
 
@@ -75,10 +82,11 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
         title: "Новая секция",
         order_index: sections.length + 1,
         isDraft: true,
+        courseId: params.courseId as string,
         lessons: [],
       },
     ]);
-  }, [setSections, sections]);
+  }, [setSections, sections, params]);
 
   const handleRemoveSection = useCallback(
     (sectionId: string) => {
@@ -188,17 +196,25 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
     <div className="max-w-4xl mx-auto py-8 px-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Редактор курса</h1>
-          <p className="text-slate-500 mt-1">
-            Перетаскивайте секции и уроки для изменения порядка
-          </p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleGoBack}
+            className="
+              flex items-center gap-2 px-4 py-2
+              text-slate-600 hover:text-slate-900
+              hover:bg-slate-100 rounded-lg
+              transition-colors
+            "
+          >
+            <ArrowLeft size={20} />
+            <span className="font-medium">Назад к курсу</span>
+          </button>
         </div>
         <button
           onClick={handleSave}
           className="
-            px-6 py-3 bg-blue-600 text-white 
-            rounded-lg font-medium 
+            px-6 py-3 bg-blue-600 text-white
+            rounded-lg font-medium
             hover:bg-blue-700 transition-colors
             shadow-sm hover:shadow-md
           "
@@ -206,6 +222,11 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
           Сохранить
         </button>
       </div>
+
+      <h1 className="text-3xl font-bold text-slate-900 mb-2">Редактор секций</h1>
+      <p className="text-slate-500 mb-8">
+        Перетаскивайте секции и уроки для изменения порядка
+      </p>
 
       {/* Основной DnD контекст для секций */}
       <DndContext

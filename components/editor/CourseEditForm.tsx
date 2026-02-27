@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, LayoutList } from "lucide-react";
 import { CourseTitleInput } from "./CourseTitleInput";
 import { CourseDescriptionInput } from "./CourseDescriptionInput";
 import { CourseLevelSelect, type CourseLevel } from "./CourseLevelSelect";
@@ -61,6 +61,10 @@ export function CourseEditForm({
     router.back();
   }, [router]);
 
+  const handleGoToSections = useCallback(() => {
+    router.push(`/editor/course/${courseId}/sections`);
+  }, [router, courseId]);
+
   const isDirty = useMemo(() => {
     return (
       formData.title !== (initialData.title ?? "") ||
@@ -97,6 +101,14 @@ export function CourseEditForm({
                 Есть несохранённые изменения
               </span>
             )}
+            <Button
+              onClick={handleGoToSections}
+              variant="outline"
+              className="flex items-center gap-2 h-12 px-6 rounded-xl font-bold border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            >
+              <LayoutList size={20} />
+              Редактор секций
+            </Button>
             <Button
               onClick={handleSave}
               disabled={isSaving || !isDirty}

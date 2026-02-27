@@ -9,21 +9,21 @@ export interface LessonBlocks {
 }
 
 export interface CourseConstructor {
-  sectionId: string;
+  courseId: string;
   sections: Section[];
   updatedAt: number;
 }
 
 type CourseDB = Dexie & {
   lessons: EntityTable<LessonBlocks, "lessonId">;
-  courses: EntityTable<CourseConstructor, "sectionId">;
+  courses: EntityTable<CourseConstructor, "courseId">;
 };
 
 const db = new Dexie("CourseConstructor") as CourseDB;
 
 db.version(4).stores({
   lessons: "lessonId, updatedAt",
-  courses: "sectionId, updatedAt",
+  courses: "courseId, updatedAt",
 });
 
 export { db };

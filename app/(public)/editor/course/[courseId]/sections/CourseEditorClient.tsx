@@ -9,13 +9,13 @@ import debounce from "lodash/debounce";
 import { useParams } from "next/navigation";
 
 export function CourseEditorClient() {
-  const { sectionId } = useParams<{ sectionId: string }>();
+  const { courseId } = useParams<{ courseId: string }>();
   const { sections, setSections } = useSection();
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     db.courses
-      .get(sectionId)
+      .get(courseId)
       .then((course) => {
         const loadedSections = course?.sections ?? [];
         // Нормализуем данные: добавляем isDraft=true, если поле отсутствует
@@ -28,25 +28,25 @@ export function CourseEditorClient() {
       })
       .catch(console.error)
       .finally(() => setIsLoaded(true));
-  }, [sectionId, setSections]);
+  }, [courseId, setSections]);
 
   const debouncedSave = useMemo(
     () =>
       debounce(
         async (payload: {
-          sectionId: string;
+          courseId: string;
           sections: typeof sections;
           now: number;
         }) => {
           await db.courses.put({
-            sectionId,
+            courseId,
             sections: payload.sections,
             updatedAt: payload.now,
           });
         },
         500,
       ),
-    [sectionId],
+    [courseId],
   );
 
   useEffect(() => {
@@ -55,13 +55,13 @@ export function CourseEditorClient() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    debouncedSave({ sectionId, sections, now: Date.now() });
-  }, [sections, isLoaded, debouncedSave, sectionId]);
+    debouncedSave({ courseId, sections, now: Date.now() });
+  }, [sections, isLoaded, debouncedSave, courseId]);
 
   const handleSave = useCallback(
     async (updatedSections: Section[]) => {
       try {
-        const response = await fetch(`/api/courses/${sectionId}/sections`, {
+        const response = await fetch(`/api/courses/${courseId}/sections`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -79,13 +79,13 @@ export function CourseEditorClient() {
         alert("Ошибка при сохранении курса");
       }
     },
-    [sectionId],
+    [courseId],
   );
 
   return (
     <CourseEditorCore
       initialSections={sections}
-      sectionId={sectionId}
+      courseId={courseId}
       onSave={handleSave}
     />
   );
