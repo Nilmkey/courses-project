@@ -7,6 +7,8 @@ import { useTheme } from "next-themes";
 import { authClient } from "@/lib/auth-client";
 import { ExtendedUser } from "@/backend/auth";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "react-hot-toast";
+import { useToast } from "@/hooks/useToast";
 import {
   Code,
   Flame,
@@ -27,6 +29,7 @@ export default function Home() {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
+  const toast = useToast();
 
   const user = session?.user as unknown as ExtendedUser | undefined;
 
@@ -37,12 +40,24 @@ export default function Home() {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => router.push("/login"),
+  const handleSignOut = () => {
+    toast.confirm(
+      "Вы точно хотите выйти из аккаунта?",
+      async () => {
+        await authClient.signOut({
+          fetchOptions: {
+            onSuccess: () => {
+              toast.success("Вы успешно вышли из аккаунта.");
+              router.push("/login");
+            },
+          },
+        });
       },
-    });
+      {
+        confirmText: "Выйти",
+        confirmClassName: "bg-red-600 hover:bg-blue-700",
+      },
+    );
   };
 
   const features = [
@@ -98,6 +113,21 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f8faff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
+            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+            border:
+              resolvedTheme === "dark"
+                ? "1px solid #1e293b"
+                : "1px solid #e2e8f0",
+            borderRadius: "0.75rem",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+          },
+        }}
+      />
       <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-blue-100/50 dark:border-slate-800">
         <div className="container mx-auto px-4 h-20 flex justify-between items-center">
           <div
