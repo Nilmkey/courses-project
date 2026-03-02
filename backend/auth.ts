@@ -5,7 +5,7 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 export const auth = betterAuth({
   database: mongodbAdapter(db),
   baseURL: "http://localhost:7777",
-  trustedOrigins: ["http://localhost:3000"],
+  trustedOrigins: ["http://localhost:3000", "http://localhost:7777"],
   emailAndPassword: {
     enabled: true,
   },
@@ -14,7 +14,6 @@ export const auth = betterAuth({
       name: {
         type: "string",
       },
-      //хз, надо, не надо роль тут. если че закоментишь
       role: {
         type: "string",
         defaultValue: "student",
@@ -26,18 +25,23 @@ export const auth = betterAuth({
     },
   },
   secret: process.env.BETTER_AUTH_SECRET,
+  cookie: {
+    domain: "localhost",
+    secure: false,
+    sameSite: "lax",
+    path: "/",
+  },
+  session: {
+    cookieName: "better-auth.session_token",
+  },
 });
-
-import { authClient } from "@/lib/auth-client";
 
 export interface ExtendedUser {
   id: string;
   email: string;
   name: string;
   image?: string;
-  role: "user" | "admin";
+  role: "student" | "teacher" | "admin";
   streak: number;
   createdAt?: Date;
 }
-
-export type SessionData = typeof authClient.useSession;

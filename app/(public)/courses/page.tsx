@@ -19,19 +19,6 @@ import {
 } from "lucide-react";
 import { courseApi } from "@/lib/api-service";
 
-interface Course {
-  _id: string;
-  title: string
-  slug: string;
-  description?: string;
-  type: string;
-  difficulty?: "Легкий" | "Средний" | "Сложный";
-  iconName: string;
-  gradient?: string;
-  target?: string;
-  status: "open" | "closed";
-}
-
 const iconMap: Record<string, React.ReactNode> = {
   Layout: <Layout className="w-8 h-8" />,
   Server: <Server className="w-8 h-8" />,

@@ -41,7 +41,9 @@ type LeanCourse = Omit<ICourse, keyof Document>;
 
 export const coursesService = {
   async getAll(): Promise<LeanCourse[]> {
-    return await Course.find().select("-__v").lean();
+    const courses = await Course.find().select("-__v").lean();
+    console.log('📦 Сырые курсы из БД:', JSON.stringify(courses, null, 2));
+    return courses;
   },
 
   async getBySlug(slug: string) {
