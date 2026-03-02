@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ConstructorContext } from "@/contexts/ConstructorContext";
 import { CourseBlock, Section, infoLesson } from "@/types/types";
 import { SectionContext } from "@/contexts/SectionContext";
-import { addErrorObserver } from "@/lib/api";
+import { addErrorObserver } from "@/lib/api/api-client";
 import { useRouter } from "next/navigation";
 
 export default function Provider({ children }: { children: React.ReactNode }) {

@@ -1,5 +1,5 @@
 export async function register() {
-  const { addErrorObserver } = await import("@/lib/api");
+  const { addErrorObserver } = await import("@/lib/api/api-client");
 
   addErrorObserver((error) => {
     if (error.status >= 500 || error.status === 0) {

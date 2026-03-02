@@ -46,7 +46,10 @@ const SectionSchema = z.object({
 export const createCourseSchema = z.object({
   body: z.object({
     title: z.string().min(3, "Название должно содержать минимум 3 символа"),
-    slug: z.string().min(3, "Slug должен содержать минимум 3 символа"),
+    slug: z
+      .string()
+      .min(3, "Slug должен содержать минимум 3 символа")
+      .optional(),
     description: z.string().optional(),
     thumbnail: z.string().url().optional().or(z.literal("")),
     level: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),

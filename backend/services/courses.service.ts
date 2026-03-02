@@ -3,10 +3,11 @@ import { Course, Section, Lesson } from "../models";
 import { ApiError } from "../utils/ApiError";
 import type { ICourse } from "../models";
 import type { Types } from "mongoose";
+import { slugify } from "../utils/slugify";
 
 export interface CourseCreateInput {
   title: string;
-  slug: string;
+  slug?: string;
   description?: string;
   thumbnail?: string;
   author_id: string | Types.ObjectId;
@@ -70,7 +71,7 @@ export const coursesService = {
   async create(data: CourseCreateInput): Promise<LeanCourse> {
     const course = await Course.create({
       title: data.title,
-      slug: data.slug,
+      slug: slugify(data.title),
       description: data.description,
       thumbnail: data.thumbnail,
       level: data.level,

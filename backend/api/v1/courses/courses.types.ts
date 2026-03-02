@@ -6,10 +6,10 @@ import { ILessonBlock } from "@/backend/models/Lesson";
 export interface CreateCourseRequest {
   body: {
     title: string;
-    slug: string;
+    slug?: string;
     description?: string;
     thumbnail?: string;
-    level: 'beginner' | 'intermediate' | 'advanced';
+    level: "beginner" | "intermediate" | "advanced";
     price?: number;
     isPublished?: boolean;
     sections?: Array<{
@@ -24,7 +24,7 @@ export interface CreateCourseRequest {
         content_blocks?: Array<{
           id: string;
           title: string;
-          type: 'text' | 'video' | 'quiz';
+          type: "text" | "video" | "quiz";
           content: Record<string, unknown>;
         }>;
       }>;
@@ -41,7 +41,7 @@ export interface UpdateCourseRequest {
     slug?: string;
     description?: string;
     thumbnail?: string;
-    level?: 'beginner' | 'intermediate' | 'advanced';
+    level?: "beginner" | "intermediate" | "advanced";
     price?: number;
     isPublished?: boolean;
   };
@@ -75,7 +75,7 @@ export interface CourseResponse {
   description?: string;
   thumbnail?: string;
   author_id: string;
-  level: 'beginner' | 'intermediate' | 'advanced';
+  level: "beginner" | "intermediate" | "advanced";
   createdAt: string;
   updatedAt: string;
 }
@@ -87,7 +87,7 @@ export interface LessonItem {
   slug: string;
   is_free: boolean;
   order_index: number;
-  content_blocks: ILessonBlock[];  // Используем готовый тип из моделей
+  content_blocks: ILessonBlock[]; // Используем готовый тип из моделей
   createdAt: string;
   updatedAt: string;
 }

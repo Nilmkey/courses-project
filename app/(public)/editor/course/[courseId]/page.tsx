@@ -3,8 +3,6 @@ import { CourseEditForm } from "@/components/editor/CourseEditForm";
 import { useEffect } from "react";
 
 export default function CourseEditorPage() {
-  useEffect(() => {}, []);
-
   return (
     <CourseEditForm
       initialData={{
