@@ -162,7 +162,9 @@ export interface ICourse {
   level: CourseLevel;
   createdAt: string;
   updatedAt: string;
-  iconName: string;
-  status: string;
-  type: string;
+  iconName?: string;
+  status?: 'open' | 'closed';
+  type?: 'career' | 'language';
+  price?: number;
+  isPublished?: boolean;
 }

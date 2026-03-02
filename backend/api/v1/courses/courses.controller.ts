@@ -56,52 +56,81 @@ interface LessonData {
   updatedAt: Date;
 }
 
-const toCourseResponse = (course: CourseData): CourseResponse => ({
-  _id: course._id.toString(),
-  title: course.title,
-  slug: course.slug,
-  price: course.price,
-  isPublished: course.isPublished,
-  description: course.description,
-  thumbnail: course.thumbnail,
-  author_id: course.author_id.toString(),
-  level: course.level,
-  createdAt: course.createdAt.toISOString(),
-  updatedAt: course.updatedAt.toISOString(),
-});
+const toCourseResponse = (course: unknown): CourseResponse => {
+  const c = course as Record<string, unknown>;
+  
+  return {
+    _id: (c._id as Types.ObjectId)?.toString() ?? "",
+    title: String(c.title ?? ""),
+    slug: String(c.slug ?? ""),
+    price: Number(c.price ?? 0),
+    isPublished: Boolean(c.isPublished ?? false),
+    description: c.description as string | undefined,
+    thumbnail: c.thumbnail as string | undefined,
+    author_id: (c.author_id as Types.ObjectId)?.toString() ?? "",
+    level: (c.level as "beginner" | "intermediate" | "advanced") ?? "beginner",
+    createdAt: (c.createdAt as Date)?.toISOString() ?? new Date().toISOString(),
+    updatedAt: (c.updatedAt as Date)?.toISOString() ?? new Date().toISOString(),
+  };
+};
 
-const toLessonItem = (lesson: LessonData): LessonItem => ({
-  _id: lesson._id.toString(),
-  section_id: lesson.section_id.toString(),
-  title: lesson.title,
-  slug: lesson.slug,
-  is_free: lesson.is_free,
-  order_index: lesson.order_index,
-  content_blocks: lesson.content_blocks as LessonItem["content_blocks"],
-  createdAt: lesson.createdAt.toISOString(),
-  updatedAt: lesson.updatedAt.toISOString(),
-});
+const toLessonItem = (lesson: unknown): LessonItem => {
+  const l = lesson as Record<string, unknown>;
+  return {
+    _id: (l._id as Types.ObjectId)?.toString() ?? "",
+    section_id: (l.section_id as Types.ObjectId)?.toString() ?? "",
+    title: String(l.title ?? ""),
+    slug: String(l.slug ?? ""),
+    is_free: Boolean(l.is_free ?? false),
+    order_index: Number(l.order_index ?? 0),
+    content_blocks: (l.content_blocks as LessonItem["content_blocks"]) ?? [],
+    createdAt: (l.createdAt as Date)?.toISOString() ?? new Date().toISOString(),
+    updatedAt: (l.updatedAt as Date)?.toISOString() ?? new Date().toISOString(),
+  };
+};
 
-const toSectionWithLessons = (section: SectionData): SectionWithLessons => ({
-  _id: section._id.toString(),
-  course_id: section.course_id.toString(),
-  title: section.title,
-  order_index: section.order_index,
-  isDraft: section.isDraft,
-  createdAt: section.createdAt.toISOString(),
-  updatedAt: section.updatedAt.toISOString(),
-  lessons: section.lessons.map(toLessonItem),
-});
+const toSectionWithLessons = (section: unknown): SectionWithLessons => {
+  const s = section as Record<string, unknown>;
+  const lessons = Array.isArray(s.lessons) ? s.lessons : [];
+  return {
+    _id: (s._id as Types.ObjectId)?.toString() ?? "",
+    course_id: (s.course_id as Types.ObjectId)?.toString() ?? "",
+    title: String(s.title ?? ""),
+    order_index: Number(s.order_index ?? 0),
+    isDraft: Boolean(s.isDraft ?? false),
+    createdAt: (s.createdAt as Date)?.toISOString() ?? new Date().toISOString(),
+    updatedAt: (s.updatedAt as Date)?.toISOString() ?? new Date().toISOString(),
+    lessons: lessons.map(toLessonItem),
+  };
+};
 
 export const coursesController = {
   async getAll(
     _req: Request,
     res: Response<CoursesListResponse>,
   ): Promise<void> {
-    const courses = await coursesService.getAll();
-    res.json({
-      courses: courses.map((c) => toCourseResponse(c as unknown as CourseData)),
-    });
+    try {
+      const courses = await coursesService.getAll();
+      console.log('📦 Получены курсы из БД:', courses.length);
+      
+      const mappedCourses = courses.map((c) => {
+        console.log('📄 Курс:', { 
+          _id: c._id, 
+          title: c.title,
+          author_id: c.author_id,
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt 
+        });
+        return toCourseResponse(c as unknown as CourseData);
+      });
+      
+      res.json({
+        courses: mappedCourses,
+      });
+    } catch (error) {
+      console.error('❌ Ошибка в getAll:', error);
+      throw error;
+    }
   },
 
   async getBySlug(

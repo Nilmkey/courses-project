@@ -19,7 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { courseApi } from "@/lib/api-service";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
-import { handleCreate } from "./newCourse";
+import { useCreateCourse } from "./newCourse";
 
 interface AdminCourse {
   _id: string;
@@ -34,10 +34,11 @@ export default function AdminDashboard() {
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
+  const { handleCreate } = useCreateCourse();
 
   useEffect(() => {
     setMounted(true);
-    // loadCourses();
+    loadCourses();
   }, []);
 
   const loadCourses = async () => {
@@ -126,7 +127,7 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      {/* <main className="flex-1 container mx-auto px-4 py-10">
+      <main className="flex-1 container mx-auto px-4 py-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
@@ -195,7 +196,7 @@ export default function AdminDashboard() {
             )}
           </div>
         )}
-      </main> */}
+      </main>
 
       <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 transition-colors">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-400 text-xs font-bold uppercase tracking-widest">
