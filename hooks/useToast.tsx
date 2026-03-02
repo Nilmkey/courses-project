@@ -30,7 +30,16 @@ export const useToast = () => {
     toast.dismiss(id);
   };
 
-  const confirm = (title: string, onConfirm: () => void) => {
+  const confirm = (
+    title: string,
+    onConfirm: () => void,
+    options?: { confirmText?: string; confirmClassName?: string },
+  ) => {
+    const {
+      confirmText = "Удалить",
+      confirmClassName = "bg-rose-500 hover:bg-rose-600",
+    } = options || {};
+
     toast(
       (t) => (
         <div className="flex flex-col gap-4 min-w-[280px] p-1">
@@ -55,9 +64,9 @@ export const useToast = () => {
                 toast.dismiss(t.id);
                 onConfirm();
               }}
-              className="px-4 py-2 text-xs font-bold uppercase bg-rose-500 hover:bg-rose-600 text-white rounded-lg shadow-lg shadow-rose-500/20 transition-all active:scale-95"
+              className={`px-4 py-2 text-xs font-bold uppercase ${confirmClassName} text-white rounded-lg shadow-lg shadow-rose-500/20 transition-all active:scale-95`}
             >
-              Удалить
+              {confirmText}
             </button>
           </div>
         </div>
