@@ -44,6 +44,9 @@ const SectionSchema = z.object({
 });
 
 export const createCourseSchema = z.object({
+  params: z.object({
+    custom_id: z.string().uuid("Неверный формат UUID"),
+  }),
   body: z.object({
     title: z.string().min(3, "Название должно содержать минимум 3 символа"),
     slug: z
@@ -61,7 +64,7 @@ export const createCourseSchema = z.object({
 
 export const updateCourseSchema = z.object({
   params: z.object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+    custom_id: z.string().uuid("Неверный формат UUID"),
   }),
   body: z.object({
     title: z.string().min(3).optional(),
@@ -82,12 +85,12 @@ export const getCourseBySlugSchema = z.object({
 
 export const deleteCourseSchema = z.object({
   params: z.object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+    custom_id: z.string().uuid("Неверный формат UUID"),
   }),
 });
 
 export const publishCourseSchema = z.object({
   params: z.object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+    custom_id: z.string().uuid("Неверный формат UUID"),
   }),
 });

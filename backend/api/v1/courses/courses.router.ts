@@ -24,7 +24,7 @@ router.get(
 );
 
 router.post(
-  "/",
+  "/:custom_id",
   authMiddleware,
   teacherMiddleware,
   validateRequest(createCourseSchema),
@@ -32,7 +32,7 @@ router.post(
 );
 
 router.patch(
-  "/:id",
+  "/:custom_id",
   authMiddleware,
   teacherMiddleware,
   validateRequest(updateCourseSchema),
@@ -40,7 +40,7 @@ router.patch(
 );
 
 router.delete(
-  "/:id",
+  "/:custom_id",
   authMiddleware,
   adminMiddleware,
   validateRequest(deleteCourseSchema),
@@ -48,7 +48,7 @@ router.delete(
 );
 
 router.post(
-  "/:id/publish",
+  "/:custom_id/publish",
   authMiddleware,
   teacherMiddleware,
   validateRequest(publishCourseSchema),

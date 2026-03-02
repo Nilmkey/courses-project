@@ -4,6 +4,9 @@ import { ILessonBlock } from "@/backend/models/Lesson";
 
 // ==================== REQUEST ====================
 export interface CreateCourseRequest {
+  params: {
+    custom_id: string;
+  };
   body: {
     title: string;
     slug?: string;
@@ -34,7 +37,7 @@ export interface CreateCourseRequest {
 
 export interface UpdateCourseRequest {
   params: {
-    id: string;
+    custom_id: string;
   };
   body: {
     title?: string;
@@ -55,19 +58,20 @@ export interface GetCourseBySlugRequest {
 
 export interface DeleteCourseRequest {
   params: {
-    id: string;
+    custom_id: string;
   };
 }
 
 export interface PublishCourseRequest {
   params: {
-    id: string;
+    custom_id: string;
   };
 }
 
 // ==================== RESPONSE ====================
 export interface CourseResponse {
   _id: string;
+  custom_id: string;
   title: string;
   slug: string;
   price: number;
@@ -82,18 +86,20 @@ export interface CourseResponse {
 
 export interface LessonItem {
   _id: string;
+  custom_id: string;
   section_id: string;
   title: string;
   slug: string;
   is_free: boolean;
   order_index: number;
-  content_blocks: ILessonBlock[]; // Используем готовый тип из моделей
+  content_blocks: ILessonBlock[];
   createdAt: string;
   updatedAt: string;
 }
 
 export interface SectionWithLessons {
   _id: string;
+  custom_id: string;
   course_id: string;
   title: string;
   order_index: number;

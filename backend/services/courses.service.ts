@@ -68,8 +68,9 @@ export const coursesService = {
     return { ...course, sections: sectionsWithLessons };
   },
 
-  async create(data: CourseCreateInput): Promise<LeanCourse> {
+  async create(data: CourseCreateInput, custom_id: string): Promise<LeanCourse> {
     const course = await Course.create({
+      custom_id,
       title: data.title,
       slug: slugify(data.title),
       description: data.description,
@@ -107,34 +108,47 @@ export const coursesService = {
     return course;
   },
 
-  async update(id: string, data: Partial<ICourse>): Promise<LeanCourse> {
-    const updated = await Course.findByIdAndUpdate(id, data, {
-      new: true,
-    }).lean();
-    if (!updated) {
+  async update(custom_id: string, data: Partial<ICourse>): Promise<LeanCourse> {
+    const course = await Course.findOne({ custom_id });
+    if (!course) {
       throw ApiError.notFound("Курс не найден");
     }
-    return updated;
+    
+    const updated = await Course.findByIdAndUpdate(
+      course._id,
+      data,
+      { new: true },
+    ).lean();
+    
+    return updated as LeanCourse;
   },
 
-  async delete(id: string): Promise<void> {
-    const sections = await Section.find({ course_id: id });
+  async delete(custom_id: string): Promise<void> {
+    const course = await Course.findOne({ custom_id });
+    if (!course) {
+      throw ApiError.notFound("Курс не найден");
+    }
+    
+    const sections = await Section.find({ course_id: course._id });
     const sectionIds = sections.map((s) => s._id);
 
     await Lesson.deleteMany({ section_id: { $in: sectionIds } });
-    await Section.deleteMany({ course_id: id });
-    await Course.findByIdAndDelete(id);
+    await Section.deleteMany({ course_id: course._id });
+    await Course.findByIdAndDelete(course._id);
   },
 
-  async publish(id: string): Promise<LeanCourse> {
+  async publish(custom_id: string): Promise<LeanCourse> {
+    const course = await Course.findOne({ custom_id });
+    if (!course) {
+      throw ApiError.notFound("Курс не найден");
+    }
+    
     const updated = await Course.findByIdAndUpdate(
-      id,
+      course._id,
       { isPublished: true },
       { new: true },
     ).lean();
-    if (!updated) {
-      throw ApiError.notFound("Курс не найден");
-    }
-    return updated;
+    
+    return updated as LeanCourse;
   },
 };

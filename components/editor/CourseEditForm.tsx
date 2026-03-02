@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Save, LayoutList } from "lucide-react";
 import { CourseTitleInput } from "./CourseTitleInput";
@@ -9,6 +9,7 @@ import { CourseLevelSelect, type CourseLevel } from "./CourseLevelSelect";
 import { CoursePriceSlider } from "./CoursePriceSlider";
 import { CoursePublishToggle } from "./CoursePublishToggle";
 import { Button } from "@/components/ui/button";
+import { coursesApi } from "@/lib/api/entities/api-courses";
 
 export interface CourseFormData {
   title: string;
@@ -22,12 +23,11 @@ export interface CourseEditFormProps {
   initialData?: Partial<CourseFormData>;
 }
 
-export function CourseEditForm({
-  initialData = {},
-}: CourseEditFormProps) {
+export function CourseEditForm({ initialData = {} }: CourseEditFormProps) {
   const router = useRouter();
   const { courseId } = useParams();
   const [isSaving, setIsSaving] = useState(false);
+  // const [isExist, setIsExist] = useState(false);
 
   const [formData, setFormData] = useState<CourseFormData>({
     title: initialData.title ?? "",
@@ -41,13 +41,13 @@ export function CourseEditForm({
     <K extends keyof CourseFormData>(field: K, value: CourseFormData[K]) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
     },
-    []
+    [],
   );
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      // TODO: реализовать вызов API для сохранения курса
+      coursesApi.create(courseId as string, formData);
       console.log("Saving course:", formData);
       console.log("Course ID:", courseId);
     } catch (error) {
@@ -170,9 +170,7 @@ export function CourseEditForm({
             {/* Publish Toggle */}
             <CoursePublishToggle
               isPublished={formData.isPublished}
-              onToggle={() =>
-                updateField("isPublished", !formData.isPublished)
-              }
+              onToggle={() => updateField("isPublished", !formData.isPublished)}
             />
           </div>
 

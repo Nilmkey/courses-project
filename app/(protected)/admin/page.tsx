@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { courseApi } from "@/lib/api-service";
+// import { courseApi } from "@/lib/api-service";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 import { handleCreate } from "./newCourse";
@@ -35,35 +35,35 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
-  useEffect(() => {
-    setMounted(true);
-    // loadCourses();
-  }, []);
+  // useEffect(() => {
+  //   setMounted(true);
+  //   // loadCourses();
+  // }, []);
 
-  const loadCourses = async () => {
-    try {
-      setLoading(true);
-      const data = await courseApi.getAll();
-      setCourses(data || []);
-    } catch (err) {
-      console.error("Ошибка загрузки:", err);
-      toast.error("Не удалось загрузить курсы. Попробуйте позже.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const loadCourses = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const data = await courseApi.getAll();
+  //     setCourses(data || []);
+  //   } catch (err) {
+  //     console.error("Ошибка загрузки:", err);
+  //     toast.error("Не удалось загрузить курсы. Попробуйте позже.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const deleteCourse = async (id: string) => {
-    toast.confirm("Удалить этот курс навсегда?", async () => {
-      try {
-        await courseApi.delete(id);
-        setCourses(courses.filter((c) => c._id !== id));
-        toast.success("Курс успешно удалён.");
-      } catch {
-        toast.error("Ошибка при удалении.");
-      }
-    });
-  };
+  // const deleteCourse = async (id: string) => {
+  //   toast.confirm("Удалить этот курс навсегда?", async () => {
+  //     try {
+  //       await courseApi.delete(id);
+  //       setCourses(courses.filter((c) => c._id !== id));
+  //       toast.success("Курс успешно удалён.");
+  //     } catch {
+  //       toast.error("Ошибка при удалении.");
+  //     }
+  //   });
+  // };
 
   if (!mounted) return null;
 

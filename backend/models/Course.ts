@@ -10,9 +10,11 @@ export interface ICourse extends Document {
   thumbnail?: string;
   author_id: mongoose.Types.ObjectId;
   level: 'beginner' | 'intermediate' | 'advanced';
+  custom_id: string;
 }
 
 const CourseSchema = new Schema<ICourse>({
+  custom_id: { type: String, unique: true, index: true, default: () => crypto.randomUUID() },
   title: { type: String, required: true },
   slug: { type: String, required: true, unique: true },
   price: { type: Number, required: true, default: 0 },
