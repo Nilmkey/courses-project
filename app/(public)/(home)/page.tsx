@@ -7,6 +7,8 @@ import { useTheme } from "next-themes";
 import { authClient } from "@/lib/auth-client";
 import { ExtendedUser } from "@/backend/auth";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "react-hot-toast";
+import { useToast } from "@/hooks/useToast";
 import {
   Code,
   Flame,
@@ -15,7 +17,6 @@ import {
   BookOpen,
   Play,
   Loader2,
-  ChevronRight,
   ArrowRight,
   User,
   ShieldCheck,
@@ -28,6 +29,7 @@ export default function Home() {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
+  const toast = useToast();
 
   const user = session?.user as unknown as ExtendedUser | undefined;
 
@@ -38,12 +40,24 @@ export default function Home() {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => router.push("/login"),
+  const handleSignOut = () => {
+    toast.confirm(
+      "Вы точно хотите выйти из аккаунта?",
+      async () => {
+        await authClient.signOut({
+          fetchOptions: {
+            onSuccess: () => {
+              toast.success("Вы успешно вышли из аккаунта.");
+              router.push("/login");
+            },
+          },
+        });
       },
-    });
+      {
+        confirmText: "Выйти",
+        confirmClassName: "bg-red-600 hover:bg-red-500",
+      },
+    );
   };
 
   const features = [
@@ -99,7 +113,21 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f8faff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      {/* --- Header --- */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
+            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+            border:
+              resolvedTheme === "dark"
+                ? "1px solid #1e293b"
+                : "1px solid #e2e8f0",
+            borderRadius: "0.75rem",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+          },
+        }}
+      />
       <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-blue-100/50 dark:border-slate-800">
         <div className="container mx-auto px-4 h-20 flex justify-between items-center">
           <div
@@ -115,11 +143,10 @@ export default function Home() {
           </div>
 
           <nav className="flex gap-3 items-center">
-            {/* Виджет огонька (streak) */}
             {mounted && user && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-full border border-orange-100 dark:border-orange-800/50 mr-2 group transition-all hover:scale-105">
                 <Flame
-                  className={`w-5 h-5 ${user.streak > 0 ? "text-orange-500 animate-pulse" : "text-slate-300"}`}
+                  className={`w-5 h-5 ${user.streak > 0 ? "text-orange-500 animate-pulse" : "text-orange-500"}`}
                 />
                 <span className="text-sm font-black text-orange-600 dark:text-orange-400">
                   {user.streak || 0}
@@ -231,11 +258,7 @@ export default function Home() {
                 <>
                   Рады видеть тебя снова,{" "}
                   <span className="font-bold text-slate-900 dark:text-white">
-                    {user.name}
-                  </span>
-                  ! Твой прогресс ждет тебя. У тебя уже{" "}
-                  <span className="text-orange-500 font-black">
-                    {user.streak}🔥
+                    {user.name}!
                   </span>
                 </>
               ) : (
@@ -301,7 +324,6 @@ export default function Home() {
                 </div>
                 <h4 className="text-xl font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2">
                   {feature.title}
-                  <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                 </h4>
                 <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
                   {feature.description}

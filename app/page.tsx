@@ -22,12 +22,15 @@ import {
   ShieldCheck,
   Sun,
   Moon,
+  Menu,
+  X,
 } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { data: session, isPending } = authClient.useSession();
   const toast = useToast();
 
@@ -55,7 +58,7 @@ export default function Home() {
       },
       {
         confirmText: "Выйти",
-        confirmClassName: "bg-red-600 hover:bg-blue-700",
+        confirmClassName: "bg-red-600 hover:bg-red-500",
       },
     );
   };
@@ -142,9 +145,9 @@ export default function Home() {
             </span>
           </div>
 
-          <nav className="flex gap-3 items-center">
+          <div className="flex items-center gap-2">
             {mounted && user && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-full border border-orange-100 dark:border-orange-800/50 mr-2 group transition-all hover:scale-105">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-full border border-orange-100 dark:border-orange-800/50 group transition-all hover:scale-105">
                 <Flame
                   className={`w-5 h-5 ${user.streak > 0 ? "text-orange-500 animate-pulse" : "text-orange-500"}`}
                 />
@@ -171,67 +174,171 @@ export default function Home() {
               </Button>
             )}
 
-            {isPending ? (
-              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-            ) : user ? (
-              <>
-                {user.role === "admin" && (
-                  <Link href="/admin">
+            <nav className="hidden md:flex gap-3 items-center ml-2">
+              {isPending ? (
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+              ) : user ? (
+                <>
+                  {user.role === "admin" && (
+                    <Link href="/admin">
+                      <Button
+                        variant="outline"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50 rounded-full px-5 gap-2 font-bold"
+                      >
+                        <ShieldCheck className="w-4 h-4" /> Админ
+                      </Button>
+                    </Link>
+                  )}
+                  <Link href="/courses">
                     <Button
-                      variant="outline"
-                      className="hidden md:flex border-blue-600 text-blue-600 hover:bg-blue-50 rounded-full px-5 gap-2 font-bold"
+                      variant="ghost"
+                      className="font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600"
                     >
-                      <ShieldCheck className="w-4 h-4" /> Админ
+                      Курсы
                     </Button>
                   </Link>
-                )}
-                <Link href="/courses" className="hidden sm:block">
+                  <Link href="/profile">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center cursor-pointer hover:border-blue-500 transition-all overflow-hidden shadow-inner">
+                      {user.image ? (
+                        <img
+                          src={user.image}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                      )}
+                    </div>
+                  </Link>
                   <Button
-                    variant="ghost"
-                    className="font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600"
+                    onClick={handleSignOut}
+                    className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 text-white rounded-full px-6 shadow-md active:scale-95 font-bold"
                   >
-                    Курсы
+                    Выйти
                   </Button>
-                </Link>
-                <Link href="/profile">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center cursor-pointer hover:border-blue-500 transition-all overflow-hidden shadow-inner">
-                    {user.image ? (
-                      <img
-                        src={user.image}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <User className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                    )}
-                  </div>
-                </Link>
-                <Button
-                  onClick={handleSignOut}
-                  className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 text-white rounded-full px-6 shadow-md active:scale-95 font-bold"
-                >
-                  Выйти
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button
-                    variant="ghost"
-                    className="font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600"
-                  >
-                    Войти
-                  </Button>
-                </Link>
-                <Link href="/login">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full px-8 shadow-lg shadow-blue-500/25 active:scale-95">
-                    Начать путь
-                  </Button>
-                </Link>
-              </>
-            )}
-          </nav>
+                </>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button
+                      variant="ghost"
+                      className="font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600"
+                    >
+                      Войти
+                    </Button>
+                  </Link>
+                  <Link href="/login">
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full px-8 shadow-lg shadow-blue-500/25 active:scale-95">
+                      Начать путь
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </nav>
+
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 ml-1 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Открыть меню"
+            >
+              {isMenuOpen ? (
+                <X className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+              ) : (
+                <Menu className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+              )}
+            </button>
+          </div>
         </div>
+
+        {isMenuOpen && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 z-40 md:hidden"
+              onClick={() => setIsMenuOpen(false)}
+            />
+            <div className="fixed top-20 left-0 right-0 z-50 md:hidden border-t border-blue-100/50 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl">
+              <div className="container mx-auto px-4 py-6 flex flex-col gap-3">
+                {isPending ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                  </div>
+                ) : user ? (
+                  <>
+                    {user.role === "admin" && (
+                      <Link
+                        href="/admin"
+                        className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 font-bold text-blue-600 dark:text-blue-400"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <ShieldCheck className="w-5 h-5" /> Админ-панель
+                      </Link>
+                    )}
+                    <Link
+                      href="/courses"
+                      className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <BookOpen className="w-5 h-5" /> Курсы
+                    </Link>
+                    <Link
+                      href="/profile"
+                      className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 flex items-center justify-center overflow-hidden">
+                        {user.image ? (
+                          <img
+                            src={user.image}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                        )}
+                      </div>
+                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                        Профиль
+                      </span>
+                    </Link>
+                    <Button
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white rounded-xl py-6 font-bold shadow-md active:scale-95 mt-2"
+                    >
+                      Выйти из аккаунта
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="w-full"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Button
+                        variant="ghost"
+                        className="w-full font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 py-6"
+                      >
+                        Войти
+                      </Button>
+                    </Link>
+                    <Link
+                      href="/login"
+                      className="w-full"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl py-6 shadow-lg shadow-blue-500/25 active:scale-95">
+                        Начать путь
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </header>
 
       <main className="flex-1">
@@ -246,14 +353,14 @@ export default function Home() {
               <span>Платформа №1 для будущих разработчиков</span>
             </div>
 
-            <h2 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-8 tracking-tight leading-[1.1]">
+            <h2 className="text-4xl md:text-7xl font-black text-slate-900 dark:text-white mb-8 tracking-tight leading-[1.1]">
               Построй свой путь в IT <br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600">
                 на реальной практике
               </span>
             </h2>
 
-            <p className="text-xl text-slate-500 dark:text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
               {user ? (
                 <>
                   Рады видеть тебя снова,{" "}
@@ -267,10 +374,10 @@ export default function Home() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/courses">
+              <Link href="/courses" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="h-16 px-10 text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-xl shadow-blue-500/30 transition-all hover:-translate-y-1 active:translate-y-0 w-full sm:w-auto"
+                  className="h-16 px-10 text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-xl shadow-blue-500/30 transition-all hover:-translate-y-1 active:translate-y-0 w-full"
                 >
                   {user ? "Продолжить обучение" : "Начать обучение бесплатно"}
                   <ArrowRight className="ml-2 w-5 h-5" />
@@ -301,9 +408,9 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="container mx-auto px-4 py-32">
-          <div className="text-center mb-20">
-            <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
+        <section className="container mx-auto px-4 py-24 md:py-32">
+          <div className="text-center mb-16 md:mb-20">
+            <h3 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
               Почему выбирают нас?
             </h3>
             <p className="text-slate-500 dark:text-slate-400 font-medium">
@@ -336,20 +443,20 @@ export default function Home() {
 
       {!session && (
         <section className="container mx-auto px-4 py-20">
-          <div className="relative bg-gradient-to-r from-blue-600 to-indigo-700 rounded-[3rem] p-12 md:p-20 overflow-hidden shadow-2xl shadow-blue-500/40">
+          <div className="relative bg-gradient-to-r from-blue-600 to-indigo-700 rounded-[2.5rem] md:rounded-[3rem] p-10 md:p-20 overflow-hidden shadow-2xl shadow-blue-500/40">
             <div className="absolute top-0 right-0 w-1/2 h-full bg-white/10 skew-x-12 translate-x-1/2" />
             <div className="relative z-10 max-w-2xl text-white">
-              <h3 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
+              <h3 className="text-3xl md:text-5xl font-black mb-6 leading-tight">
                 Готов написать свой <br /> первый Hello World?
               </h3>
-              <p className="text-xl text-blue-100 mb-10 font-medium leading-relaxed">
+              <p className="text-lg md:text-xl text-blue-100 mb-10 font-medium leading-relaxed">
                 Присоединяйся к нашему комьюнити. Начни учиться сегодня, чтобы
                 завтра оффер нашел тебя сам.
               </p>
               <Link href="/login">
                 <Button
                   size="lg"
-                  className="bg-white text-blue-600 hover:bg-blue-50 font-black text-lg px-10 h-16 rounded-2xl shadow-xl transition-all active:scale-95"
+                  className="bg-white text-blue-600 hover:bg-blue-50 font-black text-lg px-8 md:px-10 h-16 rounded-2xl shadow-xl transition-all active:scale-95 w-full sm:w-auto"
                 >
                   Зарегистрироваться сейчас
                 </Button>
@@ -367,7 +474,9 @@ export default function Home() {
               CodeLearn
             </span>
           </div>
-          <p>© {new Date().getFullYear()} CodeLearn. Все права защищены.</p>
+          <p className="text-center md:text-left">
+            © {new Date().getFullYear()} CodeLearn. Все права защищены.
+          </p>
           <div className="flex gap-6 text-slate-400 font-bold text-sm">
             <a href="#" className="hover:text-blue-600 transition-colors">
               Политика
