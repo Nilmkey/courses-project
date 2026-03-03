@@ -7,6 +7,8 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { ExtendedUser } from "@/backend/auth";
 import { authClient } from "@/lib/auth-client";
+import { Toaster } from "react-hot-toast";
+import { useToast } from "@/hooks/useToast";
 import {
   Code,
   Flame,
@@ -90,6 +92,7 @@ export default function ProfilePage() {
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
   const [progress, setProgress] = useState<Record<string, CourseProgress>>({});
+  const toast = useToast();
 
   const user = session?.user as unknown as ExtendedUser | undefined;
 
@@ -152,14 +155,43 @@ export default function ProfilePage() {
         )
       : 0;
 
-  const handleLogout = async () => {
-    await authClient.signOut({
-      fetchOptions: { onSuccess: () => router.push("/") },
-    });
+  const handleLogout = () => {
+    toast.confirm(
+      "Вы точно хотите выйти из аккаунта?",
+      async () => {
+        await authClient.signOut({
+          fetchOptions: {
+            onSuccess: () => {
+              toast.success("Вы успешно вышли из аккаунта.");
+              router.push("/");
+            },
+          },
+        });
+      },
+      {
+        confirmText: "Выйти",
+        confirmClassName: "bg-red-600 hover:bg-red-500",
+      },
+    );
   };
 
   return (
     <div className="min-h-screen bg-[#f0f5ff] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 flex flex-col">
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
+            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+            border:
+              resolvedTheme === "dark"
+                ? "1px solid #1e293b"
+                : "1px solid #e2e8f0",
+            borderRadius: "0.75rem",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+          },
+        }}
+      />
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-indigo-100/50 dark:border-slate-800 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link

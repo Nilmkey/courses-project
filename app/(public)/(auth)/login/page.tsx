@@ -92,7 +92,21 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 flex flex-col transition-colors duration-300 relative overflow-hidden">
-      <Toaster />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
+            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+            border:
+              resolvedTheme === "dark"
+                ? "1px solid #1e293b"
+                : "1px solid #e2e8f0",
+            borderRadius: "0.75rem",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+          },
+        }}
+      />
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/40 dark:bg-indigo-900/20 rounded-full blur-[120px] -z-10" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-200/30 dark:bg-blue-900/10 rounded-full blur-[120px] -z-10" />
 
@@ -179,7 +193,7 @@ export default function AuthPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
-                </div>
+                </div>  
               </div>
 
               <div className="space-y-2">
