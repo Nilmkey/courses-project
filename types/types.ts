@@ -253,3 +253,11 @@ export interface CourseWithSectionsResponse extends CourseApiResponse {
 export interface CoursesListResponse {
   courses: CourseApiResponse[];
 }
+
+export interface CourseFormData {
+  title: string;
+  description: string;
+  level: CourseLevel;
+  price: number;
+  isPublished: boolean;
+}

@@ -11,7 +11,7 @@ export const coursesApi = {
   getAll: () => api.get<CoursesListResponse>("/v1/courses"),
 
   getById: (customId: string) =>
-    api.get<CourseApiResponse>(`/v1/courses/id/${customId}`),
+    api.get<CourseWithSectionsResponse>(`/v1/courses/id/${customId}`),
 
   create: (customId: string, data: CreateCourseData) =>
     api.post<CourseApiResponse>(
@@ -28,4 +28,7 @@ export const coursesApi = {
       undefined,
       true,
     ),
+
+  delete: (customId: string) =>
+    api.delete<void>(`/v1/courses/${customId}`, undefined, true),
 };

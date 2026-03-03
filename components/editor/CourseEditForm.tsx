@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Save, LayoutList } from "lucide-react";
+import { ArrowLeft, Save, LayoutList, Loader2 } from "lucide-react";
 import { CourseTitleInput } from "./CourseTitleInput";
 import { CourseDescriptionInput } from "./CourseDescriptionInput";
 import { CourseLevelSelect, type CourseLevel } from "./CourseLevelSelect";
@@ -11,49 +11,57 @@ import { CoursePublishToggle } from "./CoursePublishToggle";
 import { Button } from "@/components/ui/button";
 import { coursesApi } from "@/lib/api/entities/api-courses";
 import { useToast } from "@/hooks/useToast";
-import { CourseApiResponse } from "@/types/types";
+import type { CourseFormData } from "@/types/types";
 
-export interface CourseFormData {
-  title: string;
-  description: string;
-  level: CourseLevel;
-  price: number;
-  isPublished: boolean;
-}
-
-export interface CourseEditFormProps {
-  initialData?: Partial<CourseApiResponse>;
-}
+const defaultCourseData: CourseFormData = {
+  title: "",
+  description: "",
+  level: "beginner",
+  price: 0,
+  isPublished: false,
+};
 
 export function CourseEditForm() {
   const router = useRouter();
   const { courseId } = useParams();
   const toast = useToast();
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [initialData, setInitialData] = useState<CourseApiResponse>();
+  const [isNewCourse, setIsNewCourse] = useState(true);
+  const [initialData, setInitialData] = useState<CourseFormData>(defaultCourseData);
+  const [formData, setFormData] = useState<CourseFormData>(defaultCourseData);
 
-  const loadCourse = async () => {
-    try {
-      const response = await coursesApi.getById(courseId as string);
-      setInitialData(response);
-    } catch (error) {
-      toast.error("Не удалось создать курс");
-      console.error("Failed to save course:", error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  useEffect(() => {
+    const loadCourse = async () => {
+      if (!courseId) {
+        setIsLoading(false);
+        return;
+      }
 
-  useEffect(() => {}, []);
+      try {
+        const response = await coursesApi.getById(courseId as string);
+        const courseData: CourseFormData = {
+          title: response.title,
+          description: response.description ?? "",
+          level: response.level as CourseLevel,
+          price: response.price,
+          isPublished: response.isPublished,
+        };
+        setInitialData(courseData);
+        setFormData(courseData);
+        setIsNewCourse(false);
+      } catch (error) {
+        setIsNewCourse(true);
+        setInitialData(defaultCourseData);
+        setFormData(defaultCourseData);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const [formData, setFormData] = useState<CourseFormData>({
-    title: initialData.title ?? "",
-    description: initialData.description ?? "",
-    level: (initialData.level as CourseLevel) ?? "beginner",
-    price: initialData.price ?? 0,
-    isPublished: initialData.isPublished ?? false,
-  });
+    loadCourse();
+  }, [courseId]);
 
   const updateField = useCallback(
     <K extends keyof CourseFormData>(field: K, value: CourseFormData[K]) => {
@@ -65,16 +73,22 @@ export function CourseEditForm() {
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      await coursesApi.create(courseId as string, formData);
-      toast.success("Курс успешно создан!");
+      if (isNewCourse) {
+        await coursesApi.create(courseId as string, formData);
+        toast.success("Курс успешно создан!");
+      } else {
+        await coursesApi.update(courseId as string, formData);
+        toast.success("Курс успешно обновлён!");
+      }
+      setInitialData(formData);
       setIsSaved(true);
     } catch (error) {
-      toast.error("Не удалось создать курс");
+      toast.error(isNewCourse ? "Не удалось создать курс" : "Не удалось обновить курс");
       console.error("Failed to save course:", error);
     } finally {
       setIsSaving(false);
     }
-  }, [formData, courseId, toast]);
+  }, [formData, courseId, toast, isNewCourse]);
 
   const handleGoBack = useCallback(() => {
     router.back();
@@ -87,13 +101,26 @@ export function CourseEditForm() {
   const isDirty = useMemo(() => {
     if (isSaved) return false;
     return (
-      formData.title !== (initialData.title ?? "") ||
-      formData.description !== (initialData.description ?? "") ||
-      formData.level !== (initialData.level ?? "beginner") ||
-      formData.price !== (initialData.price ?? 0) ||
-      formData.isPublished !== (initialData.isPublished ?? false)
+      formData.title !== initialData.title ||
+      formData.description !== initialData.description ||
+      formData.level !== initialData.level ||
+      formData.price !== initialData.price ||
+      formData.isPublished !== initialData.isPublished
     );
   }, [formData, initialData, isSaved]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-16 h-16 animate-spin text-blue-600 mx-auto mb-6" />
+          <p className="text-xl font-bold text-slate-900 dark:text-white">
+            Загрузка курса...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950">
