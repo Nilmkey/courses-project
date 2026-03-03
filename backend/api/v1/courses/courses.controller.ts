@@ -5,6 +5,7 @@ import type {
   CreateCourseRequest,
   UpdateCourseRequest,
   GetCourseBySlugRequest,
+  GetCourseByCustomIdRequest,
   DeleteCourseRequest,
   PublishCourseRequest,
   CourseResponse,
@@ -116,6 +117,23 @@ export const coursesController = {
   ): Promise<void> {
     const { slug } = req.params;
     const course = await coursesService.getBySlug(slug);
+
+    const response: CourseWithSectionsResponse = {
+      ...toCourseResponse(course as unknown as CourseData),
+      sections: course.sections.map((s) =>
+        toSectionWithLessons(s as unknown as SectionData),
+      ),
+    };
+
+    res.json(response);
+  },
+
+  async getByCustomId(
+    req: Request<GetCourseByCustomIdRequest["params"]>,
+    res: Response<CourseWithSectionsResponse>,
+  ): Promise<void> {
+    const { custom_id } = req.params;
+    const course = await coursesService.getByCustomId(custom_id);
 
     const response: CourseWithSectionsResponse = {
       ...toCourseResponse(course as unknown as CourseData),

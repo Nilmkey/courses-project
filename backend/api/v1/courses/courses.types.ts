@@ -56,6 +56,12 @@ export interface GetCourseBySlugRequest {
   };
 }
 
+export interface GetCourseByCustomIdRequest {
+  params: {
+    custom_id: string;
+  };
+}
+
 export interface DeleteCourseRequest {
   params: {
     custom_id: string;

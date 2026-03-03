@@ -1,4 +1,3 @@
-// api/v1/courses/courses.validation.ts
 import { z } from "zod";
 
 const BlockContentSchema = z.object({
@@ -48,11 +47,19 @@ export const createCourseSchema = z.object({
     custom_id: z.string().uuid("Неверный формат UUID"),
   }),
   body: z.object({
-    title: z.string().min(3, "Название должно содержать минимум 3 символа"),
+    title: z.string()
+      .min(1, "Название обязательно")
+      .refine((val) => val.trim().length >= 3, {
+        message: "Название должно содержать минимум 3 символа",
+      }),
     slug: z
       .string()
-      .min(3, "Slug должен содержать минимум 3 символа")
-      .optional(),
+      .min(1, "Slug обязателен")
+      .refine((val) => val.trim().length >= 3, {
+        message: "Slug должен содержать минимум 3 символа",
+      })
+      .optional()
+      .or(z.literal("")),
     description: z.string().optional(),
     thumbnail: z.string().url().optional().or(z.literal("")),
     level: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
@@ -67,8 +74,16 @@ export const updateCourseSchema = z.object({
     custom_id: z.string().uuid("Неверный формат UUID"),
   }),
   body: z.object({
-    title: z.string().min(3).optional(),
-    slug: z.string().min(3).optional(),
+    title: z.string()
+      .refine((val) => !val || val.trim().length >= 3, {
+        message: "Название должно содержать минимум 3 символа",
+      })
+      .optional(),
+    slug: z.string()
+      .refine((val) => !val || val.trim().length >= 3, {
+        message: "Slug должен содержать минимум 3 символа",
+      })
+      .optional(),
     description: z.string().optional(),
     thumbnail: z.string().url().optional().or(z.literal("")),
     level: z.enum(["beginner", "intermediate", "advanced"]).optional(),
@@ -80,6 +95,12 @@ export const updateCourseSchema = z.object({
 export const getCourseBySlugSchema = z.object({
   params: z.object({
     slug: z.string().min(1, "Slug обязателен"),
+  }),
+});
+
+export const getCourseByCustomIdSchema = z.object({
+  params: z.object({
+    custom_id: z.string().uuid("Неверный формат UUID"),
   }),
 });
 

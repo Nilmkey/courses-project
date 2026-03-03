@@ -3,9 +3,16 @@ import type {
   CreateCourseData,
   UpdateCourseData,
   CourseApiResponse,
+  CourseWithSectionsResponse,
+  CoursesListResponse,
 } from "@/types/types";
 
 export const coursesApi = {
+  getAll: () => api.get<CoursesListResponse>("/v1/courses"),
+
+  getById: (customId: string) =>
+    api.get<CourseApiResponse>(`/v1/courses/id/${customId}`),
+
   create: (customId: string, data: CreateCourseData) =>
     api.post<CourseApiResponse>(
       `/v1/courses/${customId}`,

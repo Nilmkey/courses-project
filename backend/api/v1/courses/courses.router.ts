@@ -6,6 +6,7 @@ import {
   createCourseSchema,
   updateCourseSchema,
   getCourseBySlugSchema,
+  getCourseByCustomIdSchema,
   deleteCourseSchema,
   publishCourseSchema,
 } from "./courses.validation";
@@ -21,6 +22,12 @@ router.get(
   "/:slug",
   validateRequest(getCourseBySlugSchema),
   coursesController.getBySlug.bind(coursesController),
+);
+
+router.get(
+  "/id/:custom_id",
+  validateRequest(getCourseByCustomIdSchema),
+  coursesController.getByCustomId.bind(coursesController),
 );
 
 router.post(

@@ -68,6 +68,30 @@ export const coursesService = {
     return { ...course, sections: sectionsWithLessons };
   },
 
+  async getByCustomId(custom_id: string) {
+    const course = await Course.findOne({ custom_id }).lean();
+    if (!course) {
+      throw ApiError.notFound("Курс не найден");
+    }
+
+    const sections = await Section.find({ course_id: course._id })
+      .sort({ order_index: 1 })
+      .lean();
+
+    const lessons = await Lesson.find({
+      section_id: { $in: sections.map((s) => s._id) },
+    })
+      .sort({ order_index: 1 })
+      .lean();
+
+    const sectionsWithLessons = sections.map((section) => ({
+      ...section,
+      lessons: lessons.filter((l) => l.section_id.equals(section._id)),
+    }));
+
+    return { ...course, sections: sectionsWithLessons };
+  },
+
   async create(data: CourseCreateInput, custom_id: string): Promise<LeanCourse> {
     const course = await Course.create({
       custom_id,

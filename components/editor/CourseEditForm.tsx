@@ -10,6 +10,8 @@ import { CoursePriceSlider } from "./CoursePriceSlider";
 import { CoursePublishToggle } from "./CoursePublishToggle";
 import { Button } from "@/components/ui/button";
 import { coursesApi } from "@/lib/api/entities/api-courses";
+import { useToast } from "@/hooks/useToast";
+import { CourseApiResponse } from "@/types/types";
 
 export interface CourseFormData {
   title: string;
@@ -20,14 +22,30 @@ export interface CourseFormData {
 }
 
 export interface CourseEditFormProps {
-  initialData?: Partial<CourseFormData>;
+  initialData?: Partial<CourseApiResponse>;
 }
 
-export function CourseEditForm({ initialData = {} }: CourseEditFormProps) {
+export function CourseEditForm() {
   const router = useRouter();
   const { courseId } = useParams();
+  const toast = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  // const [isExist, setIsExist] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [initialData, setInitialData] = useState<CourseApiResponse>();
+
+  const loadCourse = async () => {
+    try {
+      const response = await coursesApi.getById(courseId as string);
+      setInitialData(response);
+    } catch (error) {
+      toast.error("Не удалось создать курс");
+      console.error("Failed to save course:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  useEffect(() => {}, []);
 
   const [formData, setFormData] = useState<CourseFormData>({
     title: initialData.title ?? "",
@@ -47,15 +65,16 @@ export function CourseEditForm({ initialData = {} }: CourseEditFormProps) {
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      coursesApi.create(courseId as string, formData);
-      console.log("Saving course:", formData);
-      console.log("Course ID:", courseId);
+      await coursesApi.create(courseId as string, formData);
+      toast.success("Курс успешно создан!");
+      setIsSaved(true);
     } catch (error) {
+      toast.error("Не удалось создать курс");
       console.error("Failed to save course:", error);
     } finally {
       setIsSaving(false);
     }
-  }, [formData, courseId]);
+  }, [formData, courseId, toast]);
 
   const handleGoBack = useCallback(() => {
     router.back();
@@ -66,6 +85,7 @@ export function CourseEditForm({ initialData = {} }: CourseEditFormProps) {
   }, [router, courseId]);
 
   const isDirty = useMemo(() => {
+    if (isSaved) return false;
     return (
       formData.title !== (initialData.title ?? "") ||
       formData.description !== (initialData.description ?? "") ||
@@ -73,7 +93,7 @@ export function CourseEditForm({ initialData = {} }: CourseEditFormProps) {
       formData.price !== (initialData.price ?? 0) ||
       formData.isPublished !== (initialData.isPublished ?? false)
     );
-  }, [formData, initialData]);
+  }, [formData, initialData, isSaved]);
 
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950">
@@ -114,14 +134,18 @@ export function CourseEditForm({ initialData = {} }: CourseEditFormProps) {
               disabled={isSaving || !isDirty}
               className={`
                 flex items-center gap-2 h-12 px-6 rounded-xl font-bold
+                transition-all duration-200 ease-out
                 ${
                   isSaving || !isDirty
-                    ? "bg-slate-300 dark:bg-slate-700 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30"
+                    ? "bg-slate-300 dark:bg-slate-700 cursor-not-allowed opacity-60"
+                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 active:scale-95"
                 }
               `}
             >
-              <Save size={20} />
+              <Save
+                size={20}
+                className={`transition-transform duration-200 ${isSaving ? "animate-pulse" : ""}`}
+              />
               {isSaving ? "Сохранение..." : "Сохранить"}
             </Button>
           </div>

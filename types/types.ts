@@ -220,3 +220,36 @@ export interface CourseApiResponse {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface LessonItem {
+  _id: string;
+  custom_id: string;
+  section_id: string;
+  title: string;
+  slug: string;
+  is_free: boolean;
+  order_index: number;
+  content_blocks: IBlock[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SectionWithLessons {
+  _id: string;
+  custom_id: string;
+  course_id: string;
+  title: string;
+  order_index: number;
+  isDraft: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lessons: LessonItem[];
+}
+
+export interface CourseWithSectionsResponse extends CourseApiResponse {
+  sections: SectionWithLessons[];
+}
+
+export interface CoursesListResponse {
+  courses: CourseApiResponse[];
+}
