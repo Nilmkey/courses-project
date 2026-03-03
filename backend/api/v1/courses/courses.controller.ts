@@ -146,7 +146,11 @@ export const coursesController = {
   },
 
   async create(
-    req: Request<CreateCourseRequest["params"], unknown, CreateCourseRequest["body"]>,
+    req: Request<
+      CreateCourseRequest["params"],
+      unknown,
+      CreateCourseRequest["body"]
+    >,
     res: Response<CourseResponse>,
   ): Promise<void> {
     const { custom_id } = req.params;
@@ -159,10 +163,13 @@ export const coursesController = {
       throw ApiError.forbidden("Создавать курсы могут только преподаватели");
     }
 
-    const course = await coursesService.create({
-      ...courseData,
-      author_id: req.user.id,
-    }, custom_id);
+    const course = await coursesService.create(
+      {
+        ...courseData,
+        author_id: req.user.id,
+      },
+      custom_id,
+    );
 
     res.status(201).json(toCourseResponse(course as unknown as CourseData));
   },

@@ -1,28 +1,32 @@
-"use server";
+"use client";
 
-import { api } from "@/lib/api/api-client";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
-type Session = typeof authClient.$Infer.Session;
+export function useCreateCourse() {
+  const router = useRouter();
 
-export async function handleCreate() {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("better-auth.session_token")?.value;
+  const handleCreate = async () => {
+    try {
+      // Получаем сессию через клиент
+      const { data: session } = await authClient.getSession();
 
-  if (!sessionCookie) {
-    return redirect("/login");
-  }
+      console.log("📄 Сессия:", session);
 
-  const session = await api.get<Session>("/auth/get-session", {
-    headers: { cookie: `better-auth.session_token=${sessionCookie}` },
-  });
+      if (!session?.user) {
+        console.log("❌ Нет сессии — редирект на логин");
+        router.push("/login");
+        return;
+      }
 
-  if (!session?.user) {
-    return redirect("/login");
-  }
+      const courseId = crypto.randomUUID();
+      console.log("✅ Создаём курс:", courseId);
+      router.push(`/editor/course/${courseId}`);
+    } catch (error) {
+      console.error("❌ Ошибка:", error);
+      router.push("/login");
+    }
+  };
 
-  const course_id = crypto.randomUUID();
-  return redirect(`/editor/course/${course_id}`);
+  return { handleCreate };
 }

@@ -19,7 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { coursesApi } from "@/lib/api/entities/api-courses";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
-import { handleCreate } from "./newCourse";
+import { useCreateCourse } from "./newCourse";
 
 interface AdminCourse {
   _id: string;
@@ -37,6 +37,7 @@ export default function AdminDashboard() {
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
+  const { handleCreate } = useCreateCourse();
 
   useEffect(() => {
     setMounted(true);

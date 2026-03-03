@@ -8,6 +8,9 @@ export interface ICourse extends Document {
   description?: string;
   thumbnail?: string;
   author_id: mongoose.Types.ObjectId;
+  iconName?: string;
+  status?: "open" | "closed";
+  type?: "career" | "language";
   level: "beginner" | "intermediate" | "advanced";
   custom_id: string;
 }
@@ -32,7 +35,11 @@ const CourseSchema = new Schema<ICourse>(
       enum: ["beginner", "intermediate", "advanced"],
       default: "beginner",
     },
+    iconName: { type: String, default: "Code" },
+    status: { type: String, enum: ["open", "closed"], default: "open" },
+    type: { type: String, enum: ["career", "language"], default: "career" },
   },
+
   { timestamps: true },
 );
 
