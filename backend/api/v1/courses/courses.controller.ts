@@ -69,7 +69,7 @@ const toCourseResponse = (course: CourseData): CourseResponse => ({
   isPublished: course.isPublished,
   description: course.description,
   thumbnail: course.thumbnail,
-  author_id: course.author_id.toString(),
+  author_id: course.author_id?.toString() ?? "",
   level: course.level,
   createdAt: course.createdAt.toISOString(),
   updatedAt: course.updatedAt.toISOString(),
@@ -78,7 +78,7 @@ const toCourseResponse = (course: CourseData): CourseResponse => ({
 const toLessonItem = (lesson: LessonData): LessonItem => ({
   _id: lesson._id.toString(),
   custom_id: lesson.custom_id,
-  section_id: lesson.section_id.toString(),
+  section_id: lesson.section_id?.toString() ?? "",
   title: lesson.title,
   slug: lesson.slug,
   is_free: lesson.is_free,
@@ -91,7 +91,7 @@ const toLessonItem = (lesson: LessonData): LessonItem => ({
 const toSectionWithLessons = (section: SectionData): SectionWithLessons => ({
   _id: section._id.toString(),
   custom_id: section.custom_id,
-  course_id: section.course_id.toString(),
+  course_id: section.course_id?.toString() ?? "",
   title: section.title,
   order_index: section.order_index,
   isDraft: section.isDraft,
