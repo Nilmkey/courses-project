@@ -5,7 +5,7 @@ import {
   createCourseSchema,
   updateCourseSchema,
   getCourseBySlugSchema,
-  getCourseByCustomIdSchema,
+  getCourseByIdSchema,
   deleteCourseSchema,
   publishCourseSchema,
 } from "./courses.validation";
@@ -24,13 +24,13 @@ router.get(
 );
 
 router.get(
-  "/id/:custom_id",
-  validateRequest(getCourseByCustomIdSchema),
-  coursesController.getByCustomId.bind(coursesController),
+  "/id/:id",
+  validateRequest(getCourseByIdSchema),
+  coursesController.getById.bind(coursesController),
 );
 
 router.post(
-  "/:custom_id",
+  "/",
   authMiddleware,
   teacherMiddleware,
   validateRequest(createCourseSchema),
@@ -38,7 +38,7 @@ router.post(
 );
 
 router.patch(
-  "/:custom_id",
+  "/:id",
   authMiddleware,
   teacherMiddleware,
   validateRequest(updateCourseSchema),
@@ -46,7 +46,7 @@ router.patch(
 );
 
 router.delete(
-  "/:custom_id",
+  "/:id",
   authMiddleware,
   adminMiddleware,
   validateRequest(deleteCourseSchema),
@@ -54,7 +54,7 @@ router.delete(
 );
 
 router.post(
-  "/:custom_id/publish",
+  "/:id/publish",
   authMiddleware,
   teacherMiddleware,
   validateRequest(publishCourseSchema),

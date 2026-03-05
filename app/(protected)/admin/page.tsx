@@ -19,11 +19,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { coursesApi } from "@/lib/api/entities/api-courses";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
-import { useCreateCourse } from "./newCourse";
+import { handleCreate } from "./newCourse";
 
 interface AdminCourse {
   _id: string;
-  custom_id: string;
   title: string;
   slug: string;
   level: string;
@@ -37,7 +36,6 @@ export default function AdminDashboard() {
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
-  const { handleCreate } = useCreateCourse();
 
   useEffect(() => {
     setMounted(true);
@@ -57,11 +55,11 @@ export default function AdminDashboard() {
     }
   };
 
-  const deleteCourse = async (customId: string) => {
+  const deleteCourse = async (id: string) => {
     toast.confirm("Удалить этот курс навсегда?", async () => {
       try {
-        await coursesApi.delete(customId);
-        setCourses(courses.filter((c) => c.custom_id !== customId));
+        await coursesApi.delete(id);
+        setCourses(courses.filter((c) => c._id !== id));
         toast.success("Курс успешно удалён.");
       } catch {
         toast.error("Ошибка при удалении.");
@@ -179,7 +177,7 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Link href={`/editor/course/${course.custom_id}`}>
+                      <Link href={`/editor/course/${course._id}`}>
                         <Button
                           variant="outline"
                           size="sm"
@@ -191,7 +189,7 @@ export default function AdminDashboard() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => deleteCourse(course.custom_id)}
+                        onClick={() => deleteCourse(course._id)}
                         className="text-rose-500 hover:bg-rose-500 hover:text-white font-bold transition-all"
                       >
                         <Trash2 className="w-4 h-4" />
