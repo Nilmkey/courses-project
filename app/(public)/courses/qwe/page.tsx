@@ -1,9 +1,8 @@
-'use client'
+'use client'    
 
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
+import React from "react";
 import { useRouter } from "next/navigation";
-import { Code,User } from "lucide-react";
+import { Code } from "lucide-react";
 
 export default function Page() {
   const router = useRouter();
@@ -14,7 +13,7 @@ export default function Page() {
           <div
             className="flex items-center gap-3 group cursor-pointer"
             onClick={() => router.push("/")}
-          >
+          > 
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
               <Code className="w-6 h-6 text-white" />
             </div>
