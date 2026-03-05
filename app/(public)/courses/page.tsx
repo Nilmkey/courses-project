@@ -17,7 +17,7 @@ import {
   Moon,
   Loader2,
 } from "lucide-react";
-import { courseApi } from "@/lib/api-service";
+import { coursesApi } from "@/lib/api/entities/api-courses";
 
 const iconMap: Record<string, React.ReactNode> = {
   Layout: <Layout className="w-8 h-8" />,
@@ -43,8 +43,8 @@ const CoursesPage = () => {
   const loadCourses = async () => {
     try {
       setLoading(true);
-      const data = await courseApi.getAll();
-      setCourses(data || []);
+      const response = await coursesApi.getAll();
+      setCourses(response.courses || []);
     } catch (err) {
       console.error("Ошибка загрузки курсов:", err);
     } finally {
@@ -173,7 +173,11 @@ const CoursesPage = () => {
                     <div
                       className={`w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white shadow-lg shadow-blue-100 dark:shadow-none group-hover:rotate-12 transition-transform duration-500`}
                     >
-                      {iconMap[course.iconName] || <Code className="w-8 h-8" />}
+                      {course.iconName && iconMap[course.iconName] ? (
+                        iconMap[course.iconName]
+                      ) : (
+                        <Code className="w-8 h-8" />
+                      )}
                     </div>
                   </div>
 
