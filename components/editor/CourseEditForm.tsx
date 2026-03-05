@@ -28,7 +28,6 @@ export function CourseEditForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [isNewCourse, setIsNewCourse] = useState(true);
   const [initialData, setInitialData] =
     useState<CourseFormData>(defaultCourseData);
   const [formData, setFormData] = useState<CourseFormData>(defaultCourseData);
@@ -51,9 +50,7 @@ export function CourseEditForm() {
         };
         setInitialData(courseData);
         setFormData(courseData);
-        setIsNewCourse(false);
       } catch (error) {
-        setIsNewCourse(true);
         setInitialData(defaultCourseData);
         setFormData(defaultCourseData);
       } finally {
@@ -67,6 +64,7 @@ export function CourseEditForm() {
   const updateField = useCallback(
     <K extends keyof CourseFormData>(field: K, value: CourseFormData[K]) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
+      setIsSaved(false);
     },
     [],
   );
@@ -74,24 +72,17 @@ export function CourseEditForm() {
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      if (isNewCourse) {
-        await coursesApi.create(courseId as string, formData);
-        toast.success("Курс успешно создан!");
-      } else {
-        await coursesApi.update(courseId as string, formData);
-        toast.success("Курс успешно обновлён!");
-      }
+      await coursesApi.update(courseId as string, formData);
+      toast.success("Курс успешно обновлён!");
       setInitialData(formData);
       setIsSaved(true);
     } catch (error) {
-      toast.error(
-        isNewCourse ? "Не удалось создать курс" : "Не удалось обновить курс",
-      );
+      toast.error("Не удалось обновить курс");
       console.error("Failed to save course:", error);
     } finally {
       setIsSaving(false);
     }
-  }, [formData, courseId, toast, isNewCourse]);
+  }, [formData, courseId, toast]);
 
   const handleGoBack = useCallback(() => {
     router.back();

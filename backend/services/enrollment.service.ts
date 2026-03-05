@@ -48,7 +48,7 @@ export const enrollmentService = {
     const updated = await Enrollment.findOneAndUpdate(
       { user_id: userId, course_id: courseId },
       { status },
-      { new: true }
+      { returnDocument: 'after' }
     ).lean();
     return updated;
   },

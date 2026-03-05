@@ -2,10 +2,9 @@
 import type { Request, Response } from "express";
 import { coursesService } from "../../../services/courses.service";
 import type {
-  CreateCourseRequest,
   UpdateCourseRequest,
   GetCourseBySlugRequest,
-  GetCourseByCustomIdRequest,
+  GetCourseByIdRequest,
   DeleteCourseRequest,
   PublishCourseRequest,
   CourseResponse,
@@ -16,13 +15,12 @@ import type {
 } from "./courses.types";
 import { createError } from "../../../middleware/error.middleware";
 import type { AuthenticatedUser } from "../../../middleware/auth.middleware";
-import type { Types } from "mongoose";
+import { Types } from "mongoose";
 
 type AuthRequest = Request & { user?: AuthenticatedUser };
 
 interface CourseData {
   _id: Types.ObjectId;
-  custom_id: string;
   title: string;
   slug: string;
   price: number;
@@ -37,7 +35,6 @@ interface CourseData {
 
 interface SectionData {
   _id: Types.ObjectId;
-  custom_id: string;
   course_id: Types.ObjectId;
   title: string;
   order_index: number;
@@ -49,7 +46,6 @@ interface SectionData {
 
 interface LessonData {
   _id: Types.ObjectId;
-  custom_id: string;
   section_id: Types.ObjectId;
   title: string;
   slug: string;
@@ -62,7 +58,6 @@ interface LessonData {
 
 const toCourseResponse = (course: CourseData): CourseResponse => ({
   _id: course._id.toString(),
-  custom_id: course.custom_id,
   title: course.title,
   slug: course.slug,
   price: course.price,
@@ -77,7 +72,6 @@ const toCourseResponse = (course: CourseData): CourseResponse => ({
 
 const toLessonItem = (lesson: LessonData): LessonItem => ({
   _id: lesson._id.toString(),
-  custom_id: lesson.custom_id,
   section_id: lesson.section_id?.toString() ?? "",
   title: lesson.title,
   slug: lesson.slug,
@@ -90,7 +84,6 @@ const toLessonItem = (lesson: LessonData): LessonItem => ({
 
 const toSectionWithLessons = (section: SectionData): SectionWithLessons => ({
   _id: section._id.toString(),
-  custom_id: section.custom_id,
   course_id: section.course_id?.toString() ?? "",
   title: section.title,
   order_index: section.order_index,
@@ -128,12 +121,12 @@ export const coursesController = {
     res.json(response);
   },
 
-  async getByCustomId(
-    req: Request<GetCourseByCustomIdRequest["params"]>,
+  async getById(
+    req: Request<GetCourseByIdRequest["params"]>,
     res: Response<CourseWithSectionsResponse>,
   ): Promise<void> {
-    const { custom_id } = req.params;
-    const course = await coursesService.getByCustomId(custom_id);
+    const { id } = req.params;
+    const course = await coursesService.getById(id);
 
     const response: CourseWithSectionsResponse = {
       ...toCourseResponse(course as unknown as CourseData),
@@ -146,16 +139,9 @@ export const coursesController = {
   },
 
   async create(
-    req: Request<
-      CreateCourseRequest["params"],
-      unknown,
-      CreateCourseRequest["body"]
-    >,
+    req: Request,
     res: Response<CourseResponse>,
   ): Promise<void> {
-    const { custom_id } = req.params;
-    const courseData = req.body as CreateCourseRequest["body"];
-
     if (
       !req.user ||
       (req.user.role !== "admin" && req.user.role !== "teacher")
@@ -163,13 +149,7 @@ export const coursesController = {
       throw createError.forbidden("Создавать курсы могут только преподаватели");
     }
 
-    const course = await coursesService.create(
-      {
-        ...courseData,
-        author_id: req.user.id,
-      },
-      custom_id,
-    );
+    const course = await coursesService.create(req.user.id);
 
     res.status(201).json(toCourseResponse(course as unknown as CourseData));
   },
@@ -182,7 +162,7 @@ export const coursesController = {
     >,
     res: Response<CourseResponse>,
   ): Promise<void> {
-    const { custom_id } = req.params;
+    const { id } = req.params;
     const updateData = req.body;
 
     const authReq = req as AuthRequest;
@@ -195,7 +175,7 @@ export const coursesController = {
       );
     }
 
-    const course = await coursesService.update(custom_id, updateData);
+    const course = await coursesService.update(id, updateData);
     res.json(toCourseResponse(course as unknown as CourseData));
   },
 
@@ -203,14 +183,14 @@ export const coursesController = {
     req: Request<DeleteCourseRequest["params"]>,
     res: Response<void>,
   ): Promise<void> {
-    const { custom_id } = req.params;
+    const { id } = req.params;
 
     const authReq = req as AuthRequest;
     if (!authReq.user || authReq.user.role !== "admin") {
       throw createError.forbidden("Удалять курсы могут только администраторы");
     }
 
-    await coursesService.delete(custom_id);
+    await coursesService.delete(id);
     res.status(204).send();
   },
 
@@ -218,7 +198,7 @@ export const coursesController = {
     req: Request<PublishCourseRequest["params"]>,
     res: Response<CourseResponse>,
   ): Promise<void> {
-    const { custom_id } = req.params;
+    const { id } = req.params;
 
     const authReq = req as AuthRequest;
     if (
@@ -228,7 +208,7 @@ export const coursesController = {
       throw createError.forbidden("Публиковать курсы могут только преподаватели");
     }
 
-    const course = await coursesService.publish(custom_id);
+    const course = await coursesService.publish(id);
     res.json(toCourseResponse(course as unknown as CourseData));
   },
 };

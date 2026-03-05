@@ -1,6 +1,5 @@
 import { api } from "@/lib/api/api-client";
 import type {
-  CreateCourseData,
   UpdateCourseData,
   CourseApiResponse,
   CourseWithSectionsResponse,
@@ -8,27 +7,37 @@ import type {
 } from "@/types/types";
 
 export const coursesApi = {
-  getAll: () => api.get<CoursesListResponse>("/v1/courses"),
+  getAll: () => api.get<CoursesListResponse>("/v1/courses", undefined, true),
 
-  getById: (customId: string) =>
-    api.get<CourseWithSectionsResponse>(`/v1/courses/id/${customId}`),
+  getById: (id: string) =>
+    api.get<CourseWithSectionsResponse>(`/v1/courses/id/${id}`, undefined, true),
 
-  create: (customId: string, data: CreateCourseData) =>
+  create: () =>
     api.post<CourseApiResponse>(
-      `/v1/courses/${customId}`,
-      data,
+      "/v1/courses",
+      undefined,
       undefined,
       true,
     ),
 
-  update: (customId: string, data: UpdateCourseData) =>
+  update: (id: string, data: UpdateCourseData) =>
     api.patch<CourseApiResponse>(
-      `/v1/courses/${customId}`,
+      `/v1/courses/${id}`,
       data,
       undefined,
       true,
     ),
 
-  delete: (customId: string) =>
-    api.delete<void>(`/v1/courses/${customId}`, undefined, true),
+  delete: (id: string) =>
+    api.delete<void>(`/v1/courses/${id}`, undefined, true),
+
+  createWithRedirect: async () => {
+    const course = await api.post<CourseApiResponse>(
+      "/v1/courses",
+      undefined,
+      undefined,
+      true,
+    );
+    return course;
+  },
 };

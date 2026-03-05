@@ -36,7 +36,7 @@ export const progressService = {
     return await Progress.findOneAndUpdate(
       { student_id: studentId, lesson_id: lessonId },
       { completed: true, completedAt: new Date() },
-      { upsert: true, new: true },
+      { upsert: true, returnDocument: 'after' },
     ).lean();
   },
 
@@ -91,7 +91,7 @@ export const progressService = {
         ...data,
         completedAt: data.completed ?? new Date(),
       },
-      { upsert: true, new: true },
+      { upsert: true, returnDocument: 'after' },
     ).lean();
   },
 };
