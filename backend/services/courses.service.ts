@@ -1,6 +1,6 @@
 // services/courses.service.ts
 import { Course, Section, Lesson } from "../models";
-import { ApiError } from "../utils/ApiError";
+import { createError } from "../middleware/error.middleware";
 import type { ICourse } from "../models";
 import type { Types } from "mongoose";
 import { slugify } from "../utils/slugify";
@@ -49,7 +49,7 @@ export const coursesService = {
   async getBySlug(slug: string) {
     const course = await Course.findOne({ slug }).lean();
     if (!course) {
-      throw ApiError.notFound("Курс не найден");
+      throw createError.notFound("Курс не найден");
     }
 
     const sections = await Section.find({ course_id: course._id })
@@ -73,7 +73,7 @@ export const coursesService = {
   async getByCustomId(custom_id: string) {
     const course = await Course.findOne({ custom_id }).lean();
     if (!course) {
-      throw ApiError.notFound("Курс не найден");
+      throw createError.notFound("Курс не найден");
     }
 
     const sections = await Section.find({ course_id: course._id })
@@ -137,7 +137,7 @@ export const coursesService = {
   async update(custom_id: string, data: Partial<ICourse>): Promise<LeanCourse> {
     const course = await Course.findOne({ custom_id });
     if (!course) {
-      throw ApiError.notFound("Курс не найден");
+      throw createError.notFound("Курс не найден");
     }
     
     const updated = await Course.findByIdAndUpdate(
@@ -152,7 +152,7 @@ export const coursesService = {
   async delete(custom_id: string): Promise<void> {
     const course = await Course.findOne({ custom_id });
     if (!course) {
-      throw ApiError.notFound("Курс не найден");
+      throw createError.notFound("Курс не найден");
     }
     
     const sections = await Section.find({ course_id: course._id });
@@ -166,7 +166,7 @@ export const coursesService = {
   async publish(custom_id: string): Promise<LeanCourse> {
     const course = await Course.findOne({ custom_id });
     if (!course) {
-      throw ApiError.notFound("Курс не найден");
+      throw createError.notFound("Курс не найден");
     }
     
     const updated = await Course.findByIdAndUpdate(

@@ -29,7 +29,8 @@ export function CourseEditForm() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isNewCourse, setIsNewCourse] = useState(true);
-  const [initialData, setInitialData] = useState<CourseFormData>(defaultCourseData);
+  const [initialData, setInitialData] =
+    useState<CourseFormData>(defaultCourseData);
   const [formData, setFormData] = useState<CourseFormData>(defaultCourseData);
 
   useEffect(() => {
@@ -83,7 +84,9 @@ export function CourseEditForm() {
       setInitialData(formData);
       setIsSaved(true);
     } catch (error) {
-      toast.error(isNewCourse ? "Не удалось создать курс" : "Не удалось обновить курс");
+      toast.error(
+        isNewCourse ? "Не удалось создать курс" : "Не удалось обновить курс",
+      );
       console.error("Failed to save course:", error);
     } finally {
       setIsSaving(false);

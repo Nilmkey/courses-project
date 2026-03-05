@@ -14,7 +14,7 @@ import type {
   LessonItem,
   SectionWithLessons,
 } from "./courses.types";
-import { ApiError } from "../../../utils/ApiError";
+import { createError } from "../../../middleware/error.middleware";
 import type { AuthenticatedUser } from "../../../middleware/auth.middleware";
 import type { Types } from "mongoose";
 
@@ -160,7 +160,7 @@ export const coursesController = {
       !req.user ||
       (req.user.role !== "admin" && req.user.role !== "teacher")
     ) {
-      throw ApiError.forbidden("Создавать курсы могут только преподаватели");
+      throw createError.forbidden("Создавать курсы могут только преподаватели");
     }
 
     const course = await coursesService.create(
@@ -190,7 +190,7 @@ export const coursesController = {
       !authReq.user ||
       (authReq.user.role !== "admin" && authReq.user.role !== "teacher")
     ) {
-      throw ApiError.forbidden(
+      throw createError.forbidden(
         "Редактировать курсы могут только преподаватели",
       );
     }
@@ -207,7 +207,7 @@ export const coursesController = {
 
     const authReq = req as AuthRequest;
     if (!authReq.user || authReq.user.role !== "admin") {
-      throw ApiError.forbidden("Удалять курсы могут только администраторы");
+      throw createError.forbidden("Удалять курсы могут только администраторы");
     }
 
     await coursesService.delete(custom_id);
@@ -225,7 +225,7 @@ export const coursesController = {
       !authReq.user ||
       (authReq.user.role !== "admin" && authReq.user.role !== "teacher")
     ) {
-      throw ApiError.forbidden("Публиковать курсы могут только преподаватели");
+      throw createError.forbidden("Публиковать курсы могут только преподаватели");
     }
 
     const course = await coursesService.publish(custom_id);

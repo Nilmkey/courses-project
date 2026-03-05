@@ -1,4 +1,3 @@
-// api/v1/courses/courses.router.ts
 import { Router } from "express";
 import { coursesController } from "./courses.controller";
 import { validateRequest } from "./courses.middleware";
