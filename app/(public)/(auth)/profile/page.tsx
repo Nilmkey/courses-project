@@ -7,6 +7,8 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { ExtendedUser } from "@/backend/auth";
 import { authClient } from "@/lib/auth-client";
+import { Toaster } from "react-hot-toast";
+import { useToast } from "@/hooks/useToast";
 import {
   Code,
   Flame,
@@ -90,6 +92,7 @@ export default function ProfilePage() {
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
   const [progress, setProgress] = useState<Record<string, CourseProgress>>({});
+  const toast = useToast();
 
   const user = session?.user as unknown as ExtendedUser | undefined;
 
@@ -152,14 +155,43 @@ export default function ProfilePage() {
         )
       : 0;
 
-  const handleLogout = async () => {
-    await authClient.signOut({
-      fetchOptions: { onSuccess: () => router.push("/") },
-    });
+  const handleLogout = () => {
+    toast.confirm(
+      "Вы точно хотите выйти из аккаунта?",
+      async () => {
+        await authClient.signOut({
+          fetchOptions: {
+            onSuccess: () => {
+              toast.success("Вы успешно вышли из аккаунта.");
+              router.push("/");
+            },
+          },
+        });
+      },
+      {
+        confirmText: "Выйти",
+        confirmClassName: "bg-red-600 hover:bg-red-500",
+      },
+    );
   };
 
   return (
     <div className="min-h-screen bg-[#f0f5ff] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 flex flex-col">
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
+            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+            border:
+              resolvedTheme === "dark"
+                ? "1px solid #1e293b"
+                : "1px solid #e2e8f0",
+            borderRadius: "0.75rem",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+          },
+        }}
+      />
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-indigo-100/50 dark:border-slate-800 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link
@@ -208,9 +240,9 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 mt-8 space-y-8 flex-grow pb-20">
-        <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-xl shadow-indigo-900/5 border border-white dark:border-slate-800 overflow-hidden">
-          <div className="h-32 bg-gradient-to-br from-[#3b5bdb] via-[#5c7cfa] to-[#74c0fc] relative">
+      <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 mt-8 space-y-8 grow pb-20">
+        <div className="bg-white dark:bg-slate-900 rounded-2rem shadow-xl shadow-indigo-900/5 border border-white dark:border-slate-800 overflow-hidden">
+          <div className="h-32 bg-linear-to-br from-[#3b5bdb] via-[#5c7cfa] to-[#74c0fc] relative">
             <div
               className="absolute inset-0 opacity-[0.15]"
               style={{
@@ -244,7 +276,7 @@ export default function ProfilePage() {
                   </h1>
 
                   {userRole === "admin" ? (
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-orange-500/20">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-linear-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-orange-500/20">
                       <ShieldCheck size={12} /> Admin
                     </div>
                   ) : (
@@ -268,7 +300,6 @@ export default function ProfilePage() {
             border="border-orange-100 dark:border-orange-500/20"
             value={user?.streak || 0}
             label="Дней подряд"
-            suffix="🔥"
           />
           <StatCard
             icon={<Target size={22} className="text-[#3b5bdb]" />}
@@ -384,16 +415,14 @@ export default function ProfilePage() {
       </main>
 
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12">
-        <div className="container mx-auto px-4 max-w-5xl flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8 text-slate-400 font-bold uppercase tracking-widest text-[10px]">
           <div className="flex items-center gap-2">
-            <Code className="w-6 h-6 text-blue-600" />
-            <span className="text-xl font-black text-slate-800 dark:text-white uppercase">
+            <Code className="w-5 h-5 text-blue-600" />
+            <span className="text-lg font-black text-slate-800 dark:text-white tracking-tight">
               CodeLearn
             </span>
           </div>
-          <p className="text-slate-400 font-medium">
-            © {new Date().getFullYear()} CodeLearn. Все права защищены.
-          </p>
+          <p>© {new Date().getFullYear()} CodeLearn. Все права защищены.</p>
           <div className="flex gap-6 text-slate-400 font-bold text-sm">
             <a href="#" className="hover:text-blue-600 transition-colors">
               Политика

@@ -1,26 +1,7 @@
-import { CourseEditorClient } from "./CourseEditorClient";
+"use client";
 
-interface PageProps {
-  params: Promise<{
-    courseId: string;
-  }>;
-}
+import { CourseEditForm } from "@/components/editor/CourseEditForm";
 
-export default async function CourseEditorPage({ params }: PageProps) {
-  const { courseId } = await params;
-
-  if (!courseId || typeof courseId !== "string") {
-    return (
-      <div className="max-w-4xl mx-auto py-16 px-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">Неверный ID курса</h1>
-          <p className="text-slate-500 mt-2">
-            Пожалуйста, проверьте URL и попробуйте снова
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return <CourseEditorClient courseId={courseId} />;
+export default function CourseEditorPage() {
+  return <CourseEditForm />;
 }

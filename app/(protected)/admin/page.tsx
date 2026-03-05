@@ -16,22 +16,28 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { courseApi } from "@/lib/api-service";
+import { coursesApi } from "@/lib/api/entities/api-courses";
+import { Toaster } from "react-hot-toast";
+import { useToast } from "@/hooks/useToast";
+import { useCreateCourse } from "./newCourse";
 
-// Добавляем интерфейс для типизации курса
 interface AdminCourse {
   _id: string;
+  custom_id: string;
   title: string;
   slug: string;
-  gradient?: string;
+  level: string;
+  isPublished: boolean;
+  price: number;
 }
 
 export default function AdminDashboard() {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  // Заменяем any на AdminCourse[]
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
+  const { handleCreate } = useCreateCourse();
 
   useEffect(() => {
     setMounted(true);
@@ -41,39 +47,51 @@ export default function AdminDashboard() {
   const loadCourses = async () => {
     try {
       setLoading(true);
-      const data = await courseApi.getAll();
-      setCourses(data || []);
+      const response = await coursesApi.getAll();
+      setCourses(response.courses || []);
     } catch (err) {
       console.error("Ошибка загрузки:", err);
+      toast.error("Не удалось загрузить курсы. Попробуйте позже.");
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteCourse = async (id: string) => {
-    if (confirm("Удалить этот курс навсегда?")) {
+  const deleteCourse = async (customId: string) => {
+    toast.confirm("Удалить этот курс навсегда?", async () => {
       try {
-        await courseApi.delete(id);
-        // Используем типизированный стейт без any
-        setCourses(courses.filter((c) => c._id !== id));
+        await coursesApi.delete(customId);
+        setCourses(courses.filter((c) => c.custom_id !== customId));
+        toast.success("Курс успешно удалён.");
       } catch {
-        // Убрали неиспользуемую переменную err
-        alert("Ошибка при удалении");
+        toast.error("Ошибка при удалении.");
       }
-    }
+    });
   };
 
   if (!mounted) return null;
 
   return (
-    /* Добавляем flex и min-h-screen для управления высотой */
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      {/* --- Хедер --- */}
-      {/* --- Хедер --- */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
+            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+            border:
+              resolvedTheme === "dark"
+                ? "1px solid #1e293b"
+                : "1px solid #e2e8f0",
+            borderRadius: "0.75rem",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+          },
+        }}
+      />
+
       <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-6">
-            {/* Логотип теперь обернут в Link и работает как кнопка "На главную" */}
             <Link
               href="/"
               className="flex items-center gap-2 group cursor-pointer"
@@ -102,16 +120,16 @@ export default function AdminDashboard() {
                 <Moon className="text-slate-600" size={20} />
               )}
             </Button>
-            <Link href="/admin/courses/new">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
-                <Plus className="w-4 h-4 mr-1" /> Создать
-              </Button>
-            </Link>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
+              onClick={handleCreate}
+            >
+              <Plus className="w-4 h-4 mr-1" /> Создать
+            </Button>
           </div>
         </div>
       </header>
 
-      {/* --- Основной контент (flex-1 заставляет этот блок занимать все свободное место) --- */}
       <main className="flex-1 container mx-auto px-4 py-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
           <div className="flex items-center gap-3">
@@ -143,16 +161,13 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             ) : (
-              // Убрали any из map
               courses.map((course) => (
                 <Card
                   key={course._id}
                   className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
                 >
                   <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-6">
-                    <div
-                      className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${course.gradient || "from-slate-100 to-slate-200"} flex items-center justify-center`}
-                    >
+                    <div className="w-16 h-16 rounded-2xl bg--to-linear-br from-blue-500 to-indigo-600 flex items-center justify-center">
                       <Code className="w-8 h-8 text-white/80" />
                     </div>
                     <div className="flex-1 text-center sm:text-left">
@@ -164,13 +179,19 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="font-bold">
-                        <Edit className="w-4 h-4 mr-2" /> Редактировать
-                      </Button>
+                      <Link href={`/editor/course/${course.custom_id}`}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="font-bold"
+                        >
+                          <Edit className="w-4 h-4 mr-2" /> Редактировать
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => deleteCourse(course._id)}
+                        onClick={() => deleteCourse(course.custom_id)}
                         className="text-rose-500 hover:bg-rose-500 hover:text-white font-bold transition-all"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -184,7 +205,6 @@ export default function AdminDashboard() {
         )}
       </main>
 
-      {/* --- Футер (теперь всегда внизу) --- */}
       <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 transition-colors">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-400 text-xs font-bold uppercase tracking-widest">
           <p>© {new Date().getFullYear()} CodeLearn Admin Dashboard</p>

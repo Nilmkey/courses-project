@@ -53,8 +53,8 @@ export default function DragItem({
       ref={setNodeRef}
       style={style}
       className={`
-        group flex items-center gap-4 rounded-xl border border-slate-200 
-        bg-white p-4 mb-3 shadow-sm transition-shadow hover:shadow-md
+        group flex items-center gap-4 rounded-xl border border-border 
+        bg-background text-foreground p-4 mb-3 shadow-sm transition-shadow hover:shadow-md
         ${isOverlay ? "shadow-xl border-blue-400 cursor-grabbing scale-105" : ""}
       `}
     >
@@ -66,12 +66,14 @@ export default function DragItem({
         <GripVertical size={20} className="text-slate-400" />
       </div>
 
-      <div className={`p-2 rounded-lg bg-slate-50 ${config[block.type].color}`}>
+      <div
+        className={`p-2 rounded-lg bg-background ${config[block.type].color}`}
+      >
         <Icon size={22} />
       </div>
 
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-slate-900 truncate">{block.title}</h4>
+        <h4 className="font-medium text-foreground truncate">{block.title}</h4>
         <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
           {config[block.type].label}
         </p>
@@ -80,7 +82,7 @@ export default function DragItem({
       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={() => onEdit(block.id)}
-          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+          className="p-2 text-foreground hover:text-blue-600 hover:foreground rounded-lg"
         >
           <Pencil size={18} />
         </button>

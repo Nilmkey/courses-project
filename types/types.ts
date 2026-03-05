@@ -14,6 +14,13 @@ export interface CourseBlock {
   content: BlockContent;
 }
 
+export interface infoLesson {
+  title: string;
+  // isDraft: boolean;
+  order_index: number;
+  sectionId: string;
+}
+
 export type QuestionType = "single" | "multiple" | "text";
 
 interface BaseQuestion {
@@ -44,13 +51,16 @@ export type QuizQuestion =
   | TextQuestion;
 
 export interface SectionLesson {
-  lesson_id: string;
   title: string;
+  lesson_id: string;
 }
 
 export interface Section {
   id: string;
   title: string;
+  order_index: number;
+  isDraft: boolean;
+  courseId: string;
   lessons: SectionLesson[];
 }
 
@@ -77,10 +87,10 @@ export interface LessonItemProps {
   sectionId: string;
   onLessonChange: (lessonId: string, title: string) => void;
   onRemoveLesson: (lessonId: string) => void;
-// --- 5. ИНТЕРФЕЙСЫ ДЛЯ ТИПИЗАЦИИ (для фронтенда) ---
+}
+
 export type CourseLevel = "beginner" | "intermediate" | "advanced";
 
-// Структура одного вопроса в тесте
 export interface IQuizQuestion {
   id: string;
   questionText: string;
@@ -122,27 +132,31 @@ export interface IQuizBlock extends IBaseBlock {
 export type IBlock = ITextBlock | IVideoBlock | IQuizBlock;
 export interface ILesson {
   _id: string;
-  section_id: string; // В интерфейсах для фронта обычно оставляем string
+  custom_id: string;
+  section_id: string;
   title: string;
   slug: string;
   is_free: boolean;
   order_index: number;
-  content_blocks: IBlock[]; // Использует наше строгое объединение выше
+  content_blocks: IBlock[];
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ISection {
   _id: string;
+  custom_id: string;
   course_id: string;
   title: string;
   order_index: number;
+  isDraft: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ICourse {
   _id: string;
+  custom_id: string;
   title: string;
   slug: string;
   description?: string;
@@ -151,7 +165,101 @@ export interface ICourse {
   level: CourseLevel;
   createdAt: string;
   updatedAt: string;
-  iconName: string;
-  status: string;
-  type: string;
+  iconName?: string;
+  status?: 'open' | 'closed';
+  type?: 'career' | 'language';
+  price?: number;
+  isPublished?: boolean;
+}
+
+// ==================== API Courses ====================
+export interface CreateCourseData {
+  title: string;
+  description?: string;
+  thumbnail?: string;
+  level: CourseLevel;
+  price?: number;
+  isPublished?: boolean;
+  sections?: Array<{
+    title: string;
+    order_index?: number;
+    isDraft?: boolean;
+    lessons?: Array<{
+      title: string;
+      slug: string;
+      order_index?: number;
+      is_free?: boolean;
+      content_blocks?: Array<{
+        id: string;
+        title: string;
+        type: "text" | "video" | "quiz";
+        content: Record<string, unknown>;
+      }>;
+    }>;
+  }>;
+}
+
+export interface UpdateCourseData {
+  title?: string;
+  description?: string;
+  thumbnail?: string;
+  level?: CourseLevel;
+  price?: number;
+  isPublished?: boolean;
+}
+
+export interface CourseApiResponse {
+  _id: string;
+  custom_id: string;
+  title: string;
+  slug: string;
+  price: number;
+  isPublished: boolean;
+  description?: string;
+  thumbnail?: string;
+  author_id: string;
+  level: CourseLevel;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LessonItem {
+  _id: string;
+  custom_id: string;
+  section_id: string;
+  title: string;
+  slug: string;
+  is_free: boolean;
+  order_index: number;
+  content_blocks: IBlock[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SectionWithLessons {
+  _id: string;
+  custom_id: string;
+  course_id: string;
+  title: string;
+  order_index: number;
+  isDraft: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lessons: LessonItem[];
+}
+
+export interface CourseWithSectionsResponse extends CourseApiResponse {
+  sections: SectionWithLessons[];
+}
+
+export interface CoursesListResponse {
+  courses: CourseApiResponse[];
+}
+
+export interface CourseFormData {
+  title: string;
+  description: string;
+  level: CourseLevel;
+  price: number;
+  isPublished: boolean;
 }

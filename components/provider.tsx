@@ -1,33 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ConstructorContext } from "@/contexts/ConstructorContext";
-import { CourseBlock, Section } from "@/types/types";
+import { CourseBlock, Section, infoLesson } from "@/types/types";
 import { SectionContext } from "@/contexts/SectionContext";
+import { addErrorObserver } from "@/lib/api/api-client";
+import { useRouter } from "next/navigation";
 
 export default function Provider({ children }: { children: React.ReactNode }) {
   const [blocks, setBlocks] = useState<CourseBlock[]>([]);
-  const [sections, setSections] = useState<Section[]>([
-    {
-      id: "section-1",
-      title: "Введение",
-      lessons: [
-        { lesson_id: "lesson-1", title: "Приветствие" },
-        { lesson_id: "lesson-2", title: "Описание курса" },
-      ],
-    },
-    {
-      id: "section-2",
-      title: "Основы",
-      lessons: [
-        { lesson_id: "lesson-3", title: "Базовые концепции" },
-        { lesson_id: "lesson-4", title: "Практика" },
-      ],
-    },
-  ]);
+  const [lessonInfo, setLessonInfo] = useState<infoLesson>({
+    title: "",
+    order_index: 777,
+    sectionId: "",
+  });
+  const [sections, setSections] = useState<Section[]>([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Глобальная обработка ошибок
+    addErrorObserver((error) => {
+      if (error.status === 401) router.push("/login");
+      if (error.status >= 500) console.error(error);
+    });
+  }, [router]);
 
   return (
-    <ConstructorContext.Provider value={{ blocks, setBlocks }}>
+    <ConstructorContext.Provider
+      value={{ blocks, setBlocks, lessonInfo, setLessonInfo }}
+    >
       <SectionContext.Provider value={{ sections, setSections }}>
         {children}
       </SectionContext.Provider>
