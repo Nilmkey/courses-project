@@ -15,7 +15,7 @@ import type {
 } from "./courses.types";
 import { createError } from "../../../middleware/error.middleware";
 import type { AuthenticatedUser } from "../../../middleware/auth.middleware";
-import type { Types } from "mongoose";
+import { Types } from "mongoose";
 
 type AuthRequest = Request & { user?: AuthenticatedUser };
 

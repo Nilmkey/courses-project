@@ -21,20 +21,10 @@ export const coursesService = {
 
     const sections = await Section.find({ course_id: course._id })
       .sort({ order_index: 1 })
+      .populate('lessons')
       .lean();
 
-    const lessons = await Lesson.find({
-      section_id: { $in: sections.map((s) => s._id) },
-    })
-      .sort({ order_index: 1 })
-      .lean();
-
-    const sectionsWithLessons = sections.map((section) => ({
-      ...section,
-      lessons: lessons.filter((l) => l.section_id.equals(section._id)),
-    }));
-
-    return { ...course, sections: sectionsWithLessons };
+    return { ...course, sections };
   },
 
   async getById(id: string) {
@@ -45,20 +35,10 @@ export const coursesService = {
 
     const sections = await Section.find({ course_id: course._id })
       .sort({ order_index: 1 })
+      .populate('lessons')
       .lean();
 
-    const lessons = await Lesson.find({
-      section_id: { $in: sections.map((s) => s._id) },
-    })
-      .sort({ order_index: 1 })
-      .lean();
-
-    const sectionsWithLessons = sections.map((section) => ({
-      ...section,
-      lessons: lessons.filter((l) => l.section_id.equals(section._id)),
-    }));
-
-    return { ...course, sections: sectionsWithLessons };
+    return { ...course, sections };
   },
 
   /**
@@ -89,7 +69,7 @@ export const coursesService = {
     const updated = await Course.findByIdAndUpdate(
       id,
       data,
-      { new: true },
+      { returnDocument: 'after' },
     ).lean();
 
     return updated as LeanCourse;
@@ -118,7 +98,7 @@ export const coursesService = {
     const updated = await Course.findByIdAndUpdate(
       id,
       { isPublished: true },
-      { new: true },
+      { returnDocument: 'after' },
     ).lean();
 
     return updated as LeanCourse;

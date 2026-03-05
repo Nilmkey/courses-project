@@ -7,10 +7,10 @@ import type {
 } from "@/types/types";
 
 export const coursesApi = {
-  getAll: () => api.get<CoursesListResponse>("/v1/courses"),
+  getAll: () => api.get<CoursesListResponse>("/v1/courses", undefined, true),
 
   getById: (id: string) =>
-    api.get<CourseWithSectionsResponse>(`/v1/courses/id/${id}`),
+    api.get<CourseWithSectionsResponse>(`/v1/courses/id/${id}`, undefined, true),
 
   create: () =>
     api.post<CourseApiResponse>(
@@ -30,7 +30,7 @@ export const coursesApi = {
 
   delete: (id: string) =>
     api.delete<void>(`/v1/courses/${id}`, undefined, true),
-  
+
   createWithRedirect: async () => {
     const course = await api.post<CourseApiResponse>(
       "/v1/courses",

@@ -6,6 +6,7 @@ export interface ISection extends Document {
   title: string;
   order_index: number;
   isDraft: boolean;
+  lessons: Types.ObjectId[];
 }
 
 const SectionSchema = new Schema<ISection>({
@@ -13,6 +14,7 @@ const SectionSchema = new Schema<ISection>({
   title: { type: String, required: true },
   order_index: { type: Number, required: true, default: 0 },
   isDraft: { type: Boolean, required: true, default: false },
+  lessons: [{ type: Schema.Types.ObjectId, ref: 'Lesson', default: [] }],
 }, { timestamps: true });
 
 export const Section = mongoose.model<ISection>('Section', SectionSchema);

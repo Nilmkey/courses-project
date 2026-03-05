@@ -21,7 +21,7 @@ router.get(
 );
 
 router.post(
-  '/',
+  '/:sectionId',
   authMiddleware,
   teacherMiddleware,
   validateRequest(createLessonSchema),
