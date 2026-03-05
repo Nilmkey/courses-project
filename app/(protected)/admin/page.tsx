@@ -16,15 +16,19 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { courseApi } from "@/lib/api-service";
+import { coursesApi } from "@/lib/api/entities/api-courses";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
+import { useCreateCourse } from "./newCourse";
 
 interface AdminCourse {
   _id: string;
+  custom_id: string;
   title: string;
   slug: string;
-  gradient?: string;
+  level: string;
+  isPublished: boolean;
+  price: number;
 }
 
 export default function AdminDashboard() {
@@ -33,6 +37,7 @@ export default function AdminDashboard() {
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
+  const { handleCreate } = useCreateCourse();
 
   useEffect(() => {
     setMounted(true);
@@ -42,8 +47,8 @@ export default function AdminDashboard() {
   const loadCourses = async () => {
     try {
       setLoading(true);
-      const data = await courseApi.getAll();
-      setCourses(data || []);
+      const response = await coursesApi.getAll();
+      setCourses(response.courses || []);
     } catch (err) {
       console.error("Ошибка загрузки:", err);
       toast.error("Не удалось загрузить курсы. Попробуйте позже.");
@@ -52,11 +57,11 @@ export default function AdminDashboard() {
     }
   };
 
-  const deleteCourse = async (id: string) => {
+  const deleteCourse = async (customId: string) => {
     toast.confirm("Удалить этот курс навсегда?", async () => {
       try {
-        await courseApi.delete(id);
-        setCourses(courses.filter((c) => c._id !== id));
+        await coursesApi.delete(customId);
+        setCourses(courses.filter((c) => c.custom_id !== customId));
         toast.success("Курс успешно удалён.");
       } catch {
         toast.error("Ошибка при удалении.");
@@ -115,11 +120,12 @@ export default function AdminDashboard() {
                 <Moon className="text-slate-600" size={20} />
               )}
             </Button>
-            <Link href="/admin/courses/new">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
-                <Plus className="w-4 h-4 mr-1" /> Создать
-              </Button>
-            </Link>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
+              onClick={handleCreate}
+            >
+              <Plus className="w-4 h-4 mr-1" /> Создать
+            </Button>
           </div>
         </div>
       </header>
@@ -161,9 +167,7 @@ export default function AdminDashboard() {
                   className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
                 >
                   <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-6">
-                    <div
-                      className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${course.gradient || "from-slate-100 to-slate-200"} flex items-center justify-center`}
-                    >
+                    <div className="w-16 h-16 rounded-2xl bg--to-linear-br from-blue-500 to-indigo-600 flex items-center justify-center">
                       <Code className="w-8 h-8 text-white/80" />
                     </div>
                     <div className="flex-1 text-center sm:text-left">
@@ -175,13 +179,19 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="font-bold">
-                        <Edit className="w-4 h-4 mr-2" /> Редактировать
-                      </Button>
+                      <Link href={`/editor/course/${course.custom_id}`}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="font-bold"
+                        >
+                          <Edit className="w-4 h-4 mr-2" /> Редактировать
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => deleteCourse(course._id)}
+                        onClick={() => deleteCourse(course.custom_id)}
                         className="text-rose-500 hover:bg-rose-500 hover:text-white font-bold transition-all"
                       >
                         <Trash2 className="w-4 h-4" />

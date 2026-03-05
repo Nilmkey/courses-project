@@ -240,9 +240,9 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 mt-8 space-y-8 flex-grow pb-20">
-        <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-xl shadow-indigo-900/5 border border-white dark:border-slate-800 overflow-hidden">
-          <div className="h-32 bg-gradient-to-br from-[#3b5bdb] via-[#5c7cfa] to-[#74c0fc] relative">
+      <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 mt-8 space-y-8 grow pb-20">
+        <div className="bg-white dark:bg-slate-900 rounded-2rem shadow-xl shadow-indigo-900/5 border border-white dark:border-slate-800 overflow-hidden">
+          <div className="h-32 bg-linear-to-br from-[#3b5bdb] via-[#5c7cfa] to-[#74c0fc] relative">
             <div
               className="absolute inset-0 opacity-[0.15]"
               style={{
@@ -276,7 +276,7 @@ export default function ProfilePage() {
                   </h1>
 
                   {userRole === "admin" ? (
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-orange-500/20">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-linear-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-orange-500/20">
                       <ShieldCheck size={12} /> Admin
                     </div>
                   ) : (
@@ -415,24 +415,24 @@ export default function ProfilePage() {
       </main>
 
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12">
-              <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8 text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-                <div className="flex items-center gap-2">
-                  <Code className="w-5 h-5 text-blue-600" />
-                  <span className="text-lg font-black text-slate-800 dark:text-white tracking-tight">
-                    CodeLearn
-                  </span>
-                </div>
-                <p>© {new Date().getFullYear()} CodeLearn. Все права защищены.</p>
-                <div className="flex gap-6 text-slate-400 font-bold text-sm">
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    Политика
-                  </a>
-                  <a href="#" className="hover:text-blue-600 transition-colors">
-                    Условия
-                  </a>
-                </div>
-              </div>
-            </footer>
+        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8 text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+          <div className="flex items-center gap-2">
+            <Code className="w-5 h-5 text-blue-600" />
+            <span className="text-lg font-black text-slate-800 dark:text-white tracking-tight">
+              CodeLearn
+            </span>
+          </div>
+          <p>© {new Date().getFullYear()} CodeLearn. Все права защищены.</p>
+          <div className="flex gap-6 text-slate-400 font-bold text-sm">
+            <a href="#" className="hover:text-blue-600 transition-colors">
+              Политика
+            </a>
+            <a href="#" className="hover:text-blue-600 transition-colors">
+              Условия
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
