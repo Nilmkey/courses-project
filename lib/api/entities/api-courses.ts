@@ -7,7 +7,7 @@ import type {
 } from "@/types/types";
 
 export const coursesApi = {
-  getAll: () => api.get<CoursesListResponse>("/courses", undefined, true),
+  getAll: () => api.get<CoursesListResponse>("/v1/courses", undefined, true),
 
   getById: (id: string) =>
     api.get<CourseWithSectionsResponse>(`/courses/id/${id}`, undefined, true),
