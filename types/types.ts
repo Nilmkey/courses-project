@@ -217,6 +217,8 @@ export interface CourseApiResponse {
   level: CourseLevel;
   createdAt: string;
   updatedAt: string;
+  iconName?: string;
+  type?: 'career' | 'language';
 }
 
 export interface LessonItem {
