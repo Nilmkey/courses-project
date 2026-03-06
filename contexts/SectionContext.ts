@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { Section } from "@/types/types";
+import { Section, SectionLesson } from "@/types/types";
 
 interface PendingOperation {
   id: string;
@@ -10,11 +10,16 @@ interface PendingOperation {
 interface SectionContextType {
   sections: Section[];
   setSections: React.Dispatch<React.SetStateAction<Section[]>>;
-  // Optimistic UI методы
+  // Optimistic UI методы для создания
   addSectionOptimistic: (courseId: string) => string;
   addLessonOptimistic: (sectionId: string) => string;
   confirmOperation: (tempId: string, realId: string) => void;
   rollbackOperation: (tempId: string) => void;
+  // Optimistic UI методы для удаления
+  removeSectionOptimistic: (sectionId: string) => { section: Section; sectionIndex: number };
+  removeLessonOptimistic: (sectionId: string, lessonId: string) => { lesson: SectionLesson; lessonIndex: number };
+  restoreSection: (section: Section, index: number) => void;
+  restoreLesson: (sectionId: string, lesson: SectionLesson, index: number) => void;
 }
 
 export const SectionContext = createContext<SectionContextType | undefined>(
