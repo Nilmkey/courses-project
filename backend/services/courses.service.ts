@@ -3,13 +3,14 @@ import { Course, Section, Lesson } from "../models";
 import { createError } from "../middleware/error.middleware";
 import type { ICourse } from "../models";
 import type { Types } from "mongoose";
+import { slugify } from "../utils/slugify";
 
 type LeanCourse = Omit<ICourse, keyof Document>;
 
 export const coursesService = {
   async getAll(): Promise<LeanCourse[]> {
     const courses = await Course.find().select("-__v").lean();
-    console.log('📦 Сырые курсы из БД:', JSON.stringify(courses, null, 2));
+    console.log("📦 Сырые курсы из БД:", JSON.stringify(courses, null, 2));
     return courses;
   },
 
@@ -21,7 +22,7 @@ export const coursesService = {
 
     const sections = await Section.find({ course_id: course._id })
       .sort({ order_index: 1 })
-      .populate('lessons')
+      .populate("lessons")
       .lean();
 
     return { ...course, sections };
@@ -35,7 +36,7 @@ export const coursesService = {
 
     const sections = await Section.find({ course_id: course._id })
       .sort({ order_index: 1 })
-      .populate('lessons')
+      .populate("lessons")
       .lean();
 
     return { ...course, sections };
@@ -66,11 +67,18 @@ export const coursesService = {
       throw createError.notFound("Курс не найден");
     }
 
-    const updated = await Course.findByIdAndUpdate(
-      id,
-      data,
-      { returnDocument: 'after' },
-    ).lean();
+    if (!data) {
+      throw createError.badRequest("Нет даты");
+    }
+
+    const dataWithSlug: Partial<ICourse> = {
+      slug: slugify(data.title!),
+      ...data,
+    };
+
+    const updated = await Course.findByIdAndUpdate(id, dataWithSlug, {
+      returnDocument: "after",
+    }).lean();
 
     return updated as LeanCourse;
   },
@@ -98,7 +106,7 @@ export const coursesService = {
     const updated = await Course.findByIdAndUpdate(
       id,
       { isPublished: true },
-      { returnDocument: 'after' },
+      { returnDocument: "after" },
     ).lean();
 
     return updated as LeanCourse;
