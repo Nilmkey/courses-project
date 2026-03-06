@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Provider from "@/components/provider";
@@ -59,6 +60,10 @@ export default function RootLayout({
                     secondary: '#fff',
                   },
                 },
+              gutter={16}
+              containerStyle={{
+                top: 80,
+                right: 16,
               }}
             />
           </ThemeProvider>

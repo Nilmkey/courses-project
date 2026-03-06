@@ -1,4 +1,3 @@
-// api/v1/courses/courses.router.ts
 import { Router } from "express";
 import { coursesController } from "./courses.controller";
 import { validateRequest } from "./courses.middleware";
@@ -6,6 +5,7 @@ import {
   createCourseSchema,
   updateCourseSchema,
   getCourseBySlugSchema,
+  getCourseByIdSchema,
   deleteCourseSchema,
   publishCourseSchema,
 } from "./courses.validation";
@@ -21,6 +21,12 @@ router.get(
   "/:slug",
   validateRequest(getCourseBySlugSchema),
   coursesController.getBySlug.bind(coursesController),
+);
+
+router.get(
+  "/id/:id",
+  validateRequest(getCourseByIdSchema),
+  coursesController.getById.bind(coursesController),
 );
 
 router.post(

@@ -13,7 +13,7 @@ import type {
 } from "./enrollment.types";
 import { ApiError } from "../../../utils/ApiError";
 import type { AuthenticatedUser } from "../../../middleware/auth.middleware";
-import type { Types } from "mongoose";
+import { Types } from "mongoose";
 
 type AuthRequest = Request & { user?: AuthenticatedUser };
 

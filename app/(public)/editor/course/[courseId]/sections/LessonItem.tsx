@@ -3,7 +3,7 @@
 import { memo, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Video, Pencil, Trash2, FileText } from "lucide-react";
+import { GripVertical, Video, Pencil, Trash2, FileText, Loader2 } from "lucide-react";
 import { SectionLesson } from "@/types/types";
 
 export interface LessonItemProps {
@@ -11,6 +11,7 @@ export interface LessonItemProps {
   sectionId: string;
   isOverlay?: boolean;
   isDraft?: boolean;
+  isPending?: boolean;  // Флаг для временного урока (ещё не сохранён)
   onEdit?: (lessonId: string) => void;
   onRemove?: (lessonId: string) => void;
 }
@@ -20,6 +21,7 @@ export const LessonItem = memo(function LessonItem({
   sectionId,
   isOverlay = false,
   isDraft = true,
+  isPending = false,
   onEdit,
   onRemove,
 }: LessonItemProps) {
@@ -104,25 +106,41 @@ export const LessonItem = memo(function LessonItem({
       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={handleEdit}
-          className="
-            p-2 text-slate-400 
-            hover:text-blue-600 hover:bg-blue-50 
-            rounded-lg transition-colors
-          "
-          title="Редактировать"
+          disabled={isPending}
+          className={`
+            p-2 rounded-lg transition-colors
+            ${
+              isPending
+                ? 'text-slate-300 cursor-not-allowed'
+                : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'
+            }
+          `}
+          title={isPending ? "Нельзя редактировать во время создания" : "Редактировать"}
         >
-          <Pencil size={16} />
+          {isPending ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Pencil size={16} />
+          )}
         </button>
         <button
           onClick={handleRemove}
-          className="
-            p-2 text-slate-400 
-            hover:text-red-600 hover:bg-red-50 
-            rounded-lg transition-colors
-          "
-          title="Удалить"
+          disabled={isPending}
+          className={`
+            p-2 rounded-lg transition-colors
+            ${
+              isPending
+                ? 'text-slate-300 cursor-not-allowed'
+                : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
+            }
+          `}
+          title={isPending ? "Нельзя удалить во время создания" : "Удалить"}
         >
-          <Trash2 size={16} />
+          {isPending ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Trash2 size={16} />
+          )}
         </button>
       </div>
     </div>

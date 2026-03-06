@@ -2,9 +2,9 @@
 import type { Request, Response } from "express";
 import { coursesService } from "../../../services/courses.service";
 import type {
-  CreateCourseRequest,
   UpdateCourseRequest,
   GetCourseBySlugRequest,
+  GetCourseByIdRequest,
   DeleteCourseRequest,
   PublishCourseRequest,
   CourseResponse,
@@ -13,9 +13,9 @@ import type {
   LessonItem,
   SectionWithLessons,
 } from "./courses.types";
-import { ApiError } from "../../../utils/ApiError";
+import { createError } from "../../../middleware/error.middleware";
 import type { AuthenticatedUser } from "../../../middleware/auth.middleware";
-import type { Types } from "mongoose";
+import { Types } from "mongoose";
 
 type AuthRequest = Request & { user?: AuthenticatedUser };
 
@@ -56,81 +56,52 @@ interface LessonData {
   updatedAt: Date;
 }
 
-const toCourseResponse = (course: unknown): CourseResponse => {
-  const c = course as Record<string, unknown>;
-  
-  return {
-    _id: (c._id as Types.ObjectId)?.toString() ?? "",
-    title: String(c.title ?? ""),
-    slug: String(c.slug ?? ""),
-    price: Number(c.price ?? 0),
-    isPublished: Boolean(c.isPublished ?? false),
-    description: c.description as string | undefined,
-    thumbnail: c.thumbnail as string | undefined,
-    author_id: (c.author_id as Types.ObjectId)?.toString() ?? "",
-    level: (c.level as "beginner" | "intermediate" | "advanced") ?? "beginner",
-    createdAt: (c.createdAt as Date)?.toISOString() ?? new Date().toISOString(),
-    updatedAt: (c.updatedAt as Date)?.toISOString() ?? new Date().toISOString(),
-  };
-};
+const toCourseResponse = (course: CourseData): CourseResponse => ({
+  _id: course._id.toString(),
+  title: course.title,
+  slug: course.slug,
+  price: course.price,
+  isPublished: course.isPublished,
+  description: course.description,
+  thumbnail: course.thumbnail,
+  author_id: course.author_id?.toString() ?? "",
+  level: course.level,
+  createdAt: course.createdAt.toISOString(),
+  updatedAt: course.updatedAt.toISOString(),
+});
 
-const toLessonItem = (lesson: unknown): LessonItem => {
-  const l = lesson as Record<string, unknown>;
-  return {
-    _id: (l._id as Types.ObjectId)?.toString() ?? "",
-    section_id: (l.section_id as Types.ObjectId)?.toString() ?? "",
-    title: String(l.title ?? ""),
-    slug: String(l.slug ?? ""),
-    is_free: Boolean(l.is_free ?? false),
-    order_index: Number(l.order_index ?? 0),
-    content_blocks: (l.content_blocks as LessonItem["content_blocks"]) ?? [],
-    createdAt: (l.createdAt as Date)?.toISOString() ?? new Date().toISOString(),
-    updatedAt: (l.updatedAt as Date)?.toISOString() ?? new Date().toISOString(),
-  };
-};
+const toLessonItem = (lesson: LessonData): LessonItem => ({
+  _id: lesson._id.toString(),
+  section_id: lesson.section_id?.toString() ?? "",
+  title: lesson.title,
+  slug: lesson.slug,
+  is_free: lesson.is_free,
+  order_index: lesson.order_index,
+  content_blocks: lesson.content_blocks as LessonItem["content_blocks"],
+  createdAt: lesson.createdAt.toISOString(),
+  updatedAt: lesson.updatedAt.toISOString(),
+});
 
-const toSectionWithLessons = (section: unknown): SectionWithLessons => {
-  const s = section as Record<string, unknown>;
-  const lessons = Array.isArray(s.lessons) ? s.lessons : [];
-  return {
-    _id: (s._id as Types.ObjectId)?.toString() ?? "",
-    course_id: (s.course_id as Types.ObjectId)?.toString() ?? "",
-    title: String(s.title ?? ""),
-    order_index: Number(s.order_index ?? 0),
-    isDraft: Boolean(s.isDraft ?? false),
-    createdAt: (s.createdAt as Date)?.toISOString() ?? new Date().toISOString(),
-    updatedAt: (s.updatedAt as Date)?.toISOString() ?? new Date().toISOString(),
-    lessons: lessons.map(toLessonItem),
-  };
-};
+const toSectionWithLessons = (section: SectionData): SectionWithLessons => ({
+  _id: section._id.toString(),
+  course_id: section.course_id?.toString() ?? "",
+  title: section.title,
+  order_index: section.order_index,
+  isDraft: section.isDraft,
+  createdAt: section.createdAt.toISOString(),
+  updatedAt: section.updatedAt.toISOString(),
+  lessons: section.lessons.map(toLessonItem),
+});
 
 export const coursesController = {
   async getAll(
     _req: Request,
     res: Response<CoursesListResponse>,
   ): Promise<void> {
-    try {
-      const courses = await coursesService.getAll();
-      console.log('📦 Получены курсы из БД:', courses.length);
-      
-      const mappedCourses = courses.map((c) => {
-        console.log('📄 Курс:', { 
-          _id: c._id, 
-          title: c.title,
-          author_id: c.author_id,
-          createdAt: c.createdAt,
-          updatedAt: c.updatedAt 
-        });
-        return toCourseResponse(c as unknown as CourseData);
-      });
-      
-      res.json({
-        courses: mappedCourses,
-      });
-    } catch (error) {
-      console.error('❌ Ошибка в getAll:', error);
-      throw error;
-    }
+    const courses = await coursesService.getAll();
+    res.json({
+      courses: courses.map((c) => toCourseResponse(c as unknown as CourseData)),
+    });
   },
 
   async getBySlug(
@@ -150,20 +121,35 @@ export const coursesController = {
     res.json(response);
   },
 
-  async create(req: AuthRequest, res: Response<CourseResponse>): Promise<void> {
-    const courseData = req.body as CreateCourseRequest["body"];
+  async getById(
+    req: Request<GetCourseByIdRequest["params"]>,
+    res: Response<CourseWithSectionsResponse>,
+  ): Promise<void> {
+    const { id } = req.params;
+    const course = await coursesService.getById(id);
 
+    const response: CourseWithSectionsResponse = {
+      ...toCourseResponse(course as unknown as CourseData),
+      sections: course.sections.map((s) =>
+        toSectionWithLessons(s as unknown as SectionData),
+      ),
+    };
+
+    res.json(response);
+  },
+
+  async create(
+    req: Request,
+    res: Response<CourseResponse>,
+  ): Promise<void> {
     if (
       !req.user ||
       (req.user.role !== "admin" && req.user.role !== "teacher")
     ) {
-      throw ApiError.forbidden("Создавать курсы могут только преподаватели");
+      throw createError.forbidden("Создавать курсы могут только преподаватели");
     }
 
-    const course = await coursesService.create({
-      ...courseData,
-      author_id: req.user.id,
-    });
+    const course = await coursesService.create(req.user.id);
 
     res.status(201).json(toCourseResponse(course as unknown as CourseData));
   },
@@ -184,7 +170,7 @@ export const coursesController = {
       !authReq.user ||
       (authReq.user.role !== "admin" && authReq.user.role !== "teacher")
     ) {
-      throw ApiError.forbidden(
+      throw createError.forbidden(
         "Редактировать курсы могут только преподаватели",
       );
     }
@@ -201,7 +187,7 @@ export const coursesController = {
 
     const authReq = req as AuthRequest;
     if (!authReq.user || authReq.user.role !== "admin") {
-      throw ApiError.forbidden("Удалять курсы могут только администраторы");
+      throw createError.forbidden("Удалять курсы могут только администраторы");
     }
 
     await coursesService.delete(id);
@@ -219,7 +205,7 @@ export const coursesController = {
       !authReq.user ||
       (authReq.user.role !== "admin" && authReq.user.role !== "teacher")
     ) {
-      throw ApiError.forbidden("Публиковать курсы могут только преподаватели");
+      throw createError.forbidden("Публиковать курсы могут только преподаватели");
     }
 
     const course = await coursesService.publish(id);

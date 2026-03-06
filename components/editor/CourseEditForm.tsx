@@ -1,61 +1,88 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Save, LayoutList } from "lucide-react";
+import { ArrowLeft, Save, LayoutList, Loader2 } from "lucide-react";
 import { CourseTitleInput } from "./CourseTitleInput";
 import { CourseDescriptionInput } from "./CourseDescriptionInput";
 import { CourseLevelSelect, type CourseLevel } from "./CourseLevelSelect";
 import { CoursePriceSlider } from "./CoursePriceSlider";
 import { CoursePublishToggle } from "./CoursePublishToggle";
 import { Button } from "@/components/ui/button";
+import { coursesApi } from "@/lib/api/entities/api-courses";
+import { useToast } from "@/hooks/useToast";
+import type { CourseFormData } from "@/types/types";
 
-export interface CourseFormData {
-  title: string;
-  description: string;
-  level: CourseLevel;
-  price: number;
-  isPublished: boolean;
-}
+const defaultCourseData: CourseFormData = {
+  title: "",
+  description: "",
+  level: "beginner",
+  price: 0,
+  isPublished: false,
+};
 
-export interface CourseEditFormProps {
-  initialData?: Partial<CourseFormData>;
-}
-
-export function CourseEditForm({
-  initialData = {},
-}: CourseEditFormProps) {
+export function CourseEditForm() {
   const router = useRouter();
   const { courseId } = useParams();
+  const toast = useToast();
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [initialData, setInitialData] =
+    useState<CourseFormData>(defaultCourseData);
+  const [formData, setFormData] = useState<CourseFormData>(defaultCourseData);
 
-  const [formData, setFormData] = useState<CourseFormData>({
-    title: initialData.title ?? "",
-    description: initialData.description ?? "",
-    level: (initialData.level as CourseLevel) ?? "beginner",
-    price: initialData.price ?? 0,
-    isPublished: initialData.isPublished ?? false,
-  });
+  useEffect(() => {
+    const loadCourse = async () => {
+      if (!courseId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await coursesApi.getById(courseId as string);
+        const courseData: CourseFormData = {
+          title: response.title,
+          description: response.description ?? "",
+          level: response.level as CourseLevel,
+          price: response.price,
+          isPublished: response.isPublished,
+        };
+        setInitialData(courseData);
+        setFormData(courseData);
+      } catch (error) {
+        setInitialData(defaultCourseData);
+        setFormData(defaultCourseData);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCourse();
+  }, [courseId]);
 
   const updateField = useCallback(
     <K extends keyof CourseFormData>(field: K, value: CourseFormData[K]) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
+      setIsSaved(false);
     },
-    []
+    [],
   );
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      // TODO: реализовать вызов API для сохранения курса
-      console.log("Saving course:", formData);
-      console.log("Course ID:", courseId);
+      await coursesApi.update(courseId as string, formData);
+      toast.success("Курс успешно обновлён!");
+      setInitialData(formData);
+      setIsSaved(true);
     } catch (error) {
+      toast.error("Не удалось обновить курс");
       console.error("Failed to save course:", error);
     } finally {
       setIsSaving(false);
     }
-  }, [formData, courseId]);
+  }, [formData, courseId, toast]);
 
   const handleGoBack = useCallback(() => {
     router.back();
@@ -66,14 +93,28 @@ export function CourseEditForm({
   }, [router, courseId]);
 
   const isDirty = useMemo(() => {
+    if (isSaved) return false;
     return (
-      formData.title !== (initialData.title ?? "") ||
-      formData.description !== (initialData.description ?? "") ||
-      formData.level !== (initialData.level ?? "beginner") ||
-      formData.price !== (initialData.price ?? 0) ||
-      formData.isPublished !== (initialData.isPublished ?? false)
+      formData.title !== initialData.title ||
+      formData.description !== initialData.description ||
+      formData.level !== initialData.level ||
+      formData.price !== initialData.price ||
+      formData.isPublished !== initialData.isPublished
     );
-  }, [formData, initialData]);
+  }, [formData, initialData, isSaved]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-16 h-16 animate-spin text-blue-600 mx-auto mb-6" />
+          <p className="text-xl font-bold text-slate-900 dark:text-white">
+            Загрузка курса...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950">
@@ -114,14 +155,18 @@ export function CourseEditForm({
               disabled={isSaving || !isDirty}
               className={`
                 flex items-center gap-2 h-12 px-6 rounded-xl font-bold
+                transition-all duration-200 ease-out
                 ${
                   isSaving || !isDirty
-                    ? "bg-slate-300 dark:bg-slate-700 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30"
+                    ? "bg-slate-300 dark:bg-slate-700 cursor-not-allowed opacity-60"
+                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 active:scale-95"
                 }
               `}
             >
-              <Save size={20} />
+              <Save
+                size={20}
+                className={`transition-transform duration-200 ${isSaving ? "animate-pulse" : ""}`}
+              />
               {isSaving ? "Сохранение..." : "Сохранить"}
             </Button>
           </div>
@@ -170,9 +215,7 @@ export function CourseEditForm({
             {/* Publish Toggle */}
             <CoursePublishToggle
               isPublished={formData.isPublished}
-              onToggle={() =>
-                updateField("isPublished", !formData.isPublished)
-              }
+              onToggle={() => updateField("isPublished", !formData.isPublished)}
             />
           </div>
 

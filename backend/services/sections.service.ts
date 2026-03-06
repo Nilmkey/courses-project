@@ -9,12 +9,14 @@ export interface SectionCreateInput {
   title: string;
   order_index?: number;
   isDraft?: boolean;
+  lessons?: string[];
 }
 
 export interface SectionUpdateInput {
   title?: string;
   order_index?: number;
   isDraft?: boolean;
+  lessons?: string[];
 }
 
 export const sectionsService = {
@@ -24,13 +26,14 @@ export const sectionsService = {
       title: data.title,
       order_index: data.order_index ?? 0,
       isDraft: data.isDraft ?? false,
+      lessons: data.lessons ?? [],
     });
     return section;
   },
 
   async update(id: string, data: SectionUpdateInput): Promise<ISection> {
     const updated = await Section.findByIdAndUpdate(id, data, {
-      new: true,
+      returnDocument: 'after',
     }).lean();
     if (!updated) {
       throw ApiError.notFound("Секция не найдена");
@@ -53,6 +56,7 @@ export const sectionsService = {
   async getByCourse(courseId: string): Promise<ISection[]> {
     return await Section.find({ course_id: courseId })
       .sort({ order_index: 1 })
+      .populate('lessons')
       .lean();
   },
 };

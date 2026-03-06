@@ -11,9 +11,7 @@ const LessonBlockSchema = z.object({
 
 export const createLessonSchema = z.object({
   params: z.object({
-    sectionId: z
-      .string()
-      .regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID секции"),
+    sectionId: z.string().min(1, "ID секции обязателен"),
   }),
   body: z.object({
     title: z.string().min(1, "Название урока обязательно"),
@@ -26,7 +24,7 @@ export const createLessonSchema = z.object({
 
 export const updateLessonSchema = z.object({
   params: z.object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+    id: z.string().min(1, "ID обязателен"),
   }),
   body: z.object({
     title: z.string().min(1).optional(),
@@ -39,27 +37,21 @@ export const updateLessonSchema = z.object({
 
 export const deleteLessonSchema = z.object({
   params: z.object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+    id: z.string().min(1, "ID обязателен"),
   }),
 });
 
 export const reorderLessonsSchema = z.object({
   params: z.object({
-    sectionId: z
-      .string()
-      .regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID секции"),
+    sectionId: z.string().min(1, "ID секции обязателен"),
   }),
   body: z.object({
-    lessonIds: z.array(
-      z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID урока"),
-    ),
+    lessonIds: z.array(z.string().min(1)),
   }),
 });
 
 export const getLessonsBySectionSchema = z.object({
   params: z.object({
-    sectionId: z
-      .string()
-      .regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID секции"),
+    sectionId: z.string().min(1, "ID секции обязателен"),
   }),
 });

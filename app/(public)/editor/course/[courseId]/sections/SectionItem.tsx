@@ -26,6 +26,7 @@ import {
   Trash2,
   CheckCircle2,
   CircleDashed,
+  Loader2,
 } from "lucide-react";
 import { Section, SectionLesson } from "@/types/types";
 import { LessonItem } from "./LessonItem";
@@ -60,6 +61,9 @@ export const SectionItem = memo(function SectionItem({
 }: SectionItemProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+
+  // Проверка, является ли секция временной (ещё не сохранена)
+  const isPending = section.id.startsWith('temp_');
 
   // Sensors для внутреннего DnD (уроки)
   const sensors = useSensors(
@@ -178,6 +182,7 @@ export const SectionItem = memo(function SectionItem({
       ref={setNodeRef}
       style={style}
       className={`
+        group
         rounded-xl border bg-white shadow-sm
         ${isOverlay ? "border-blue-400 shadow-xl scale-105" : "border-slate-200"}
         transition-all duration-200
@@ -207,27 +212,36 @@ export const SectionItem = memo(function SectionItem({
           type="text"
           value={section.title}
           onChange={handleTitleChange}
-          className="
-            flex-1 font-semibold text-slate-900 
-            bg-transparent border-none outline-none 
+          disabled={isPending}
+          className={`
+            flex-1 font-semibold text-slate-900
+            bg-transparent border-none outline-none
             focus:ring-2 focus:ring-blue-500 rounded px-2 py-1
-          "
+            ${isPending ? 'opacity-50 cursor-not-allowed' : ''}
+          `}
           placeholder="Название секции"
         />
 
         {/* Индикатор статуса с кликом */}
         <button
           onClick={handleToggleDraft}
+          disabled={isPending}
           className={`
             flex items-center gap-1 px-2 py-1 rounded-full transition-colors
             ${
-              section.isDraft
-                ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                : "bg-green-100 text-green-700 hover:bg-green-200"
+              isPending
+                ? 'opacity-50 cursor-not-allowed'
+                : section.isDraft
+                  ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                  : "bg-green-100 text-green-700 hover:bg-green-200"
             }
           `}
           title={
-            section.isDraft ? "Опубликовать секцию" : "Вернуть в черновики"
+            isPending
+              ? "Нельзя изменить во время создания"
+              : section.isDraft
+                ? "Опубликовать секцию"
+                : "Вернуть в черновики"
           }
         >
           {section.isDraft ? (
@@ -252,17 +266,27 @@ export const SectionItem = memo(function SectionItem({
         {/* Индикатор черновика секции */}
 
         {/* Actions */}
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className={`flex gap-1 transition-opacity ${
+          isPending ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+        }`}>
           <button
             onClick={handleRemove}
-            className="
-              p-2 text-slate-400 
-              hover:text-red-600 hover:bg-red-50 
-              rounded-lg transition-colors
-            "
-            title="Удалить секцию"
+            disabled={isPending}
+            className={`
+              p-2 rounded-lg transition-colors
+              ${
+                isPending
+                  ? 'text-slate-300 cursor-not-allowed'
+                  : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
+              }
+            `}
+            title={isPending ? "Нельзя удалить во время создания" : "Удалить секцию"}
           >
-            <Trash2 size={18} />
+            {isPending ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <Trash2 size={18} />
+            )}
           </button>
         </div>
       </div>
@@ -284,15 +308,31 @@ export const SectionItem = memo(function SectionItem({
               strategy={verticalListSortingStrategy}
             >
               {section.lessons.length > 0 ? (
-                section.lessons.map((lesson) => (
-                  <LessonItem
-                    key={`${section.id}-lesson-${lesson.lesson_id}`}
-                    lesson={lesson}
-                    sectionId={section.id}
-                    onEdit={handleEditLesson}
-                    onRemove={handleRemoveLesson}
-                  />
-                ))
+                section.lessons.map((lesson) => {
+                  const isLessonPending = lesson.lesson_id.startsWith('temp_');
+                  return (
+                    <div
+                      key={`${section.id}-lesson-${lesson.lesson_id}`}
+                      className={`relative transition-all duration-300 ${
+                        isLessonPending ? 'opacity-70' : ''
+                      }`}
+                    >
+                      <LessonItem
+                        lesson={lesson}
+                        sectionId={section.id}
+                        isPending={isLessonPending}
+                        onEdit={handleEditLesson}
+                        onRemove={handleRemoveLesson}
+                      />
+                      {isLessonPending && (
+                        <div className="absolute top-2 right-2 flex items-center gap-1 text-xs text-blue-600 font-medium animate-pulse">
+                          <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
+                          Создание...
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               ) : (
                 <div className="text-center py-6 text-slate-400 text-sm">
                   В этой секции пока нет уроков

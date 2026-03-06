@@ -1,7 +1,5 @@
-// middleware/error.middleware.ts
-import type { Request, Response, NextFunction } from 'express';
-import { ZodError } from 'zod';
-
+import type { Request, Response, NextFunction } from "express";
+import { ZodError } from "zod";
 
 export class AppError extends Error {
   public readonly statusCode: number;
@@ -15,27 +13,27 @@ export class AppError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 
-  static badRequest(message = 'Некорректный запрос') {
+  static badRequest(message = "Некорректный запрос") {
     return new AppError(message, 400);
   }
 
-  static unauthorized(message = 'Не авторизован') {
+  static unauthorized(message = "Не авторизован") {
     return new AppError(message, 401);
   }
 
-  static forbidden(message = 'Доступ запрещён') {
+  static forbidden(message = "Доступ запрещён") {
     return new AppError(message, 403);
   }
 
-  static notFound(message = 'Не найдено') {
+  static notFound(message = "Не найдено") {
     return new AppError(message, 404);
   }
 
-  static conflict(message = 'Конфликт данных') {
+  static conflict(message = "Конфликт данных") {
     return new AppError(message, 409);
   }
 
-  static internal(message = 'Внутренняя ошибка сервера') {
+  static internal(message = "Внутренняя ошибка сервера") {
     return new AppError(message, 500);
   }
 }
@@ -60,12 +58,12 @@ export const errorHandler = (
   err: Error | AppError | ZodError,
   _req: Request,
   res: Response,
-  _next: NextFunction
+  _next: NextFunction,
 ): void => {
   if (err instanceof ZodError) {
     const response: ErrorResponse = {
       success: false,
-      message: 'Ошибка валидации данных',
+      message: "Ошибка валидации данных",
       errors: err.flatten().fieldErrors,
     };
     res.status(400).json(response);
@@ -73,15 +71,18 @@ export const errorHandler = (
   }
 
   const statusCode = err instanceof AppError ? err.statusCode : 500;
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = process.env.NODE_ENV === "development";
 
   const response: ErrorResponse = {
     success: false,
-    message: err.message || 'Произошла непредвиденная ошибка',
+    message: err.message || "Произошла непредвиденная ошибка",
     ...(isDevelopment && { stack: err.stack }),
   };
 
-  console.error(`[ERROR ${statusCode}] ${_req.method} ${_req.path}:`, err.message);
+  console.error(
+    `[ERROR ${statusCode}] ${_req.method} ${_req.path}:`,
+    err.message,
+  );
 
   res.status(statusCode).json(response);
 };
