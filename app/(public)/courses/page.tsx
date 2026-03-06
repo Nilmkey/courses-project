@@ -1,23 +1,23 @@
 // "use client";
 
-// import React, { useState, useEffect } from "react";
-// import Link from "next/link";
-// import { useTheme } from "next-themes";
-// import { ICourse } from "@/types/types";
-// import {
-//   Code,
-//   ChevronRight,
-//   Layout,
-//   Server,
-//   Globe,
-//   Laptop,
-//   Zap,
-//   User,
-//   Sun,
-//   Moon,
-//   Loader2,
-// } from "lucide-react";
-// import { coursesApi } from "@/lib/api/entities/api-courses";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useTheme } from "next-themes";
+import { ICourse } from "@/types/types";
+import {
+  Code,
+  ChevronRight,
+  Layout,
+  Server,
+  Globe,
+  Laptop,
+  Zap,
+  User,
+  Sun,
+  Moon,
+  Loader2,
+} from "lucide-react";
+import { coursesApi } from "@/lib/api/entities/api-courses";
 
 // const iconMap: Record<string, React.ReactNode> = {
 //   Layout: <Layout className="w-8 h-8" />,
@@ -40,17 +40,17 @@
 //     loadCourses();
 //   }, []);
 
-//   const loadCourses = async () => {
-//     try {
-//       setLoading(true);
-//       const data = await coursesApi.getAll();
-//       setCourses(data || []);
-//     } catch (err) {
-//       console.error("Ошибка загрузки курсов:", err);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+  const loadCourses = async () => {
+    try {
+      setLoading(true);
+      const response = await coursesApi.getAll();
+      setCourses(response.courses || []);
+    } catch (err) {
+      console.error("Ошибка загрузки курсов:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 //   if (!mounted) return null;
 
@@ -137,45 +137,49 @@
 //           ))}
 //         </div>
 
-//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
-//           {loading
-//             ? [1, 2, 3].map((i) => (
-//                 <div
-//                   key={i}
-//                   className="h-96 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 animate-pulse flex items-center justify-center"
-//                 >
-//                   <Loader2 className="animate-spin text-slate-300" />
-//                 </div>
-//               ))
-//             : filteredCourses.map((course) => (
-//                 <div
-//                   key={course._id}
-//                   className="group relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-8 flex flex-col h-full transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40 dark:hover:shadow-blue-900/20 overflow-hidden"
-//                 >
-//                   <div className="mb-6 flex justify-between items-center">
-//                     {course.level && (
-//                       <span
-//                         className={`px-4 py-1.5 rounded-full text-[10px] uppercase font-black tracking-widest border ${
-//                           course.level === "beginner"
-//                             ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-100 dark:border-emerald-900/30"
-//                             : course.level === "intermediate"
-//                               ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 border-blue-100 dark:border-blue-900/30"
-//                               : "bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-100 dark:border-rose-900/30"
-//                         }`}
-//                       >
-//                         {course.level === "beginner"
-//                           ? "Начальный"
-//                           : course.level === "intermediate"
-//                             ? "Средний"
-//                             : "Продвинутый"}
-//                       </span>
-//                     )}
-//                     <div
-//                       className={`w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white shadow-lg shadow-blue-100 dark:shadow-none group-hover:rotate-12 transition-transform duration-500`}
-//                     >
-//                       {iconMap[course.iconName] || <Code className="w-8 h-8" />}
-//                     </div>
-//                   </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+          {loading
+            ? [1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-96 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 animate-pulse flex items-center justify-center"
+                >
+                  <Loader2 className="animate-spin text-slate-300" />
+                </div>
+              ))
+            : filteredCourses.map((course) => (
+                <div
+                  key={course._id}
+                  className="group relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-8 flex flex-col h-full transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40 dark:hover:shadow-blue-900/20 overflow-hidden"
+                >
+                  <div className="mb-6 flex justify-between items-center">
+                    {course.level && (
+                      <span
+                        className={`px-4 py-1.5 rounded-full text-[10px] uppercase font-black tracking-widest border ${
+                          course.level === "beginner"
+                            ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-100 dark:border-emerald-900/30"
+                            : course.level === "intermediate"
+                              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 border-blue-100 dark:border-blue-900/30"
+                              : "bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-100 dark:border-rose-900/30"
+                        }`}
+                      >
+                        {course.level === "beginner"
+                          ? "Начальный"
+                          : course.level === "intermediate"
+                            ? "Средний"
+                            : "Продвинутый"}
+                      </span>
+                    )}
+                    <div
+                      className={`w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white shadow-lg shadow-blue-100 dark:shadow-none group-hover:rotate-12 transition-transform duration-500`}
+                    >
+                      {course.iconName && iconMap[course.iconName] ? (
+                        iconMap[course.iconName]
+                      ) : (
+                        <Code className="w-8 h-8" />
+                      )}
+                    </div>
+                  </div>
 
 //                   <div className="flex-grow">
 //                     <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-3 leading-tight group-hover:text-blue-600 transition-colors">

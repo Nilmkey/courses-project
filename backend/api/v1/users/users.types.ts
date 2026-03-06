@@ -22,3 +22,8 @@ export interface UserProfileResponse {
 export interface UsersListResponse {
   users: UserProfileResponse[];
 }
+
+export interface UploadAvatarResponse {
+  avatar: string;
+  message: string;
+}
