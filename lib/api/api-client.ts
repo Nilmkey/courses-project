@@ -59,21 +59,15 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  // Для FormData не устанавливаем Content-Type — браузер сделает это сам
-  const isFormData = options.body instanceof FormData;
   const headers: HeadersInit = {
-    ...(isFormData ? {} : DEFAULT_HEADERS),
+    ...DEFAULT_HEADERS,
     ...options.headers,
   };
   const fetchOptions: RequestInit = {
     ...options,
     credentials: withCredentials ? "include" : "same-origin",
     headers,
-    body: isFormData
-      ? options.body
-      : options.body !== undefined
-        ? JSON.stringify(options.body)
-        : undefined,
+    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   };
   try {
     const response = await fetchWithTimeout(url, fetchOptions);
