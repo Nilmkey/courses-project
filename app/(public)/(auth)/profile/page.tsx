@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { ExtendedUser } from "@/backend/auth";
 import { authClient } from "@/lib/auth-client";
+import { apiRequest, ApiError } from "@/lib/api/api-client";
+import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -24,6 +26,10 @@ import {
   ShieldCheck,
   Sun,
   Moon,
+  Camera,
+  Trash2,
+  Upload,
+  X,
 } from "lucide-react";
 
 interface CourseProgress {
@@ -38,6 +44,11 @@ interface CourseInfo {
   text: string;
   shadow: string;
   icon: string;
+}
+
+interface UploadAvatarResponse {
+  avatar: string;
+  message: string;
 }
 
 const coursesInfo: Record<string, CourseInfo> = {
@@ -88,13 +99,30 @@ const coursesInfo: Record<string, CourseInfo> = {
 export default function ProfilePage() {
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
   const [progress, setProgress] = useState<Record<string, CourseProgress>>({});
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
   const toast = useToast();
 
   const user = session?.user as unknown as ExtendedUser | undefined;
+
+  // Инициализируем currentAvatar при загрузке сессии
+  useEffect(() => {
+    if (session?.user) {
+      const extendedUser = session.user as unknown as ExtendedUser;
+      setCurrentAvatar(extendedUser.image ?? null);
+    }
+  }, [session]);
+
+  // Функция для обновления сессии
+  const refreshSession = async () => {
+    router.refresh();
+  };
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -175,6 +203,99 @@ export default function ProfilePage() {
     );
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Проверка типа файла
+    if (!file.type.startsWith("image/")) {
+      toast.error("Пожалуйста, выберите изображение");
+      return;
+    }
+
+    // Проверка размера (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Размер файла не должен превышать 5MB");
+      return;
+    }
+
+    // Создаем preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewUrl(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadAvatar = async () => {
+    const fileInput = fileInputRef.current;
+    const file = fileInput?.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const response = await apiRequest<UploadAvatarResponse>(
+        "/users/avatar",
+        {
+          method: "POST",
+          body: formData,
+        },
+        true,
+      );
+
+      // Сразу обновляем аватар в UI
+      setCurrentAvatar(response.avatar);
+      
+      setPreviewUrl(null);
+      if (fileInput) fileInput.value = "";
+
+      toast.success("Аватар успешно загружен");
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Ошибка при загрузке аватара";
+      toast.error(message);
+      setPreviewUrl(null);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    if (!confirm("Вы уверены, что хотите удалить аватар?")) return;
+
+    try {
+      await apiRequest(
+        "/users/avatar",
+        {
+          method: "DELETE",
+        },
+        true,
+      );
+
+      // Сразу удаляем аватар из UI
+      setCurrentAvatar(null);
+      
+      toast.success("Аватар успешно удалён");
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Ошибка при удалении аватара";
+      toast.error(message);
+    }
+  };
+
+  const handleCancelUpload = () => {
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   return (
     <div className="min-h-screen bg-[#f0f5ff] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 flex flex-col">
       <Toaster
@@ -252,22 +373,88 @@ export default function ProfilePage() {
           </div>
 
           <div className="px-6 pb-6 sm:px-10">
-            <div className="flex flex-col sm:flex-row items-center sm:items-end -mt-12 gap-5">
-              <div className="relative p-1.5 rounded-full bg-white dark:bg-slate-900 shadow-xl shadow-indigo-900/10">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-indigo-100 dark:border-slate-700 overflow-hidden">
-                  {session.user.image ? (
-                    <Image
-                      src={session.user.image}
-                      alt="User"
-                      width={112}
-                      height={112}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <User size={44} className="text-[#3b5bdb]" />
-                  )}
+            <div className="flex flex-col sm:flex-row items-center sm:items-end -mt-12 gap-4">
+              <div className="relative group">
+                <div className="p-1.5 rounded-full bg-white dark:bg-slate-900 shadow-xl shadow-indigo-900/10">
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-indigo-100 dark:border-slate-700 overflow-hidden relative">
+                    {previewUrl ? (
+                      <Image
+                        src={previewUrl}
+                        alt="Preview"
+                        width={112}
+                        height={112}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : currentAvatar ? (
+                      <Image
+                        src={currentAvatar}
+                        alt="User"
+                        width={112}
+                        height={112}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User size={44} className="text-[#3b5bdb]" />
+                    )}
+
+                    {/* Оверлей для загрузки при наведении */}
+                    {!previewUrl && (
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                      >
+                        <Camera className="text-white" size={32} />
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Скрытый input для файла */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+
+                {/* Кнопка удаления аватара */}
+                {!previewUrl && currentAvatar && (
+                  <button
+                    onClick={handleDeleteAvatar}
+                    className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-colors shadow-lg border-2 border-white dark:border-slate-900"
+                    title="Удалить аватар"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                )}
               </div>
+
+              {/* Кнопки управления загрузкой */}
+              {previewUrl && (
+                <div className="flex gap-2 mb-2">
+                  <button
+                    onClick={handleUploadAvatar}
+                    disabled={isUploading}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-emerald-500 rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isUploading ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Upload size={16} />
+                    )}
+                    {isUploading ? "Загрузка..." : "Сохранить"}
+                  </button>
+                  <button
+                    onClick={handleCancelUpload}
+                    disabled={isUploading}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                  >
+                    <X size={16} />
+                    Отмена
+                  </button>
+                </div>
+              )}
 
               <div className="flex-1 text-center sm:text-left mb-2">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">

@@ -28,13 +28,16 @@ export const createApp = () => {
   // 3. JSON parser
   app.use(express.json());
 
-  // 4. API v1 Routes
+  // 4. URL-encoded parser (для form-data)
+  app.use(express.urlencoded({ extended: true }));
+
+  // 5. API v1 Routes
   app.use(appConfig.apiPrefix + '/v1', v1Router);
 
-  // 5. 404 handler
+  // 6. 404 handler
   app.use(notFoundHandler);
 
-  // 6. Error handler
+  // 7. Error handler
   app.use(errorHandler);
 
   return app;
