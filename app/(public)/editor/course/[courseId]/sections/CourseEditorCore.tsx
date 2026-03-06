@@ -32,7 +32,7 @@ interface CourseEditorCoreProps {
 }
 
 export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
-  const { sections, setSections, addSectionOptimistic, addLessonOptimistic, confirmOperation, rollbackOperation } = useSection();
+  const { sections, setSections, addSectionOptimistic, addLessonOptimistic, confirmOperation, rollbackOperation, removeSectionOptimistic, removeLessonOptimistic, restoreSection, restoreLesson } = useSection();
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -108,16 +108,21 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
 
   const handleRemoveSection = useCallback(
     async (sectionId: string) => {
+      // 1. СРАЗУ удаляем секцию из UI (Optimistic UI)
+      const { section: removedSection, sectionIndex } = removeSectionOptimistic(sectionId);
+
       try {
+        // 2. Отправляем запрос на сервер
         await sectionsApi.delete(sectionId);
-        setSections((prev) => prev.filter((section) => section.id !== sectionId));
         toast.success("Секция удалена");
       } catch (error) {
         console.error("Ошибка при удалении секции:", error);
+        // 3. Восстанавливаем секцию при ошибке
+        restoreSection(removedSection, sectionIndex);
         toast.error("Не удалось удалить секцию");
       }
     },
-    [setSections, toast],
+    [removeSectionOptimistic, restoreSection, toast],
   );
 
   const handleTitleChange = useCallback(
@@ -188,27 +193,21 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
 
   const handleRemoveLesson = useCallback(
     async (sectionId: string, lessonId: string) => {
+      // 1. СРАЗУ удаляем урок из UI (Optimistic UI)
+      const { lesson: removedLesson, lessonIndex } = removeLessonOptimistic(sectionId, lessonId);
+
       try {
+        // 2. Отправляем запрос на сервер
         await lessonsApi.delete(lessonId);
-        setSections((prev) =>
-          prev.map((section) =>
-            section.id === sectionId
-              ? {
-                  ...section,
-                  lessons: section.lessons.filter(
-                    (lesson) => lesson.lesson_id !== lessonId,
-                  ),
-                }
-              : section,
-          ),
-        );
         toast.success("Урок удалён");
       } catch (error) {
         console.error("Ошибка при удалении урока:", error);
+        // 3. Восстанавливаем урок при ошибке
+        restoreLesson(sectionId, removedLesson, lessonIndex);
         toast.error("Не удалось удалить урок");
       }
     },
-    [setSections, toast],
+    [removeLessonOptimistic, restoreLesson, toast],
   );
 
   const handleToggleDraft = useCallback(

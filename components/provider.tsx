@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { ConstructorContext } from "@/contexts/ConstructorContext";
-import { CourseBlock, Section, infoLesson } from "@/types/types";
+import { CourseBlock, Section, SectionLesson, infoLesson } from "@/types/types";
 import { SectionContext } from "@/contexts/SectionContext";
 import { addErrorObserver } from "@/lib/api/api-client";
 import { useRouter } from "next/navigation";
@@ -94,12 +94,71 @@ export default function Provider({ children }: { children: React.ReactNode }) {
       if (sectionIndex !== -1) {
         return prev.filter((s) => s.id !== tempId);
       }
-      
+
       // Проверяем, не урок ли это внутри секции
       return prev.map((section) => ({
         ...section,
         lessons: section.lessons.filter((l) => l.lesson_id !== tempId),
       }));
+    });
+  }, []);
+
+  const removeSectionOptimistic = useCallback((sectionId: string) => {
+    let removedSection: Section | undefined;
+    let sectionIndex = -1;
+
+    setSections((prev) => {
+      sectionIndex = prev.findIndex((s) => s.id === sectionId);
+      if (sectionIndex === -1) return prev;
+
+      removedSection = prev[sectionIndex];
+      return prev.filter((s) => s.id !== sectionId);
+    });
+
+    return { section: removedSection!, sectionIndex };
+  }, []);
+
+  const removeLessonOptimistic = useCallback((sectionId: string, lessonId: string) => {
+    let removedLesson: SectionLesson | undefined;
+    let lessonIndex = -1;
+
+    setSections((prev) => {
+      return prev.map((section) => {
+        if (section.id === sectionId) {
+          lessonIndex = section.lessons.findIndex((l) => l.lesson_id === lessonId);
+          if (lessonIndex === -1) return section;
+
+          removedLesson = section.lessons[lessonIndex];
+          return {
+            ...section,
+            lessons: section.lessons.filter((l) => l.lesson_id !== lessonId),
+          };
+        }
+        return section;
+      });
+    });
+
+    return { lesson: removedLesson!, lessonIndex };
+  }, []);
+
+  const restoreSection = useCallback((section: Section, index: number) => {
+    setSections((prev) => {
+      const newArray = [...prev];
+      newArray.splice(index, 0, section);
+      return newArray;
+    });
+  }, []);
+
+  const restoreLesson = useCallback((sectionId: string, lesson: SectionLesson, index: number) => {
+    setSections((prev) => {
+      return prev.map((section) => {
+        if (section.id === sectionId) {
+          const newLessons = [...section.lessons];
+          newLessons.splice(index, 0, lesson);
+          return { ...section, lessons: newLessons };
+        }
+        return section;
+      });
     });
   }, []);
 
@@ -115,6 +174,10 @@ export default function Provider({ children }: { children: React.ReactNode }) {
           addLessonOptimistic,
           confirmOperation,
           rollbackOperation,
+          removeSectionOptimistic,
+          removeLessonOptimistic,
+          restoreSection,
+          restoreLesson,
         }}
       >
         {children}
