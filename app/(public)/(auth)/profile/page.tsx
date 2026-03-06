@@ -8,7 +8,6 @@ import { useTheme } from "next-themes";
 import { ExtendedUser } from "@/backend/auth";
 import { authClient } from "@/lib/auth-client";
 import { apiRequest, ApiError } from "@/lib/api/api-client";
-import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -118,11 +117,6 @@ export default function ProfilePage() {
       setCurrentAvatar(extendedUser.image ?? null);
     }
   }, [session]);
-
-  // Функция для обновления сессии
-  const refreshSession = async () => {
-    router.refresh();
-  };
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -249,7 +243,7 @@ export default function ProfilePage() {
 
       // Сразу обновляем аватар в UI
       setCurrentAvatar(response.avatar);
-      
+
       setPreviewUrl(null);
       if (fileInput) fileInput.value = "";
 
@@ -280,7 +274,7 @@ export default function ProfilePage() {
 
       // Сразу удаляем аватар из UI
       setCurrentAvatar(null);
-      
+
       toast.success("Аватар успешно удалён");
     } catch (error) {
       const message =
