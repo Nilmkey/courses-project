@@ -85,7 +85,7 @@ export function CourseEditForm() {
   }, [formData, courseId, toast]);
 
   const handleGoBack = useCallback(() => {
-    router.back();
+    router.push("/admin");
   }, [router]);
 
   const handleGoToSections = useCallback(() => {
