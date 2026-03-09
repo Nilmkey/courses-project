@@ -87,4 +87,12 @@ export const lessonsService = {
       .sort({ order_index: 1 })
       .lean();
   },
+
+  async getById(id: string): Promise<ILesson> {
+    const lesson = await Lesson.findById(id).lean();
+    if (!lesson) {
+      throw ApiError.notFound("Урок не найден");
+    }
+    return lesson;
+  },
 };

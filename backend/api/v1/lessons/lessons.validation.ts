@@ -55,3 +55,9 @@ export const getLessonsBySectionSchema = z.object({
     sectionId: z.string().min(1, "ID секции обязателен"),
   }),
 });
+
+export const getLessonByIdSchema = z.object({
+  params: z.object({
+    id: z.string().min(1, "ID урока обязателен"),
+  }),
+});

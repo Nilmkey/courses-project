@@ -46,6 +46,10 @@ export interface GetLessonsBySectionRequest {
   params: { sectionId: string };
 }
 
+export interface GetLessonByIdRequest {
+  params: { id: string };
+}
+
 export interface LessonBlockResponse {
   id: string;
   title: string;

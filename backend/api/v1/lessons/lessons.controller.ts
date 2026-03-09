@@ -1,20 +1,20 @@
-// api/v1/lessons/lessons.controller.ts
-import type { Request, Response } from 'express';
-import { lessonsService } from '../../../services/lessons.service';
+import type { Request, Response } from "express";
+import { lessonsService } from "../../../services/lessons.service";
 import type {
   CreateLessonRequest,
   UpdateLessonRequest,
   DeleteLessonRequest,
   ReorderLessonsRequest,
   GetLessonsBySectionRequest,
+  GetLessonByIdRequest,
   LessonResponse,
   LessonsListResponse,
   ReorderLessonsResponse,
   LessonBlockResponse,
-} from './lessons.types';
-import { ApiError } from '../../../utils/ApiError';
-import type { AuthenticatedUser } from '../../../middleware/auth.middleware';
-import { Types } from 'mongoose';
+} from "./lessons.types";
+import { ApiError } from "../../../utils/ApiError";
+import type { AuthenticatedUser } from "../../../middleware/auth.middleware";
+import { Types } from "mongoose";
 
 type AuthRequest = Request & { user?: AuthenticatedUser };
 
@@ -35,7 +35,7 @@ const toLessonBlockResponse = (block: unknown): LessonBlockResponse => {
   return {
     id: String(b.id),
     title: String(b.title),
-    type: b.type as 'text' | 'video' | 'quiz',
+    type: b.type as "text" | "video" | "quiz",
     content: b.content as Record<string, unknown>,
     order_index: b.order_index as number | undefined,
   };
@@ -55,24 +55,33 @@ const toLessonResponse = (lesson: LessonData): LessonResponse => ({
 
 export const lessonsController = {
   async getBySection(
-    req: Request<GetLessonsBySectionRequest['params']>,
-    res: Response<LessonsListResponse>
+    req: Request<GetLessonsBySectionRequest["params"]>,
+    res: Response<LessonsListResponse>,
   ): Promise<void> {
     const { sectionId } = req.params;
     const lessons = await lessonsService.getBySection(sectionId);
-    res.json({ lessons: lessons.map((l) => toLessonResponse(l as unknown as LessonData)) });
+    res.json({
+      lessons: lessons.map((l) => toLessonResponse(l as unknown as LessonData)),
+    });
   },
 
   async create(
-    req: Request<CreateLessonRequest['params'], unknown, CreateLessonRequest['body']>,
-    res: Response<LessonResponse>
+    req: Request<
+      CreateLessonRequest["params"],
+      unknown,
+      CreateLessonRequest["body"]
+    >,
+    res: Response<LessonResponse>,
   ): Promise<void> {
     const { sectionId } = req.params;
     const lessonData = req.body;
 
     const authReq = req as AuthRequest;
-    if (!authReq.user || (authReq.user.role !== 'admin' && authReq.user.role !== 'teacher')) {
-      throw ApiError.forbidden('Создавать уроки могут только преподаватели');
+    if (
+      !authReq.user ||
+      (authReq.user.role !== "admin" && authReq.user.role !== "teacher")
+    ) {
+      throw ApiError.forbidden("Создавать уроки могут только преподаватели");
     }
 
     const lesson = await lessonsService.create({
@@ -84,15 +93,24 @@ export const lessonsController = {
   },
 
   async update(
-    req: Request<UpdateLessonRequest['params'], unknown, UpdateLessonRequest['body']>,
-    res: Response<LessonResponse>
+    req: Request<
+      UpdateLessonRequest["params"],
+      unknown,
+      UpdateLessonRequest["body"]
+    >,
+    res: Response<LessonResponse>,
   ): Promise<void> {
     const { id } = req.params;
     const updateData = req.body;
 
     const authReq = req as AuthRequest;
-    if (!authReq.user || (authReq.user.role !== 'admin' && authReq.user.role !== 'teacher')) {
-      throw ApiError.forbidden('Редактировать уроки могут только преподаватели');
+    if (
+      !authReq.user ||
+      (authReq.user.role !== "admin" && authReq.user.role !== "teacher")
+    ) {
+      throw ApiError.forbidden(
+        "Редактировать уроки могут только преподаватели",
+      );
     }
 
     const lesson = await lessonsService.update(id, updateData);
@@ -100,14 +118,17 @@ export const lessonsController = {
   },
 
   async delete(
-    req: Request<DeleteLessonRequest['params']>,
-    res: Response<void>
+    req: Request<DeleteLessonRequest["params"]>,
+    res: Response<void>,
   ): Promise<void> {
     const { id } = req.params;
 
     const authReq = req as AuthRequest;
-    if (!authReq.user || (authReq.user.role !== 'admin' && authReq.user.role !== 'teacher')) {
-      throw ApiError.forbidden('Удалять уроки могут только преподаватели');
+    if (
+      !authReq.user ||
+      (authReq.user.role !== "admin" && authReq.user.role !== "teacher")
+    ) {
+      throw ApiError.forbidden("Удалять уроки могут только преподаватели");
     }
 
     await lessonsService.delete(id);
@@ -115,18 +136,36 @@ export const lessonsController = {
   },
 
   async reorder(
-    req: Request<ReorderLessonsRequest['params'], unknown, ReorderLessonsRequest['body']>,
-    res: Response<ReorderLessonsResponse>
+    req: Request<
+      ReorderLessonsRequest["params"],
+      unknown,
+      ReorderLessonsRequest["body"]
+    >,
+    res: Response<ReorderLessonsResponse>,
   ): Promise<void> {
     const { sectionId } = req.params;
     const { lessonIds } = req.body;
 
     const authReq = req as AuthRequest;
-    if (!authReq.user || (authReq.user.role !== 'admin' && authReq.user.role !== 'teacher')) {
-      throw ApiError.forbidden('Изменять порядок уроков могут только преподаватели');
+    if (
+      !authReq.user ||
+      (authReq.user.role !== "admin" && authReq.user.role !== "teacher")
+    ) {
+      throw ApiError.forbidden(
+        "Изменять порядок уроков могут только преподаватели",
+      );
     }
 
     await lessonsService.reorder(sectionId, lessonIds);
-    res.json({ success: true, message: 'Порядок уроков обновлён' });
+    res.json({ success: true, message: "Порядок уроков обновлён" });
+  },
+
+  async getById(
+    req: Request<GetLessonByIdRequest["params"]>,
+    res: Response<LessonResponse>,
+  ): Promise<void> {
+    const { id } = req.params;
+    const lesson = await lessonsService.getById(id);
+    res.json(toLessonResponse(lesson as unknown as LessonData));
   },
 };

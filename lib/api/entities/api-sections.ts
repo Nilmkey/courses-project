@@ -1,5 +1,5 @@
 import { api } from "@/lib/api/api-client";
-import type { Section, SectionLesson } from "@/types/types";
+import type { Section } from "@/types/types";
 
 export interface CreateSectionData {
   title: string;
@@ -28,13 +28,18 @@ export interface UpdateLessonData {
   is_free?: boolean;
 }
 
+export interface LessonData {
+  _id: string;
+  title: string;
+}
+
 export interface SectionResponse {
   _id: string;
   course_id: string;
   title: string;
   order_index: number;
   isDraft: boolean;
-  lessons: string[];
+  lessons: LessonData[];
   createdAt: string;
   updatedAt: string;
 }

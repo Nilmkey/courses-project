@@ -30,9 +30,9 @@ export function CourseEditorClient() {
           order_index: section.order_index,
           isDraft: section.isDraft,
           courseId,
-          lessons: section.lessons.map((lessonId) => ({
-            lesson_id: lessonId,
-            title: "", // Название урока загрузится отдельно при редактировании
+          lessons: section.lessons.map((lesson) => ({
+            lesson_id: lesson._id,
+            title: lesson.title,
           })),
         }));
 

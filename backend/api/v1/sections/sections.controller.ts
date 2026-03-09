@@ -35,9 +35,13 @@ const toSectionResponse = (section: SectionData): SectionResponse => ({
   title: section.title,
   order_index: section.order_index,
   isDraft: section.isDraft,
-  lessons: section.lessons.map((l) => 
-    typeof l === 'string' ? l : l instanceof Types.ObjectId ? l.toString() : l._id.toString()
-  ),
+  lessons: section.lessons.map((l) => {
+    const lesson = l as unknown as ILesson;
+    return {
+      _id: lesson._id.toString(),
+      title: lesson.title,
+    };
+  }),
   createdAt: section.createdAt.toISOString(),
   updatedAt: section.updatedAt.toISOString(),
 });
