@@ -24,6 +24,5 @@ export type {
 export type {
   QuizAnswerInput,
   LessonProgressInput,
-  ProgressUpdateInput,
   CourseProgressResult,
 } from './progress.service';
