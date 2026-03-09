@@ -6,6 +6,7 @@ import { useConstructor } from "@/hooks/useConstructor";
 import { db } from "@/lib/db";
 import debounce from "lodash/debounce";
 import { infoLesson } from "@/types/types";
+import { lessonsBlocksApi, toCourseBlock } from "@/lib/api/entities/api-lessons";
 
 const DndEditor = dynamic(() => import("./editorCore"), {
   ssr: false,
@@ -14,24 +15,54 @@ const DndEditor = dynamic(() => import("./editorCore"), {
 
 export default function DndPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
-  const { blocks, setBlocks, lessonInfo } = useConstructor();
+  const { blocks, setBlocks, lessonInfo, setLessonInfo } = useConstructor();
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Загружаем данные с сервера при монтировании
   useEffect(() => {
     let cancelled = false;
-    db.lessons
-      .get(lessonId)
-      .then((lesson) => {
+    
+    const loadData = async () => {
+      try {
+        // Пробуем загрузить с сервера
+        const lesson = await lessonsBlocksApi.getById(lessonId);
+        
         if (!cancelled) {
-          setBlocks(lesson?.blocks ?? []);
+          // Конвертируем блоки сервера в локальный формат
+          const convertedBlocks = lesson.content_blocks.map(toCourseBlock);
+          setBlocks(convertedBlocks);
+          
+          // Обновляем информацию об уроке
+          setLessonInfo(prev => ({
+            ...prev,
+            title: lesson.title,
+            order_index: lesson.order_index,
+            sectionId: lesson.section_id,
+          }));
+          
           setIsLoaded(true);
         }
-      })
-      .catch(console.error);
+      } catch (error) {
+        console.error("Ошибка загрузки урока с сервера:", error);
+        
+        // Fallback: загружаем из IndexedDB если сервер недоступен
+        if (!cancelled) {
+          const localLesson = await db.lessons.get(lessonId);
+          if (localLesson) {
+            setBlocks(localLesson.blocks);
+            setLessonInfo(localLesson.lessonInfo);
+          }
+          setIsLoaded(true);
+        }
+      }
+    };
+    
+    loadData();
+    
     return () => {
       cancelled = true;
     };
-  }, [lessonId, setBlocks]);
+  }, [lessonId, setBlocks, setLessonInfo]);
 
   const debouncedSave = useMemo(
     () =>
