@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { ICourse } from "@/types/types";
 import { coursesApi } from "@/lib/api/entities/api-courses";
+import { Toaster } from "react-hot-toast";
 import {
   Code,
   ArrowLeft,
@@ -136,6 +137,21 @@ export default function CoursePage() {
 
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 transition-colors duration-300">
+      <Toaster
+              position="top-center"
+              toastOptions={{
+                style: {
+                  background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
+                  color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+                  border:
+                    resolvedTheme === "dark"
+                      ? "1px solid #1e293b"
+                      : "1px solid #e2e8f0",
+                  borderRadius: "0.75rem",
+                  boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                },
+              }}
+            />
       <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
