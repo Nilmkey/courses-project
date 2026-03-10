@@ -32,7 +32,7 @@ const fileFilter = (
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new ApiError('Неверный тип файла. Разрешены только JPEG, PNG, WebP, GIF'));
+    cb(new ApiError(400, 'Неверный тип файла. Разрешены только JPEG, PNG, WebP, GIF'));
   }
 };
 
@@ -54,14 +54,14 @@ export const handleMulterError = (
 ) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return next(new ApiError('Файл слишком большой. Максимальный размер 5MB'));
+      return next(new ApiError(400, 'Файл слишком большой. Максимальный размер 5MB'));
     }
-    return next(new ApiError(`Ошибка загрузки: ${err.message}`));
+    return next(new ApiError(400, `Ошибка загрузки: ${err.message}`));
   }
-  
+
   if (err) {
-    return next(new ApiError(err.message));
+    return next(new ApiError(400, err.message));
   }
-  
+
   next();
 };

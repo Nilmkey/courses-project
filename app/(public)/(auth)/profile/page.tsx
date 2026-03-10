@@ -7,7 +7,8 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { ExtendedUser } from "@/backend/auth";
 import { authClient } from "@/lib/auth-client";
-import { apiRequest, ApiError } from "@/lib/api/api-client";
+import { ApiError } from "@/lib/api/api-client";
+import { API_BASE_URL } from "@/config/config";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -232,17 +233,23 @@ export default function ProfilePage() {
       const formData = new FormData();
       formData.append("avatar", file);
 
-      const response = await apiRequest<UploadAvatarResponse>(
-        "/users/avatar",
-        {
-          method: "POST",
-          body: formData,
-        },
-        true,
-      );
+      const response = await fetch(`${API_BASE_URL}/v1/users/avatar`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          message: response.statusText,
+        }));
+        throw new ApiError(errorData.message, response.status, errorData);
+      }
+
+      const data = await response.json();
 
       // Сразу обновляем аватар в UI
-      setCurrentAvatar(response.avatar);
+      setCurrentAvatar(data.avatar);
 
       setPreviewUrl(null);
       if (fileInput) fileInput.value = "";
@@ -264,13 +271,17 @@ export default function ProfilePage() {
     if (!confirm("Вы уверены, что хотите удалить аватар?")) return;
 
     try {
-      await apiRequest(
-        "/users/avatar",
-        {
-          method: "DELETE",
-        },
-        true,
-      );
+      const response = await fetch(`${API_BASE_URL}/v1/users/avatar`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          message: response.statusText,
+        }));
+        throw new ApiError(errorData.message, response.status, errorData);
+      }
 
       // Сразу удаляем аватар из UI
       setCurrentAvatar(null);
