@@ -41,10 +41,6 @@ export const coursesService = {
     return { ...course, sections };
   },
 
-  /**
-   * Создаёт новый курс с данными по умолчанию
-   * @param authorId - ID автора курса (из сессии пользователя)
-   */
   async create(authorId: string): Promise<LeanCourse> {
     const course = await Course.create({
       title: "Новый курс",

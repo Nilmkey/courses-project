@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { useState, useCallback, useMemo } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import {
   DndContext,
   DragOverlay,
@@ -24,13 +24,18 @@ import DragItem from "@/components/ui/dragItem";
 import { AddItemButton } from "@/components/ui/addItemButton";
 import { useConstructor } from "@/hooks/useConstructor";
 import { EditorWindow } from "@/components/editor/EditorWindow";
+import { lessonsBlocksApi, toLessonBlockData } from "@/lib/api/entities/api-lessons";
+import { useToast } from "@/hooks/useToast";
 
 export default function Editor() {
+  const params = useParams();
   const router = useRouter();
-  const { blocks, setBlocks } = useConstructor();
+  const { lessonId } = params as { lessonId: string };
+  const { blocks, setBlocks, lessonInfo, setLessonInfo } = useConstructor();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const toast = useToast();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -38,56 +43,84 @@ export default function Editor() {
     }),
   );
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
+  const activeBlock = useMemo(
+    () => blocks.find((b) => b.id === activeId),
+    [blocks, activeId],
+  );
 
-  const handleEdit = () => {
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  }, []);
+
+  const handleEdit = useCallback(() => {
     if (!activeBlock) return;
     setEditingId(activeBlock.id);
-  };
+  }, [activeBlock, setEditingId]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
 
-    if (over && active.id !== over.id) {
-      setBlocks((items) => {
-        const oldIndex = items.findIndex((i) => i.id === active.id);
-        const newIndex = items.findIndex((i) => i.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-    setActiveId(null);
-  };
+      if (over && active.id !== over.id) {
+        setBlocks((items) => {
+          const oldIndex = items.findIndex((i) => i.id === active.id);
+          const newIndex = items.findIndex((i) => i.id === over.id);
+          return arrayMove(items, oldIndex, newIndex);
+        });
+      }
+      setActiveId(null);
+    },
+    [setBlocks],
+  );
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setEditingId(null);
-  };
-
-  const activeBlock = blocks.find((b) => b.id === activeId);
+  }, []);
 
   const handleGoBack = useCallback(() => {
     router.back();
   }, [router]);
 
+  const handleLessonChange = useCallback(
+    (title: string) => {
+      setLessonInfo((prev) => ({ ...prev, title }));
+    },
+    [setLessonInfo],
+  );
+
+  // Проверка, является ли ID временным
+  const isTempId = useCallback((id: string) => id.startsWith("temp_"), []);
+
   // ========== Сохранение ==========
 
   const handleSave = useCallback(async () => {
+    if (!lessonId) {
+      toast.error("ID урока не определён");
+      return;
+    }
+
     setIsSaving(true);
     try {
-      // TODO: реализовать вызов эндпоинта для сохранения урока
-      // await fetch(`/api/lessons/${lessonId}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ blocks }),
-      // });
-      console.log("Saving lesson blocks:", blocks);
+      // Конвертируем блоки в формат для API
+      const contentBlocks = blocks.map((block, index) => ({
+        ...toLessonBlockData(block),
+        order_index: index,
+      }));
+
+      // Отправляем обновление урока на сервер
+      await lessonsBlocksApi.update(lessonId, {
+        title: lessonInfo.title,
+        content_blocks: contentBlocks,
+      });
+
+      toast.success("Урок успешно сохранён!");
     } catch (error) {
-      console.error("Failed to save lesson:", error);
+      console.error("Ошибка при сохранении урока:", error);
+      toast.error("Не удалось сохранить урок");
     } finally {
       setIsSaving(false);
     }
-  }, [blocks]);
+  }, [blocks, lessonId, lessonInfo.title, toast]);
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
@@ -115,17 +148,36 @@ export default function Editor() {
             shadow-sm hover:shadow-md
             ${
               isSaving
-                ? "bg-blue-400 cursor-not-allowed"
+                ? "bg-slate-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"
             }
             text-white
           `}
         >
-          {isSaving ? "Сохранение..." : "Сохранить"}
+          {isSaving ? (
+            <span className="flex items-center gap-2">
+              <Loader2 size={18} className="animate-spin" />
+              Сохранение...
+            </span>
+          ) : (
+            "Сохранить"
+          )}
         </button>
       </div>
 
-      <h1 className="text-3xl font-bold text-slate-900 mb-6">Редактор урока</h1>
+      <h1 className="text-3xl font-bold text-slate-900 mb-2">Редактор урока</h1>
+      
+      {/* Название урока */}
+      <div className="mb-8">
+        <input
+          type="text"
+          placeholder="[название урока]"
+          value={lessonInfo.title}
+          onChange={(e) => handleLessonChange(e.target.value)}
+          className="w-full bg-transparent text-2xl text-slate-800 placeholder-slate-200 outline-none"
+        />
+      </div>
+
       <p className="text-slate-500 mb-8">
         Перетаскивайте блоки для изменения порядка
       </p>
@@ -172,6 +224,33 @@ export default function Editor() {
       </DndContext>
 
       <AddItemButton />
+
+      {/* Статистика */}
+      <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200">
+        <div className="flex items-center gap-6 text-sm text-slate-600">
+          <span>
+            <strong className="text-slate-900">{blocks.length}</strong> блоков
+          </span>
+          <span>
+            <strong className="text-slate-900">
+              {blocks.filter((b) => b.type === "text").length}
+            </strong>{" "}
+            текстовых
+          </span>
+          <span>
+            <strong className="text-slate-900">
+              {blocks.filter((b) => b.type === "video").length}
+            </strong>{" "}
+            видео
+          </span>
+          <span>
+            <strong className="text-slate-900">
+              {blocks.filter((b) => b.type === "quiz").length}
+            </strong>{" "}
+            викторин
+          </span>
+        </div>
+      </div>
 
       {editingId && (
         <EditorWindow

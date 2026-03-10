@@ -13,12 +13,6 @@ export const unenrollSchema = z.object({
   }),
 });
 
-export const getMyCoursesSchema = z.object({
-  params: z.object({
-    userId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Неверный формат ID пользователя'),
-  }),
-});
-
 export const checkEnrollmentSchema = z.object({
   params: z.object({
     courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Неверный формат ID курса'),

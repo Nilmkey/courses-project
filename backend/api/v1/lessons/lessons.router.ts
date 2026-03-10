@@ -1,55 +1,71 @@
 // api/v1/lessons/lessons.router.ts
-import { Router } from 'express';
-import { lessonsController } from './lessons.controller';
-import { validateRequest } from './lessons.middleware';
+import { Router } from "express";
+import { lessonsController } from "./lessons.controller";
+import { validateRequest } from "./lessons.middleware";
 import {
   createLessonSchema,
   updateLessonSchema,
   deleteLessonSchema,
   reorderLessonsSchema,
   getLessonsBySectionSchema,
-} from './lessons.validation';
-import { authMiddleware } from '../../../middleware/auth.middleware';
-import { teacherMiddleware } from '../../../middleware/teacher.middleware';
+  getLessonByIdSchema,
+} from "./lessons.validation";
+import { authMiddleware } from "../../../middleware/auth.middleware";
+import { teacherMiddleware } from "../../../middleware/teacher.middleware";
 
 const router = Router();
 
+/* 
+ты - senior fullstack developer с 10+летним опытом работы. проанализируй
+  @app/\(public\)/editor/course/\[courseId\]/sections/CourseEditorCore.tsx систему сохранения. и сделай
+  систему сохранений в @app/\(public\)/editor/lesson/\[lessonId\]/editorCore.tsx . используй контекст
+  @hooks/useConstructor.tsx, и учитывай типы в @types/types.ts .  эндпоинты найди в
+  @backend/api/v1/lessons/, а фетч запросы найди или создай в @lib/api/ . для новый api запросов создай
+  файл api-lessons.ts. в конце отчитайся о каждой сделанной строчке кода. ​
+*/
+
 router.get(
-  '/section/:sectionId',
+  "/section/:sectionId",
   validateRequest(getLessonsBySectionSchema),
-  lessonsController.getBySection.bind(lessonsController)
+  lessonsController.getBySection.bind(lessonsController),
 );
 
 router.post(
-  '/:sectionId',
+  "/:sectionId",
   authMiddleware,
   teacherMiddleware,
   validateRequest(createLessonSchema),
-  lessonsController.create.bind(lessonsController)
+  lessonsController.create.bind(lessonsController),
 );
 
 router.patch(
-  '/:id',
+  "/:id",
   authMiddleware,
   teacherMiddleware,
   validateRequest(updateLessonSchema),
-  lessonsController.update.bind(lessonsController)
+  lessonsController.update.bind(lessonsController),
 );
 
 router.delete(
-  '/:id',
+  "/:id",
   authMiddleware,
   teacherMiddleware,
   validateRequest(deleteLessonSchema),
-  lessonsController.delete.bind(lessonsController)
+  lessonsController.delete.bind(lessonsController),
 );
 
 router.post(
-  '/reorder/:sectionId',
+  "/reorder/:sectionId",
   authMiddleware,
   teacherMiddleware,
   validateRequest(reorderLessonsSchema),
-  lessonsController.reorder.bind(lessonsController)
+  lessonsController.reorder.bind(lessonsController),
+);
+
+router.get(
+  "/:id",
+  validateRequest(getLessonByIdSchema),
+  lessonsController.getById.bind(lessonsController),
 );
 
 export default router;

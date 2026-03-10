@@ -39,7 +39,10 @@ export interface SectionResponse {
   title: string;
   order_index: number;
   isDraft: boolean;
-  lessons: string[];
+  lessons: {
+    _id: string;
+    title: string;
+  }[];
   createdAt: string;
   updatedAt: string;
 }
