@@ -2,7 +2,6 @@
 import { Course, Section, Lesson } from "../models";
 import { createError } from "../middleware/error.middleware";
 import type { ICourse } from "../models";
-import type { Types } from "mongoose";
 import { slugify } from "../utils/slugify";
 
 type LeanCourse = Omit<ICourse, keyof Document>;
