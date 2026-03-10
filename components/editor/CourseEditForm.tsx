@@ -8,6 +8,7 @@ import { CourseDescriptionInput } from "./CourseDescriptionInput";
 import { CourseLevelSelect, type CourseLevel } from "./CourseLevelSelect";
 import { CoursePriceSlider } from "./CoursePriceSlider";
 import { CoursePublishToggle } from "./CoursePublishToggle";
+import { TagSelector } from "./TagSelector";
 import { Button } from "@/components/ui/button";
 import { coursesApi } from "@/lib/api/entities/api-courses";
 import { useToast } from "@/hooks/useToast";
@@ -19,6 +20,7 @@ const defaultCourseData: CourseFormData = {
   level: "beginner",
   price: 0,
   isPublished: false,
+  tags: [],
 };
 
 export function CourseEditForm() {
@@ -47,6 +49,7 @@ export function CourseEditForm() {
           level: response.level as CourseLevel,
           price: response.price,
           isPublished: response.isPublished,
+          tags: response.tags ?? [],
         };
         setInitialData(courseData);
         setFormData(courseData);
@@ -99,7 +102,8 @@ export function CourseEditForm() {
       formData.description !== initialData.description ||
       formData.level !== initialData.level ||
       formData.price !== initialData.price ||
-      formData.isPublished !== initialData.isPublished
+      formData.isPublished !== initialData.isPublished ||
+      JSON.stringify(formData.tags) !== JSON.stringify(initialData.tags)
     );
   }, [formData, initialData, isSaved]);
 
@@ -217,6 +221,14 @@ export function CourseEditForm() {
               isPublished={formData.isPublished}
               onToggle={() => updateField("isPublished", !formData.isPublished)}
             />
+
+            {/* Tag Selector */}
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+              <TagSelector
+                selectedTagIds={formData.tags || []}
+                onChange={(tagIds) => updateField("tags", tagIds)}
+              />
+            </div>
           </div>
 
           {/* Info Card */}

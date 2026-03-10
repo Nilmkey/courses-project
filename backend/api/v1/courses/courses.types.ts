@@ -19,6 +19,7 @@ export interface UpdateCourseRequest {
     level?: "beginner" | "intermediate" | "advanced";
     price?: number;
     isPublished?: boolean;
+    tags?: string[];
   };
 }
 
@@ -59,6 +60,7 @@ export interface CourseResponse {
   level: "beginner" | "intermediate" | "advanced";
   createdAt: string;
   updatedAt: string;
+  tags?: string[];
 }
 
 export interface LessonItem {

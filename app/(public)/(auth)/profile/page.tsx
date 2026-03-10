@@ -46,11 +46,6 @@ interface CourseInfo {
   icon: string;
 }
 
-interface UploadAvatarResponse {
-  avatar: string;
-  message: string;
-}
-
 const coursesInfo: Record<string, CourseInfo> = {
   html: {
     title: "HTML Основы",

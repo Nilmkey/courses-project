@@ -1,6 +1,7 @@
 // api/v1/courses/courses.controller.ts
 import type { Request, Response } from "express";
 import { coursesService } from "../../../services/courses.service";
+import type { ICourse } from "../../../models/Course";
 import type {
   UpdateCourseRequest,
   GetCourseBySlugRequest,
@@ -31,6 +32,7 @@ interface CourseData {
   level: "beginner" | "intermediate" | "advanced";
   createdAt: Date;
   updatedAt: Date;
+  tags?: Types.ObjectId[];
 }
 
 interface SectionData {
@@ -68,6 +70,7 @@ const toCourseResponse = (course: CourseData): CourseResponse => ({
   level: course.level,
   createdAt: course.createdAt.toISOString(),
   updatedAt: course.updatedAt.toISOString(),
+  tags: course.tags?.map((t) => t.toString()),
 });
 
 const toLessonItem = (lesson: LessonData): LessonItem => ({
@@ -175,7 +178,13 @@ export const coursesController = {
       );
     }
 
-    const course = await coursesService.update(id, updateData);
+    // Преобразуем tags из string[] в ObjectId[] перед передачей в сервис
+    const dataForService = { ...updateData };
+    if (updateData.tags) {
+      dataForService.tags = updateData.tags.map((tagId) => new Types.ObjectId(tagId)) as unknown as string[];
+    }
+
+    const course = await coursesService.update(id, dataForService as Partial<ICourse>);
     res.json(toCourseResponse(course as unknown as CourseData));
   },
 
