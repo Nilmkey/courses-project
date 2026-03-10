@@ -22,7 +22,7 @@ import {
   X,
 } from "lucide-react";
 
-export default function Header() {
+export default function Header() {2
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);

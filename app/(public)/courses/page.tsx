@@ -161,11 +161,17 @@ const CoursesPage = () => {
                   <Loader2 className="animate-spin text-slate-300" />
                 </div>
               ))
-            : filteredCourses.map((course) => (
-                <div
-                  key={course._id}
-                  className="group relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-8 flex flex-col h-full transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40 dark:hover:shadow-blue-900/20 overflow-hidden"
-                >
+            : filteredCourses.map((course) => {
+                return (
+                  <div
+                    key={course._id}
+                    className="group relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-8 flex flex-col h-full transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40 dark:hover:shadow-blue-900/20 overflow-hidden cursor-pointer"
+                    onClick={() => {
+                      if (course.slug) {
+                        window.location.href = `/courses/${course.slug}`;
+                      }
+                    }}
+                  >
                   <div className="mb-6 flex justify-between items-center">
                     <span
                       className={`px-4 py-1.5 rounded-full text-[10px] uppercase font-black tracking-widest border ${getLevelStyles(course.level)}`}
@@ -199,21 +205,24 @@ const CoursesPage = () => {
                         <span
                           className={`text-[11px] font-black uppercase tracking-tighter ${course.isPublished ? "text-emerald-600" : "text-slate-400"}`}
                         >
-                          {course.isPublished ? "Доступен" : "Скоро"}
+                          {course.isPublished
+                            ? "Набор открыт"
+                            : "Набор закрыт"}
                         </span>
                       </div>
 
-                      <Link
-                        href={`/editor/course/${course._id}`}
+                      <div
                         className={`flex items-center gap-1 font-bold text-sm transition-all ${
                           course.isPublished
-                            ? "text-blue-600 hover:gap-3 group-hover:mr-2"
-                            : "text-slate-300 cursor-not-allowed pointer-events-none"
+                            ? "text-blue-600 group-hover:gap-3"
+                            : "text-slate-300"
                         }`}
                       >
-                        {course.isPublished ? "Подробнее" : "Ждем старта"}
+                        {course.isPublished
+                          ? "Подробнее"
+                          : "Ждем старта"}
                         <ChevronRight className="w-4 h-4" />
-                      </Link>
+                      </div>
                     </div>
                   </div>
 
@@ -221,7 +230,8 @@ const CoursesPage = () => {
                     className={`absolute -right-12 -bottom-12 w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 opacity-[0.03] rounded-full blur-2xl group-hover:scale-[3] transition-transform duration-700`}
                   />
                 </div>
-              ))}
+              );
+            })}
         </div>
       </section>
 
