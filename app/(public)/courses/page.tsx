@@ -3,36 +3,50 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { ICourse } from "@/types/types";
-import {
-  Code,
-  ChevronRight,
-  Layout,
-  Server,
-  Globe,
-  Laptop,
-  Zap,
-  User,
-  Sun,
-  Moon,
-  Loader2,
-} from "lucide-react";
+import { Code, ChevronRight, User, Sun, Moon, Loader2 } from "lucide-react";
 import { coursesApi } from "@/lib/api/entities/api-courses";
+import { CourseApiResponse, CourseLevel } from "@/types/types";
 
 const iconMap: Record<string, React.ReactNode> = {
-  Layout: <Layout className="w-8 h-8" />,
-  Server: <Server className="w-8 h-8" />,
-  Globe: <Globe className="w-8 h-8" />,
-  Laptop: <Laptop className="w-8 h-8" />,
-  Zap: <Zap className="w-8 h-8" />,
-  Code: <Code className="w-8 h-8" />,
+  Layout: <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" /></svg>,
+  Server: <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="8" rx="2" /><rect x="2" y="14" width="20" height="8" rx="2" /><path d="M6 6h.01" /><path d="M6 18h.01" /></svg>,
+  Globe: <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>,
+  Laptop: <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M2 21h20" /><path d="M12 17v4" /></svg>,
+  Zap: <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>,
+  Code: <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>,
+};
+
+const getLevelLabel = (level: CourseLevel) => {
+  switch (level) {
+    case "beginner":
+      return "Начальный";
+    case "intermediate":
+      return "Средний";
+    case "advanced":
+      return "Продвинутый";
+    default:
+      return level;
+  }
+};
+
+const getLevelStyles = (level: CourseLevel) => {
+  switch (level) {
+    case "beginner":
+      return "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-100 dark:border-emerald-900/30";
+    case "intermediate":
+      return "bg-blue-50 dark:bg-blue-900/20 text-blue-600 border-blue-100 dark:border-blue-900/30";
+    case "advanced":
+      return "bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-100 dark:border-rose-900/30";
+    default:
+      return "bg-slate-50 dark:bg-slate-900/20 text-slate-600 border-slate-100 dark:border-slate-900/30";
+  }
 };
 
 const CoursesPage = () => {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [filter, setFilter] = useState("all");
-  const [courses, setCourses] = useState<ICourse[]>([]);
+  const [filter, setFilter] = useState<"all" | "career" | "language">("all");
+  const [courses, setCourses] = useState<CourseApiResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,8 +57,8 @@ const CoursesPage = () => {
   const loadCourses = async () => {
     try {
       setLoading(true);
-      const response = await coursesApi.getAll();
-      setCourses(response.courses || []);
+      const data = await coursesApi.getAll();
+      setCourses(data.courses || []);
     } catch (err) {
       console.error("Ошибка загрузки курсов:", err);
     } finally {
@@ -118,21 +132,21 @@ const CoursesPage = () => {
         </p>
 
         <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {["all", "career", "language"].map((t) => (
+          {[
+            { value: "all", label: "Все курсы" },
+            { value: "career", label: "Профессии" },
+            { value: "language", label: "Языки" },
+          ].map((t) => (
             <button
-              key={t}
-              onClick={() => setFilter(t)}
+              key={t.value}
+              onClick={() => setFilter(t.value as typeof filter)}
               className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
-                filter === t
+                filter === t.value
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none scale-105"
                   : "bg-white dark:bg-slate-900 text-slate-500 border border-slate-200 dark:border-slate-800 hover:border-blue-300"
               }`}
             >
-              {t === "all"
-                ? "Все курсы"
-                : t === "career"
-                  ? "Профессии"
-                  : "Языки"}
+              {t.label}
             </button>
           ))}
         </div>
@@ -159,31 +173,15 @@ const CoursesPage = () => {
                     }}
                   >
                   <div className="mb-6 flex justify-between items-center">
-                    {course.level && (
-                      <span
-                        className={`px-4 py-1.5 rounded-full text-[10px] uppercase font-black tracking-widest border ${
-                          course.level === "beginner"
-                            ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-100 dark:border-emerald-900/30"
-                            : course.level === "intermediate"
-                              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 border-blue-100 dark:border-blue-900/30"
-                              : "bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-100 dark:border-rose-900/30"
-                        }`}
-                      >
-                        {course.level === "beginner"
-                          ? "Начальный"
-                          : course.level === "intermediate"
-                            ? "Средний"
-                            : "Продвинутый"}
-                      </span>
-                    )}
-                    <div
-                      className={`w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white shadow-lg shadow-blue-100 dark:shadow-none group-hover:rotate-12 transition-transform duration-500`}
+                    <span
+                      className={`px-4 py-1.5 rounded-full text-[10px] uppercase font-black tracking-widest border ${getLevelStyles(course.level)}`}
                     >
-                      {course.iconName && iconMap[course.iconName] ? (
-                        iconMap[course.iconName]
-                      ) : (
-                        <Code className="w-8 h-8" />
-                      )}
+                      {getLevelLabel(course.level)}
+                    </span>
+                    <div
+                      className={`w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-100 dark:shadow-none group-hover:rotate-12 transition-transform duration-500`}
+                    >
+                      {iconMap[course.iconName || "Code"] || iconMap.Code}
                     </div>
                   </div>
 
@@ -229,7 +227,7 @@ const CoursesPage = () => {
                   </div>
 
                   <div
-                    className={`absolute -right-12 -bottom-12 w-24 h-24 bg-gradient-to-br opacity-[0.03] rounded-full blur-2xl group-hover:scale-[3] transition-transform duration-700`}
+                    className={`absolute -right-12 -bottom-12 w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 opacity-[0.03] rounded-full blur-2xl group-hover:scale-[3] transition-transform duration-700`}
                   />
                 </div>
               );

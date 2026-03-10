@@ -14,6 +14,7 @@ export interface UpdateSectionRequest {
     title?: string;
     order_index?: number;
     isDraft?: boolean;
+    lessons?: string[];
   };
 }
 
@@ -38,6 +39,10 @@ export interface SectionResponse {
   title: string;
   order_index: number;
   isDraft: boolean;
+  lessons: {
+    _id: string;
+    title: string;
+  }[];
   createdAt: string;
   updatedAt: string;
 }

@@ -22,21 +22,24 @@ import { SectionItem } from "./SectionItem";
 import { AddSectionButton } from "./AddSectionButton";
 import { useSection } from "@/hooks/useSection";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { sectionsApi, lessonsApi } from "@/lib/api/entities/api-sections";
+import { useToast } from "@/hooks/useToast";
 
 interface CourseEditorCoreProps {
-  initialSections: Section[];
   courseId: string;
   onSave?: (sections: Section[]) => void;
 }
 
 export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
-  const { sections, setSections } = useSection();
+  const { sections, setSections, addSectionOptimistic, addLessonOptimistic, confirmOperation, rollbackOperation, removeSectionOptimistic, removeLessonOptimistic, restoreSection, restoreLesson } = useSection();
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { courseId } = params as { courseId: string };
+  const toast = useToast();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -63,7 +66,7 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
           const oldIndex = prev.findIndex((s) => s.id === active.id);
           const newIndex = prev.findIndex((s) => s.id === over.id);
 
-          // if (oldIndex === -1 || newIndex === -1) return prev;
+          if (oldIndex === -1 || newIndex === -1) return prev;
 
           return arrayMove(prev, oldIndex, newIndex);
         });
@@ -74,25 +77,52 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
     [setSections],
   );
 
-  const handleAddSection = useCallback(() => {
-    setSections((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
+  const handleAddSection = useCallback(async () => {
+    if (!courseId) {
+      toast.error("ID курса не определён");
+      return;
+    }
+
+    // 1. СРАЗУ добавляем секцию в UI (Optimistic UI)
+    const tempId = addSectionOptimistic(courseId);
+
+    try {
+      // 2. Отправляем запрос на сервер
+      const response = await sectionsApi.create(courseId, {
         title: "Новая секция",
         order_index: sections.length + 1,
         isDraft: true,
-        courseId: params.courseId as string,
-        lessons: [],
-      },
-    ]);
-  }, [setSections, sections, params]);
+      });
+
+      // 3. Заменяем временный ID на реальный от сервера
+      confirmOperation(tempId, response._id);
+
+      toast.success("Секция успешно создана!");
+    } catch (error) {
+      console.error("Ошибка при создании секции:", error);
+      // 4. Откатываем изменения при ошибке
+      rollbackOperation(tempId);
+      toast.error("Не удалось создать секцию");
+    }
+  }, [courseId, sections.length, addSectionOptimistic, confirmOperation, rollbackOperation, toast]);
 
   const handleRemoveSection = useCallback(
-    (sectionId: string) => {
-      setSections((prev) => prev.filter((section) => section.id !== sectionId));
+    async (sectionId: string) => {
+      // 1. СРАЗУ удаляем секцию из UI (Optimistic UI)
+      const { section: removedSection, sectionIndex } = removeSectionOptimistic(sectionId);
+
+      try {
+        // 2. Отправляем запрос на сервер
+        await sectionsApi.delete(sectionId);
+        toast.success("Секция удалена");
+      } catch (error) {
+        console.error("Ошибка при удалении секции:", error);
+        // 3. Восстанавливаем секцию при ошибке
+        restoreSection(removedSection, sectionIndex);
+        toast.error("Не удалось удалить секцию");
+      }
     },
-    [setSections],
+    [removeSectionOptimistic, restoreSection, toast],
   );
 
   const handleTitleChange = useCallback(
@@ -118,25 +148,40 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
   );
 
   const handleAddLesson = useCallback(
-    (sectionId: string) => {
-      setSections((prev) =>
-        prev.map((section) =>
-          section.id === sectionId
-            ? {
-                ...section,
-                lessons: [
-                  ...section.lessons,
-                  {
-                    lesson_id: crypto.randomUUID(),
-                    title: "Новый урок",
-                  },
-                ],
-              }
-            : section,
-        ),
-      );
+    async (sectionId: string) => {
+      if (!sectionId) {
+        toast.error("ID секции не определён");
+        return;
+      }
+
+      // 1. СРАЗУ добавляем урок в UI (Optimistic UI)
+      const tempId = addLessonOptimistic(sectionId);
+
+      try {
+        // Находим секцию для определения порядка урока
+        const section = sections.find((s) => s.id === sectionId);
+        const orderIndex = section ? section.lessons.length : 0;
+
+        // 2. Отправляем запрос на сервер
+        const response = await lessonsApi.create(sectionId, {
+          title: "Новый урок",
+          slug: `lesson-${Date.now()}`,
+          order_index: orderIndex,
+          is_free: false,
+        });
+
+        // 3. Заменяем временный ID на реальный от сервера
+        confirmOperation(tempId, response._id);
+
+        toast.success("Урок успешно создан!");
+      } catch (error) {
+        console.error("Ошибка при создании урока:", error);
+        // 4. Откатываем изменения при ошибке
+        rollbackOperation(tempId);
+        toast.error("Не удалось создать урок");
+      }
     },
-    [setSections],
+    [sections, addLessonOptimistic, confirmOperation, rollbackOperation, toast],
   );
 
   const handleEditLesson = useCallback(
@@ -147,21 +192,22 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
   );
 
   const handleRemoveLesson = useCallback(
-    (sectionId: string, lessonId: string) => {
-      setSections((prev) =>
-        prev.map((section) =>
-          section.id === sectionId
-            ? {
-                ...section,
-                lessons: section.lessons.filter(
-                  (lesson) => lesson.lesson_id !== lessonId,
-                ),
-              }
-            : section,
-        ),
-      );
+    async (sectionId: string, lessonId: string) => {
+      // 1. СРАЗУ удаляем урок из UI (Optimistic UI)
+      const { lesson: removedLesson, lessonIndex } = removeLessonOptimistic(sectionId, lessonId);
+
+      try {
+        // 2. Отправляем запрос на сервер
+        await lessonsApi.delete(lessonId);
+        toast.success("Урок удалён");
+      } catch (error) {
+        console.error("Ошибка при удалении урока:", error);
+        // 3. Восстанавливаем урок при ошибке
+        restoreLesson(sectionId, removedLesson, lessonIndex);
+        toast.error("Не удалось удалить урок");
+      }
     },
-    [setSections],
+    [removeLessonOptimistic, restoreLesson, toast],
   );
 
   const handleToggleDraft = useCallback(
@@ -186,11 +232,51 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
 
   const sectionIds = useMemo(() => sections.map((s) => s.id), [sections]);
 
+  // Проверка, является ли ID временным
+  const isTempId = (id: string) => id.startsWith('temp_');
+
   // ========== Сохранение ==========
 
-  const handleSave = useCallback(() => {
-    onSave?.(sections);
-  }, [sections, onSave]);
+  const handleSave = useCallback(async () => {
+    if (!courseId) {
+      toast.error("ID курса не определён");
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      // Собираем все изменения для отправки на сервер
+      const updatePromises: Promise<unknown>[] = [];
+
+      // Обновляем порядок секций
+      updatePromises.push(sectionsApi.reorder(courseId, sectionIds));
+
+      // Обновляем каждую секцию (название, порядок, lessons)
+      for (const section of sections) {
+        // Собираем ID уроков в порядке их следования
+        const lessonIds = section.lessons.map((l) => l.lesson_id);
+
+        updatePromises.push(
+          sectionsApi.update(section.id, {
+            title: section.title,
+            order_index: section.order_index,
+            isDraft: section.isDraft,
+            lessons: lessonIds,
+          }),
+        );
+      }
+
+      await Promise.all(updatePromises);
+
+      toast.success("Все изменения сохранены!");
+      onSave?.(sections);
+    } catch (error) {
+      console.error("Ошибка при сохранении:", error);
+      toast.error("Не удалось сохранить изменения");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [sections, courseId, sectionIds, onSave, toast]);
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
@@ -212,14 +298,25 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
         </div>
         <button
           onClick={handleSave}
-          className="
-            px-6 py-3 bg-blue-600 text-white
-            rounded-lg font-medium
-            hover:bg-blue-700 transition-colors
-            shadow-sm hover:shadow-md
-          "
+          disabled={isSaving}
+          className={`
+            px-6 py-3 text-white rounded-lg font-medium
+            transition-colors shadow-sm hover:shadow-md
+            ${
+              isSaving
+                ? "bg-slate-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }
+          `}
         >
-          Сохранить
+          {isSaving ? (
+            <span className="flex items-center gap-2">
+              <Loader2 size={18} className="animate-spin" />
+              Сохранение...
+            </span>
+          ) : (
+            "Сохранить"
+          )}
         </button>
       </div>
 
@@ -240,19 +337,34 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-4">
-            {sections.map((section) => (
-              <SectionItem
-                key={section.id}
-                section={section}
-                onTitleChange={handleTitleChange}
-                onLessonChange={handleLessonChange}
-                onRemove={handleRemoveSection}
-                onAddLesson={handleAddLesson}
-                onEditLesson={handleEditLesson}
-                onRemoveLesson={handleRemoveLesson}
-                onToggleDraft={handleToggleDraft}
-              />
-            ))}
+            {sections.map((section) => {
+              const isPending = isTempId(section.id);
+              return (
+                <div
+                  key={section.id}
+                  className={`relative transition-all duration-300 ${
+                    isPending ? 'opacity-70' : ''
+                  }`}
+                >
+                  <SectionItem
+                    section={section}
+                    onTitleChange={handleTitleChange}
+                    onLessonChange={handleLessonChange}
+                    onRemove={handleRemoveSection}
+                    onAddLesson={handleAddLesson}
+                    onEditLesson={handleEditLesson}
+                    onRemoveLesson={handleRemoveLesson}
+                    onToggleDraft={handleToggleDraft}
+                  />
+                  {isPending && (
+                    <div className="absolute top-3 right-3 flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 font-medium animate-pulse">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" />
+                      Создание...
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </SortableContext>
 

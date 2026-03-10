@@ -1,4 +1,3 @@
-// api/v1/sections/sections.router.ts
 import { Router } from "express";
 import { sectionsController } from "./sections.controller";
 import { validateRequest } from "./sections.middleware";
@@ -21,7 +20,7 @@ router.get(
 );
 
 router.post(
-  "/",
+  "/:courseId",
   authMiddleware,
   teacherMiddleware,
   validateRequest(createSectionSchema),

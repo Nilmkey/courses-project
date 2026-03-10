@@ -1,3 +1,5 @@
+import { Types } from "mongoose";
+
 // api/v1/enrollment/enrollment.types.ts
 export interface EnrollRequest {
   body: {
@@ -7,10 +9,6 @@ export interface EnrollRequest {
 
 export interface UnenrollRequest {
   params: { courseId: string };
-}
-
-export interface GetMyCoursesRequest {
-  params: { userId: string };
 }
 
 export interface CheckEnrollmentRequest {
@@ -54,4 +52,21 @@ export interface EnrollResponse {
   success: boolean;
   message: string;
   enrollment: EnrollmentResponse;
+}
+export interface EnrollmentData {
+  _id: Types.ObjectId;
+  user_id: Types.ObjectId;
+  course_id: Types.ObjectId;
+  enrolledAt: Date;
+  completedAt?: Date;
+  status: "active" | "completed" | "cancelled";
+  createdAt: Date;
+  updatedAt: Date;
+  course?: {
+    _id: Types.ObjectId;
+    title: string;
+    slug: string;
+    thumbnail?: string;
+    level: "beginner" | "intermediate" | "advanced";
+  };
 }

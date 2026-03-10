@@ -4,40 +4,12 @@ import { ILessonBlock } from "@/backend/models/Lesson";
 
 // ==================== REQUEST ====================
 export interface CreateCourseRequest {
-  params: {
-    custom_id: string;
-  };
-  body: {
-    title: string;
-    slug?: string;
-    description?: string;
-    thumbnail?: string;
-    level: "beginner" | "intermediate" | "advanced";
-    price?: number;
-    isPublished?: boolean;
-    sections?: Array<{
-      title: string;
-      order_index?: number;
-      isDraft?: boolean;
-      lessons?: Array<{
-        title: string;
-        slug: string;
-        order_index?: number;
-        is_free?: boolean;
-        content_blocks?: Array<{
-          id: string;
-          title: string;
-          type: "text" | "video" | "quiz";
-          content: Record<string, unknown>;
-        }>;
-      }>;
-    }>;
-  };
+  params: Record<string, never>;
 }
 
 export interface UpdateCourseRequest {
   params: {
-    custom_id: string;
+    id: string;
   };
   body: {
     title?: string;
@@ -56,28 +28,27 @@ export interface GetCourseBySlugRequest {
   };
 }
 
-export interface GetCourseByCustomIdRequest {
+export interface GetCourseByIdRequest {
   params: {
-    custom_id: string;
+    id: string;
   };
 }
 
 export interface DeleteCourseRequest {
   params: {
-    custom_id: string;
+    id: string;
   };
 }
 
 export interface PublishCourseRequest {
   params: {
-    custom_id: string;
+    id: string;
   };
 }
 
 // ==================== RESPONSE ====================
 export interface CourseResponse {
   _id: string;
-  custom_id: string;
   title: string;
   slug: string;
   price: number;
@@ -92,7 +63,6 @@ export interface CourseResponse {
 
 export interface LessonItem {
   _id: string;
-  custom_id: string;
   section_id: string;
   title: string;
   slug: string;
@@ -105,7 +75,6 @@ export interface LessonItem {
 
 export interface SectionWithLessons {
   _id: string;
-  custom_id: string;
   course_id: string;
   title: string;
   order_index: number;

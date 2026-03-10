@@ -40,10 +40,25 @@ export default function RootLayout({
             {children}
             <Toaster
               position="top-right"
-              gutter={16}
-              containerStyle={{
-                top: 80,
-                right: 16,
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: "#363636",
+                  color: "#fff",
+                },
+                success: {
+                  duration: 2000,
+                  iconTheme: {
+                    primary: "#10b981",
+                    secondary: "#fff",
+                  },
+                },
+                error: {
+                  iconTheme: {
+                    primary: "#ef4444",
+                    secondary: "#fff",
+                  },
+                },
               }}
             />
           </ThemeProvider>

@@ -1,5 +1,5 @@
 // services/lessons.service.ts
-import { Lesson } from "../models";
+import { Lesson, Section } from "../models";
 import { ApiError } from "../utils/ApiError";
 import type { ILesson } from "../models";
 import type { Types } from "mongoose";
@@ -42,12 +42,18 @@ export const lessonsService = {
         order_index: b.order_index ?? i,
       })),
     });
+
+    // Добавляем ID урока в массив lessons секции
+    await Section.findByIdAndUpdate(data.section_id, {
+      $push: { lessons: lesson._id },
+    });
+
     return lesson;
   },
 
   async update(id: string, data: LessonUpdateInput): Promise<ILesson> {
     const updated = await Lesson.findByIdAndUpdate(id, data, {
-      new: true,
+      returnDocument: 'after',
     }).lean();
     if (!updated) {
       throw ApiError.notFound("Урок не найден");
@@ -56,6 +62,16 @@ export const lessonsService = {
   },
 
   async delete(id: string): Promise<void> {
+    const lesson = await Lesson.findById(id);
+    if (!lesson) {
+      throw ApiError.notFound("Урок не найден");
+    }
+
+    // Удаляем ID урока из массива lessons секции
+    await Section.findByIdAndUpdate(lesson.section_id, {
+      $pull: { lessons: lesson._id },
+    });
+
     await Lesson.findByIdAndDelete(id);
   },
 
@@ -70,5 +86,13 @@ export const lessonsService = {
     return await Lesson.find({ section_id: sectionId })
       .sort({ order_index: 1 })
       .lean();
+  },
+
+  async getById(id: string): Promise<ILesson> {
+    const lesson = await Lesson.findById(id).lean();
+    if (!lesson) {
+      throw ApiError.notFound("Урок не найден");
+    }
+    return lesson;
   },
 };

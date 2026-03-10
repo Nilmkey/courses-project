@@ -13,7 +13,8 @@ import type {
 } from "./sections.types";
 import { ApiError } from "../../../utils/ApiError";
 import type { AuthenticatedUser } from "../../../middleware/auth.middleware";
-import type { Types } from "mongoose";
+import { Types } from "mongoose";
+import type { ILesson } from "../../../models/Lesson";
 
 type AuthRequest = Request & { user?: AuthenticatedUser };
 
@@ -23,6 +24,7 @@ interface SectionData {
   title: string;
   order_index: number;
   isDraft: boolean;
+  lessons: (Types.ObjectId | ILesson)[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,6 +35,13 @@ const toSectionResponse = (section: SectionData): SectionResponse => ({
   title: section.title,
   order_index: section.order_index,
   isDraft: section.isDraft,
+  lessons: section.lessons.map((l) => {
+    const lesson = l as unknown as ILesson;
+    return {
+      _id: lesson._id.toString(),
+      title: lesson.title,
+    };
+  }),
   createdAt: section.createdAt.toISOString(),
   updatedAt: section.updatedAt.toISOString(),
 });

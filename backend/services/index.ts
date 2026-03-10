@@ -6,12 +6,6 @@ export { enrollmentService } from './enrollment.service';
 export { progressService } from './progress.service';
 
 export type {
-  CourseCreateInput,
-  SectionCreateInput,
-  LessonCreateInput,
-} from './courses.service';
-
-export type {
   SectionCreateInput as SectionServiceCreateInput,
   SectionUpdateInput,
 } from './sections.service';
@@ -30,6 +24,5 @@ export type {
 export type {
   QuizAnswerInput,
   LessonProgressInput,
-  ProgressUpdateInput,
   CourseProgressResult,
 } from './progress.service';

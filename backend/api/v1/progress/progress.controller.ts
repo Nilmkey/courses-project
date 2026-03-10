@@ -12,24 +12,9 @@ import type {
 } from "./progress.types";
 import { ApiError } from "../../../utils/ApiError";
 import type { AuthenticatedUser } from "../../../middleware/auth.middleware";
-import type { Types } from "mongoose";
+import type { IQuizAnswer, ILessonProgress } from "../../../models";
 
 type AuthRequest = Request & { user?: AuthenticatedUser };
-
-interface ProgressData {
-  _id: Types.ObjectId;
-  student_id: Types.ObjectId;
-  lesson_id: Types.ObjectId;
-  completed: boolean;
-  completedAt?: Date;
-  quizAnswers?: Array<{
-    questionId: string;
-    selectedAnswer: number | number[] | string;
-    isCorrect: boolean;
-  }>;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 interface CourseProgressData {
   totalLessons: number;
@@ -37,17 +22,14 @@ interface CourseProgressData {
   progress: number;
 }
 
-const toQuizAnswerResponse = (answer: unknown): QuizAnswerResponse => {
-  const a = answer as Record<string, unknown>;
-  return {
-    questionId: String(a.questionId),
-    selectedAnswer: a.selectedAnswer as QuizAnswerResponse["selectedAnswer"],
-    isCorrect: Boolean(a.isCorrect),
-  };
-};
+const toQuizAnswerResponse = (answer: IQuizAnswer): QuizAnswerResponse => ({
+  questionId: answer.questionId,
+  selectedAnswer: answer.selectedAnswer,
+  isCorrect: answer.isCorrect,
+});
 
 const toLessonProgressResponse = (
-  progress: ProgressData,
+  progress: ILessonProgress,
 ): LessonProgressResponse => ({
   lesson_id: progress.lesson_id.toString(),
   completed: progress.completed,
@@ -73,6 +55,7 @@ export const progressController = {
     res: Response<LessonProgressResponse>,
   ): Promise<void> {
     const { lessonId } = req.params;
+    const { courseId } = req.body;
 
     const authReq = req as AuthRequest;
     if (!authReq.user) {
@@ -82,13 +65,22 @@ export const progressController = {
     const progress = await progressService.markComplete(
       authReq.user.id,
       lessonId,
+      courseId,
     );
 
     if (!progress) {
       throw ApiError.internal("Не удалось отметить урок как пройденный");
     }
 
-    res.json(toLessonProgressResponse(progress as unknown as ProgressData));
+    const lessonProgress = progress.lessons?.find(
+      (l) => l.lesson_id.toString() === lessonId,
+    );
+
+    if (!lessonProgress) {
+      throw ApiError.internal("Прогресс урока не найден");
+    }
+
+    res.json(toLessonProgressResponse(lessonProgress));
   },
 
   async resetProgress(
@@ -100,13 +92,14 @@ export const progressController = {
     res: Response<void>,
   ): Promise<void> {
     const { lessonId } = req.params;
+    const { courseId } = req.body;
 
     const authReq = req as AuthRequest;
     if (!authReq.user) {
       throw ApiError.unauthorized("Требуется авторизация");
     }
 
-    await progressService.resetProgress(authReq.user.id, lessonId);
+    await progressService.resetProgress(authReq.user.id, lessonId, courseId);
     res.status(204).send();
   },
 
@@ -142,7 +135,7 @@ export const progressController = {
     res: Response<LessonProgressResponse>,
   ): Promise<void> {
     const { lessonId } = req.params;
-    const { completed, quizAnswers } = req.body;
+    const { courseId, completed, quizAnswers } = req.body;
 
     const authReq = req as AuthRequest;
     if (!authReq.user) {
@@ -152,10 +145,10 @@ export const progressController = {
     const progress = await progressService.updateLessonProgress(
       authReq.user.id,
       lessonId,
+      courseId,
       {
         lesson_id: lessonId,
         completed,
-        completedAt: completed ? new Date() : undefined,
         quizAnswers,
       },
     );
@@ -164,6 +157,14 @@ export const progressController = {
       throw ApiError.internal("Не удалось обновить прогресс");
     }
 
-    res.json(toLessonProgressResponse(progress as unknown as ProgressData));
+    const lessonProgress = progress.lessons?.find(
+      (l) => l.lesson_id.toString() === lessonId,
+    );
+
+    if (!lessonProgress) {
+      throw ApiError.internal("Прогресс урока не найден");
+    }
+
+    res.json(toLessonProgressResponse(lessonProgress));
   },
 };

@@ -10,30 +10,12 @@ import type {
   EnrollmentsListResponse,
   IsEnrolledResponse,
   EnrollResponse,
+  EnrollmentData,
 } from "./enrollment.types";
 import { ApiError } from "../../../utils/ApiError";
 import type { AuthenticatedUser } from "../../../middleware/auth.middleware";
-import type { Types } from "mongoose";
 
 type AuthRequest = Request & { user?: AuthenticatedUser };
-
-interface EnrollmentData {
-  _id: Types.ObjectId;
-  user_id: Types.ObjectId;
-  course_id: Types.ObjectId;
-  enrolledAt: Date;
-  completedAt?: Date;
-  status: "active" | "completed" | "cancelled";
-  createdAt: Date;
-  updatedAt: Date;
-  course?: {
-    _id: Types.ObjectId;
-    title: string;
-    slug: string;
-    thumbnail?: string;
-    level: "beginner" | "intermediate" | "advanced";
-  };
-}
 
 const toEnrollmentResponse = (
   enrollment: EnrollmentData,

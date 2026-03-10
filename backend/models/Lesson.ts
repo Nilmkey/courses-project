@@ -30,7 +30,6 @@ export interface ILesson extends Document {
   is_free: boolean;
   order_index: number;
   content_blocks: ILessonBlock[];
-  custom_id: string;
 }
 
 const LessonBlockSchema = new Schema({
@@ -58,7 +57,6 @@ const LessonBlockSchema = new Schema({
 }, { _id: false });
 
 const LessonSchema = new Schema<ILesson>({
-  custom_id: { type: String, unique: true, index: true, default: () => crypto.randomUUID() },
   section_id: { type: Schema.Types.ObjectId, ref: 'Section', required: true, index: true },
   title: { type: String, required: true },
   slug: { type: String, required: true },

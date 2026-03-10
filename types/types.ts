@@ -132,7 +132,6 @@ export interface IQuizBlock extends IBaseBlock {
 export type IBlock = ITextBlock | IVideoBlock | IQuizBlock;
 export interface ILesson {
   _id: string;
-  custom_id: string;
   section_id: string;
   title: string;
   slug: string;
@@ -145,7 +144,6 @@ export interface ILesson {
 
 export interface ISection {
   _id: string;
-  custom_id: string;
   course_id: string;
   title: string;
   order_index: number;
@@ -156,7 +154,6 @@ export interface ISection {
 
 export interface ICourse {
   _id: string;
-  custom_id: string;
   title: string;
   slug: string;
   description?: string;
@@ -210,7 +207,6 @@ export interface UpdateCourseData {
 
 export interface CourseApiResponse {
   _id: string;
-  custom_id: string;
   title: string;
   slug: string;
   price: number;
@@ -221,11 +217,12 @@ export interface CourseApiResponse {
   level: CourseLevel;
   createdAt: string;
   updatedAt: string;
+  iconName?: string;
+  type?: 'career' | 'language';
 }
 
 export interface LessonItem {
   _id: string;
-  custom_id: string;
   section_id: string;
   title: string;
   slug: string;
@@ -238,7 +235,6 @@ export interface LessonItem {
 
 export interface SectionWithLessons {
   _id: string;
-  custom_id: string;
   course_id: string;
   title: string;
   order_index: number;
