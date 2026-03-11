@@ -217,7 +217,7 @@ export default function CoursePage() {
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2" />
 
-              <div className="relative z-10 flex flex-col items-start gap-6">
+              <div className="relative z-10 flex flex-col items-start gap-6 ">
                 <div className={`p-4 bg-white rounded-3xl shadow-lg ${iconColor}`}>
                   {course.iconName && iconMap[course.iconName]
                     ? iconMap[course.iconName]
