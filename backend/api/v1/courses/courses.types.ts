@@ -19,6 +19,7 @@ export interface UpdateCourseRequest {
     level?: "beginner" | "intermediate" | "advanced";
     price?: number;
     isPublished?: boolean;
+    isOpenForEnrollment?: boolean;
     tags?: string[];
   };
 }
@@ -54,6 +55,7 @@ export interface CourseResponse {
   slug: string;
   price: number;
   isPublished: boolean;
+  isOpenForEnrollment: boolean;
   description?: string;
   thumbnail?: string;
   author_id: string;

@@ -28,6 +28,7 @@ interface AdminCourse {
   slug: string;
   level: string;
   isPublished: boolean;
+  isOpenForEnrollment: boolean;
   price: number;
 }
 

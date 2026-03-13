@@ -5,6 +5,7 @@ export interface ICourse extends Document {
   slug: string;
   price: number;
   isPublished: boolean;
+  isOpenForEnrollment: boolean;
   description?: string;
   thumbnail?: string;
   author_id: mongoose.Types.ObjectId;
@@ -21,6 +22,7 @@ const CourseSchema = new Schema<ICourse>(
     slug: { type: String, required: true, unique: true },
     price: { type: Number, required: true, default: 0 },
     isPublished: { type: Boolean, required: true, default: false },
+    isOpenForEnrollment: { type: Boolean, required: true, default: false },
     description: String,
     thumbnail: String,
     author_id: { type: Schema.Types.ObjectId, ref: "User", index: true },

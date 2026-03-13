@@ -325,7 +325,7 @@ export default function CoursePage() {
                 </div>
               </div>
 
-              {course.isPublished ? (
+              {course.isOpenForEnrollment ? (
                 <Button
                   onClick={handleBuy}
                   disabled={isBuying}
