@@ -1,4 +1,3 @@
-// services/lessons.service.ts
 import { Lesson, Section } from "../models";
 import { ApiError } from "../utils/ApiError";
 import type { ILesson } from "../models";
@@ -53,7 +52,7 @@ export const lessonsService = {
 
   async update(id: string, data: LessonUpdateInput): Promise<ILesson> {
     const updated = await Lesson.findByIdAndUpdate(id, data, {
-      returnDocument: 'after',
+      returnDocument: "after",
     }).lean();
     if (!updated) {
       throw ApiError.notFound("Урок не найден");

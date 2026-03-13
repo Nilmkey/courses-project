@@ -1,4 +1,3 @@
-// services/progress.service.ts
 import { Progress, Lesson, Section, Course } from "../models";
 import type { IProgress, IQuizAnswer } from "../models";
 import { Types } from "mongoose";
@@ -36,9 +35,7 @@ async function validateLessonBelongsToCourse(
 
   const section = await Section.findById(lesson.section_id);
   if (!section) {
-    throw ApiError.notFound(
-      `Секция для урока ${lessonId} не найдена`,
-    );
+    throw ApiError.notFound(`Секция для урока ${lessonId} не найдена`);
   }
 
   if (section.course_id.toString() !== courseId) {
@@ -64,8 +61,8 @@ export const progressService = {
       { user_id: studentId, course_id: courseObjId },
       {
         $set: {
-          'lessons.$[lesson].completed': true,
-          'lessons.$[lesson].completedAt': new Date(),
+          "lessons.$[lesson].completed": true,
+          "lessons.$[lesson].completedAt": new Date(),
         },
         $addToSet: {
           lessons: {
@@ -76,16 +73,20 @@ export const progressService = {
         },
       },
       {
-        arrayFilters: [{ 'lesson.lesson_id': lessonObjId }],
+        arrayFilters: [{ "lesson.lesson_id": lessonObjId }],
         upsert: true,
-        returnDocument: 'after',
+        returnDocument: "after",
       },
     ).lean();
 
     return progress;
   },
 
-  async resetProgress(studentId: string, lessonId: string, courseId: string): Promise<IProgress | null> {
+  async resetProgress(
+    studentId: string,
+    lessonId: string,
+    courseId: string,
+  ): Promise<IProgress | null> {
     // Проверка целостности данных
     await validateLessonBelongsToCourse(lessonId, courseId);
 
@@ -99,7 +100,7 @@ export const progressService = {
           lessons: { lesson_id: lessonObjId },
         },
       },
-      { returnDocument: 'after' },
+      { returnDocument: "after" },
     ).lean();
 
     return progress;
@@ -126,7 +127,11 @@ export const progressService = {
       course_id: courseId,
     });
 
-    if (!progressDoc || !progressDoc.lessons || progressDoc.lessons.length === 0) {
+    if (
+      !progressDoc ||
+      !progressDoc.lessons ||
+      progressDoc.lessons.length === 0
+    ) {
       return {
         totalLessons: lessonIds.length,
         completedLessons: 0,
@@ -167,15 +172,15 @@ export const progressService = {
     const courseObjId = new Types.ObjectId(courseId);
 
     const updateData: Record<string, unknown> = {
-      'lessons.$[lesson].completed': data.completed,
+      "lessons.$[lesson].completed": data.completed,
     };
 
     if (data.completed) {
-      updateData['lessons.$[lesson].completedAt'] = new Date();
+      updateData["lessons.$[lesson].completedAt"] = new Date();
     }
 
     if (data.quizAnswers && data.quizAnswers.length > 0) {
-      updateData['lessons.$[lesson].quizAnswers'] = data.quizAnswers;
+      updateData["lessons.$[lesson].quizAnswers"] = data.quizAnswers;
     }
 
     const progress = await Progress.findOneAndUpdate(
@@ -192,9 +197,9 @@ export const progressService = {
         },
       },
       {
-        arrayFilters: [{ 'lesson.lesson_id': lessonObjId }],
+        arrayFilters: [{ "lesson.lesson_id": lessonObjId }],
         upsert: true,
-        returnDocument: 'after',
+        returnDocument: "after",
       },
     ).lean();
 
