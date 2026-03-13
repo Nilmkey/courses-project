@@ -1,4 +1,3 @@
-// services/courses.service.ts
 import { Course, Section, Lesson } from "../models";
 import { createError } from "../middleware/error.middleware";
 import type { ICourse } from "../models";

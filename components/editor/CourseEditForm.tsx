@@ -186,9 +186,7 @@ export function CourseEditForm() {
             </p>
           </div>
 
-          {/* Form Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-xl p-8 space-y-8">
-            {/* Title & Description */}
+          <div className="bg-white dark:bg-slate-900 rounded-2rem border border-slate-100 dark:border-slate-800 shadow-xl p-8 space-y-8">
             <div className="space-y-6">
               <CourseTitleInput
                 value={formData.title}
@@ -200,26 +198,22 @@ export function CourseEditForm() {
               />
             </div>
 
-            {/* Level Selection */}
             <CourseLevelSelect
               value={formData.level}
               onChange={(value) => updateField("level", value)}
             />
 
-            {/* Price Slider */}
             <CoursePriceSlider
               value={formData.price}
               onChange={(value) => updateField("price", value)}
             />
 
-            {/* Publish Toggle */}
             <CoursePublishToggle
               isPublished={formData.isPublished}
               onToggle={() => updateField("isPublished", !formData.isPublished)}
             />
           </div>
 
-          {/* Info Card */}
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 p-6">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-blue-100 dark:bg-blue-800 rounded-xl">

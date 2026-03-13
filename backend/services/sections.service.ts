@@ -1,4 +1,3 @@
-// services/sections.service.ts
 import { Section, Lesson } from "../models";
 import { ApiError } from "../utils/ApiError";
 import type { ISection } from "../models";
@@ -33,7 +32,7 @@ export const sectionsService = {
 
   async update(id: string, data: SectionUpdateInput): Promise<ISection> {
     const updated = await Section.findByIdAndUpdate(id, data, {
-      returnDocument: 'after',
+      returnDocument: "after",
     }).lean();
     if (!updated) {
       throw ApiError.notFound("Секция не найдена");
@@ -56,7 +55,7 @@ export const sectionsService = {
   async getByCourse(courseId: string): Promise<ISection[]> {
     return await Section.find({ course_id: courseId })
       .sort({ order_index: 1 })
-      .populate('lessons')
+      .populate("lessons")
       .lean();
   },
 };
