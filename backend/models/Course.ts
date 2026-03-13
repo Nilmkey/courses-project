@@ -12,6 +12,7 @@ export interface ICourse extends Document {
   status?: "open" | "closed";
   type?: "career" | "language";
   level: "beginner" | "intermediate" | "advanced";
+  tags: mongoose.Types.ObjectId[];
 }
 
 const CourseSchema = new Schema<ICourse>(
@@ -31,6 +32,7 @@ const CourseSchema = new Schema<ICourse>(
     iconName: { type: String, default: "Code" },
     status: { type: String, enum: ["open", "closed"], default: "open" },
     type: { type: String, enum: ["career", "language"], default: "career" },
+    tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
   },
 
   { timestamps: true },

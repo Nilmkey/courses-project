@@ -6,6 +6,7 @@ import lessonsRouter from "./lessons/lessons.router";
 import enrollmentRouter from "./enrollment/enrollment.router";
 import progressRouter from "./progress/progress.router";
 import usersRouter from "./users/users.router";
+import tagsRouter from "./tags/tags.router";
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.use("/lessons", lessonsRouter);
 router.use("/enrollment", enrollmentRouter);
 router.use("/progress", progressRouter);
 router.use("/users", usersRouter);
+router.use("/tags", tagsRouter);
 
 export default router;

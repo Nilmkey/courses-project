@@ -91,6 +91,15 @@ export interface LessonItemProps {
 
 export type CourseLevel = "beginner" | "intermediate" | "advanced";
 
+export interface ITag {
+  _id: string;
+  name: string;
+  slug: string;
+  color: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IQuizQuestion {
   id: string;
   questionText: string;
@@ -167,6 +176,7 @@ export interface ICourse {
   type?: 'career' | 'language';
   price?: number;
   isPublished?: boolean;
+  tags?: string[];
 }
 
 // ==================== API Courses ====================
@@ -177,6 +187,7 @@ export interface CreateCourseData {
   level: CourseLevel;
   price?: number;
   isPublished?: boolean;
+  tags?: string[];
   sections?: Array<{
     title: string;
     order_index?: number;
@@ -203,6 +214,7 @@ export interface UpdateCourseData {
   level?: CourseLevel;
   price?: number;
   isPublished?: boolean;
+  tags?: string[];
 }
 
 export interface CourseApiResponse {
@@ -219,6 +231,7 @@ export interface CourseApiResponse {
   updatedAt: string;
   iconName?: string;
   type?: 'career' | 'language';
+  tags?: string[];
 }
 
 export interface LessonItem {
@@ -258,4 +271,5 @@ export interface CourseFormData {
   level: CourseLevel;
   price: number;
   isPublished: boolean;
+  tags?: string[];
 }
