@@ -18,6 +18,10 @@ export const enrollmentService = {
       throw ApiError.notFound('Курс не найден');
     }
 
+    if (!course.isOpenForEnrollment) {
+      throw ApiError.badRequest('Набор на этот курс закрыт');
+    }
+
     const existing = await Enrollment.findOne({ user_id: userId, course_id: courseId });
     if (existing) {
       throw ApiError.conflict('Вы уже записаны на этот курс');

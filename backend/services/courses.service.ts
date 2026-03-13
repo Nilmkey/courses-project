@@ -51,6 +51,7 @@ export const coursesService = {
       author_id: authorId,
       price: 0,
       isPublished: false,
+      isOpenForEnrollment: false,
     });
 
     return course;

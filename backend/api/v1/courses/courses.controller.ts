@@ -26,6 +26,7 @@ interface CourseData {
   slug: string;
   price: number;
   isPublished: boolean;
+  isOpenForEnrollment: boolean;
   description?: string;
   thumbnail?: string;
   author_id: Types.ObjectId;
@@ -64,6 +65,7 @@ const toCourseResponse = (course: CourseData): CourseResponse => ({
   slug: course.slug,
   price: course.price,
   isPublished: course.isPublished,
+  isOpenForEnrollment: course.isOpenForEnrollment,
   description: course.description,
   thumbnail: course.thumbnail,
   author_id: course.author_id?.toString() ?? "",
@@ -179,12 +181,12 @@ export const coursesController = {
     }
 
     // Преобразуем tags из string[] в ObjectId[] перед передачей в сервис
-    const dataForService = { ...updateData };
-    if (updateData.tags) {
-      dataForService.tags = updateData.tags.map((tagId) => new Types.ObjectId(tagId)) as unknown as string[];
-    }
+    const dataForService: Partial<ICourse> = {
+      ...updateData,
+      tags: updateData.tags?.map((tagId) => new Types.ObjectId(tagId)),
+    };
 
-    const course = await coursesService.update(id, dataForService as Partial<ICourse>);
+    const course = await coursesService.update(id, dataForService);
     res.json(toCourseResponse(course as unknown as CourseData));
   },
 
