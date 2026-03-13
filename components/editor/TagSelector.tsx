@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Plus, Search, Loader2 } from "lucide-react";
 import { tagsApi, type TagResponse } from "@/lib/api/entities/api-tags";
+import { slugify } from "@/lib/utils/slugify";
 import { useToast } from "@/hooks/useToast";
 
 interface TagSelectorProps {

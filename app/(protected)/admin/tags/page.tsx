@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { tagsApi, type TagResponse, type CreateTagData, type UpdateTagData } from "@/lib/api/entities/api-tags";
+import { slugify } from "@/lib/utils/slugify";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 
@@ -40,14 +41,6 @@ const generateColor = () => {
     "#d63384", // fuchsia
   ];
   return colors[Math.floor(Math.random() * colors.length)];
-};
-
-// Генерация slug из названия
-const generateSlug = (name: string) => {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 };
 
 export default function AdminTagsPage() {
@@ -271,7 +264,7 @@ export default function AdminTagsPage() {
                     setFormData((prev) => ({
                       ...prev,
                       name,
-                      slug: generateSlug(name),
+                      slug: slugify(name),
                     }));
                   }}
                   className="border-slate-200 dark:border-slate-700"
