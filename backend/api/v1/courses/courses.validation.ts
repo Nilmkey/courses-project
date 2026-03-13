@@ -29,6 +29,7 @@ export const updateCourseSchema = z.object({
     level: z.enum(["beginner", "intermediate", "advanced"]).optional(),
     price: z.number().int().min(0).optional(),
     isPublished: z.boolean().optional(),
+    isOpenForEnrollment: z.boolean().optional(),
   }),
 });
 

@@ -28,8 +28,6 @@ import {
   Moon,
   Camera,
   Trash2,
-  Upload,
-  X,
 } from "lucide-react";
 
 interface CourseProgress {
@@ -44,11 +42,6 @@ interface CourseInfo {
   text: string;
   shadow: string;
   icon: string;
-}
-
-interface UploadAvatarResponse {
-  avatar: string;
-  message: string;
 }
 
 const coursesInfo: Record<string, CourseInfo> = {
@@ -105,7 +98,6 @@ export default function ProfilePage() {
   const { data: session, isPending } = authClient.useSession();
   const [progress, setProgress] = useState<Record<string, CourseProgress>>({});
   const [isUploading, setIsUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
   const toast = useToast();
 
@@ -214,19 +206,11 @@ export default function ProfilePage() {
       return;
     }
 
-    // Создаем preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreviewUrl(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    // Сразу загружаем аватар
+    handleUploadAvatar(file);
   };
 
-  const handleUploadAvatar = async () => {
-    const fileInput = fileInputRef.current;
-    const file = fileInput?.files?.[0];
-    if (!file) return;
-
+  const handleUploadAvatar = async (file: File) => {
     setIsUploading(true);
 
     try {
@@ -250,9 +234,7 @@ export default function ProfilePage() {
 
       // Сразу обновляем аватар в UI
       setCurrentAvatar(data.avatar);
-
-      setPreviewUrl(null);
-      if (fileInput) fileInput.value = "";
+      if (fileInputRef.current) fileInputRef.current.value = "";
 
       toast.success("Аватар успешно загружен");
     } catch (error) {
@@ -261,51 +243,54 @@ export default function ProfilePage() {
           ? error.message
           : "Ошибка при загрузке аватара";
       toast.error(message);
-      setPreviewUrl(null);
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleDeleteAvatar = async () => {
-    if (!confirm("Вы уверены, что хотите удалить аватар?")) return;
+    toast.confirm(
+      "Вы уверены, что хотите удалить аватар?",
+      async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/v1/users/avatar`, {
+            method: "DELETE",
+            credentials: "include",
+          });
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/v1/users/avatar`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({
+              message: response.statusText,
+            }));
+            throw new ApiError(errorData.message, response.status, errorData);
+          }
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: response.statusText,
-        }));
-        throw new ApiError(errorData.message, response.status, errorData);
-      }
+          // Сразу удаляем аватар из UI
+          setCurrentAvatar(null);
 
-      // Сразу удаляем аватар из UI
-      setCurrentAvatar(null);
-
-      toast.success("Аватар успешно удалён");
-    } catch (error) {
-      const message =
-        error instanceof ApiError
-          ? error.message
-          : "Ошибка при удалении аватара";
-      toast.error(message);
-    }
+          toast.success("Аватар успешно удалён");
+        } catch (error) {
+          const message =
+            error instanceof ApiError
+              ? error.message
+              : "Ошибка при удалении аватара";
+          toast.error(message);
+        }
+      },
+      {
+        confirmText: "Удалить",
+        confirmClassName: "bg-red-600 hover:bg-red-500",
+      },
+    );
   };
 
-  const handleCancelUpload = () => {
-    setPreviewUrl(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
 
   return (
     <div className="min-h-screen bg-[#f0f5ff] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 flex flex-col">
       <Toaster
         position="top-center"
         toastOptions={{
+          duration: 3000,
           style: {
             background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
             color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
@@ -378,19 +363,11 @@ export default function ProfilePage() {
           </div>
 
           <div className="px-6 pb-6 sm:px-10">
-            <div className="flex flex-col sm:flex-row items-center sm:items-end -mt-12 gap-4">
-              <div className="relative group">
+            <div className="flex flex-col items-center sm:flex-row sm:items-end -mt-12 gap-4">
+              <div className="relative">
                 <div className="p-1.5 rounded-full bg-white dark:bg-slate-900 shadow-xl shadow-indigo-900/10">
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-indigo-100 dark:border-slate-700 overflow-hidden relative">
-                    {previewUrl ? (
-                      <Image
-                        src={previewUrl}
-                        alt="Preview"
-                        width={112}
-                        height={112}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : currentAvatar ? (
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-indigo-100 dark:border-slate-700 overflow-hidden relative group">
+                    {currentAvatar ? (
                       <Image
                         src={currentAvatar}
                         alt="User"
@@ -403,14 +380,12 @@ export default function ProfilePage() {
                     )}
 
                     {/* Оверлей для загрузки при наведении */}
-                    {!previewUrl && (
-                      <div
-                        onClick={() => fileInputRef.current?.click()}
-                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                      >
-                        <Camera className="text-white" size={32} />
-                      </div>
-                    )}
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                    >
+                      <Camera className="text-white" size={32} />
+                    </div>
                   </div>
                 </div>
 
@@ -424,10 +399,10 @@ export default function ProfilePage() {
                 />
 
                 {/* Кнопка удаления аватара */}
-                {!previewUrl && currentAvatar && (
+                {currentAvatar && (
                   <button
                     onClick={handleDeleteAvatar}
-                    className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-colors shadow-lg border-2 border-white dark:border-slate-900"
+                    className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-colors shadow-lg border-2 border-white dark:border-slate-900 z-10"
                     title="Удалить аватар"
                   >
                     <Trash2 size={12} />
@@ -435,49 +410,23 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Кнопки управления загрузкой */}
-              {previewUrl && (
-                <div className="flex gap-2 mb-2">
-                  <button
-                    onClick={handleUploadAvatar}
-                    disabled={isUploading}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-emerald-500 rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isUploading ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Upload size={16} />
-                    )}
-                    {isUploading ? "Загрузка..." : "Сохранить"}
-                  </button>
-                  <button
-                    onClick={handleCancelUpload}
-                    disabled={isUploading}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-                  >
-                    <X size={16} />
-                    Отмена
-                  </button>
-                </div>
-              )}
-
-              <div className="flex-1 text-center sm:text-left mb-2">
+              <div className="flex-1 text-center sm:text-left mb-2 min-w-0 w-full">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight break-words">
                     {session.user.name}
                   </h1>
 
                   {userRole === "admin" ? (
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-linear-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-orange-500/20">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-linear-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-orange-500/20 shrink-0">
                       <ShieldCheck size={12} /> Admin
                     </div>
                   ) : (
-                    <div className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-[#3b5bdb] text-[10px] font-bold uppercase tracking-widest rounded-lg border border-indigo-100/50 dark:border-indigo-500/20">
+                    <div className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-[#3b5bdb] text-[10px] font-bold uppercase tracking-widest rounded-lg border border-indigo-100/50 dark:border-indigo-500/20 shrink-0">
                       <Sparkles size={12} /> Student
                     </div>
                   )}
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 font-medium">
+                <p className="text-slate-500 dark:text-slate-400 font-medium break-all">
                   {session.user.email}
                 </p>
               </div>

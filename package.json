@@ -11,7 +11,8 @@
     "build:back": "tsc",
     "start:back": "node dist/index.js",
     "seed:course": "tsx scripts/createTestCourse.ts",
-    "seed:admin": "tsx scripts/createAdmin.ts"
+    "seed:admin": "tsx scripts/createAdmin.ts",
+    "migrate:enrollment": "tsx scripts/migrate-add-enrollment-field.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
