@@ -19,25 +19,31 @@ type AuthRequest = Request & { user?: AuthenticatedUser };
 
 const toEnrollmentResponse = (
   enrollment: EnrollmentData,
-): EnrollmentResponse => ({
-  _id: enrollment._id.toString(),
-  user_id: enrollment.user_id.toString(),
-  course_id: enrollment.course_id.toString(),
-  enrolledAt: enrollment.enrolledAt.toISOString(),
-  completedAt: enrollment.completedAt?.toISOString(),
-  status: enrollment.status,
-  createdAt: enrollment.createdAt.toISOString(),
-  updatedAt: enrollment.updatedAt.toISOString(),
-  course: enrollment.course
-    ? {
-        _id: enrollment.course._id.toString(),
-        title: enrollment.course.title,
-        slug: enrollment.course.slug,
-        thumbnail: enrollment.course.thumbnail,
-        level: enrollment.course.level,
-      }
-    : undefined,
-});
+): EnrollmentResponse => {
+  // Проверяем, что course_id - это объект (после populate)
+  const populatedCourse = (enrollment as any).course_id;
+  const isPopulated = populatedCourse && typeof populatedCourse === 'object';
+  
+  return {
+    _id: enrollment._id.toString(),
+    user_id: enrollment.user_id.toString(),
+    course_id: isPopulated ? populatedCourse._id.toString() : enrollment.course_id.toString(),
+    enrolledAt: enrollment.enrolledAt.toISOString(),
+    completedAt: enrollment.completedAt?.toISOString(),
+    status: enrollment.status,
+    createdAt: enrollment.createdAt.toISOString(),
+    updatedAt: enrollment.updatedAt.toISOString(),
+    course: isPopulated
+      ? {
+          _id: populatedCourse._id.toString(),
+          title: populatedCourse.title,
+          slug: populatedCourse.slug,
+          thumbnail: populatedCourse.thumbnail,
+          level: populatedCourse.level,
+        }
+      : undefined,
+  };
+};
 
 export const enrollmentController = {
   async enroll(
@@ -88,10 +94,16 @@ export const enrollmentController = {
     }
 
     const enrollments = await enrollmentService.getMyCourses(authReq.user.id);
+    console.log("=== Backend getMyCourses ===", JSON.stringify(enrollments, null, 2));
+    
+    const response = enrollments.map((e) =>
+      toEnrollmentResponse(e as unknown as EnrollmentData),
+    );
+    
+    console.log("=== Backend Response ===", JSON.stringify(response, null, 2));
+    
     res.json({
-      enrollments: enrollments.map((e) =>
-        toEnrollmentResponse(e as unknown as EnrollmentData),
-      ),
+      enrollments: response,
     });
   },
 

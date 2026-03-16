@@ -103,16 +103,27 @@ export interface ITag {
 export interface IQuizQuestion {
   id: string;
   questionText: string;
-  options: string[]; // Список вариантов ответов
-  correctAnswerIndex: number; // Индекс правильного ответа
-  explanation?: string; // Необязательное пояснение
+  type: "single" | "multiple" | "text";
+  options?: string[];
+  correctAnswerIndex?: number;
+  correctAnswerIndices?: number[];
+  correctAnswerText?: string;
+  explanation?: string;
 }
+
+export interface IQuizAnswer {
+  questionId: string;
+  selectedAnswer: number | number[] | string;
+  isCorrect: boolean;
+}
+
 export interface IBaseBlock {
-  _id: string;
+  _id?: string;
+  id?: string;
   title: string;
   order_index?: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ITextBlock extends IBaseBlock {
@@ -159,6 +170,7 @@ export interface ISection {
   isDraft: boolean;
   createdAt: string;
   updatedAt: string;
+  lessons: ILesson[];
 }
 
 export interface ICourse {
