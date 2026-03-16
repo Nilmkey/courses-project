@@ -11,6 +11,7 @@ import { ApiError } from "@/lib/api/api-client";
 import { API_BASE_URL } from "@/config/config";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
+import { enrollmentApi, EnrollmentResponse } from "@/lib/api/entities/api-enrollment";
 import {
   Code,
   Flame,
@@ -29,12 +30,6 @@ import {
   Camera,
   Trash2,
 } from "lucide-react";
-
-interface CourseProgress {
-  completed: number;
-  total: number;
-  percentage: number;
-}
 
 interface CourseInfo {
   title: string;
@@ -96,8 +91,9 @@ export default function ProfilePage() {
 
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
-  const [progress, setProgress] = useState<Record<string, CourseProgress>>({});
-  const [isUploading, setIsUploading] = useState(false);
+  const [enrolledCourses, setEnrolledCourses] = useState<EnrollmentResponse[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
+  const [_isUploading, setIsUploading] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
   const toast = useToast();
 
@@ -124,23 +120,24 @@ export default function ProfilePage() {
       return;
     }
 
-    if (session?.user?.email) {
-      const savedProgress = localStorage.getItem(
-        `progress_${session.user.email}`,
-      );
-      if (savedProgress) {
-        try {
-          const parsed = JSON.parse(savedProgress);
-
-          setTimeout(() => {
-            setProgress(parsed.courses || {});
-          }, 0);
-        } catch (e) {
-          console.error("Error parsing progress", e);
-        }
-      }
+    if (session?.user) {
+      loadEnrolledCourses();
     }
   }, [session, isPending, router]);
+
+  const loadEnrolledCourses = async () => {
+    try {
+      setLoadingCourses(true);
+      const response = await enrollmentApi.getMyCourses();
+      console.log("=== Enrolled Courses Debug ===", response);
+      setEnrolledCourses(response.enrollments || []);
+    } catch (error) {
+      console.error("Ошибка загрузки курсов:", error);
+      setEnrolledCourses([]);
+    } finally {
+      setLoadingCourses(false);
+    }
+  };
 
   if (!mounted || isPending) {
     return (
@@ -158,14 +155,14 @@ export default function ProfilePage() {
   if (!session) return null;
 
   const userRole = (session.user as { role?: string }).role || "user";
-  const startedCourses = Object.keys(progress).length;
-  const completedCourses = Object.values(progress).filter(
-    (p) => p.percentage === 100,
+  const startedCourses = enrolledCourses.length;
+  const completedCourses = enrolledCourses.filter(
+    (e) => e.status === "completed",
   ).length;
   const totalPercentage =
     startedCourses > 0
       ? Math.round(
-          Object.values(progress).reduce((sum, p) => sum + p.percentage, 0) /
+          enrolledCourses.reduce((sum, e) => sum + (e.status === "completed" ? 100 : 0), 0) /
             startedCourses,
         )
       : 0;
@@ -486,7 +483,14 @@ export default function ProfilePage() {
           </div>
 
           <div className="p-6 sm:p-8 bg-slate-50/30 dark:bg-slate-900/30 min-h-[300px]">
-            {startedCourses === 0 ? (
+            {loadingCourses ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="w-10 h-10 animate-spin text-[#3b5bdb]" />
+                <p className="text-sm font-medium text-slate-400 mt-4">
+                  Загрузка курсов...
+                </p>
+              </div>
+            ) : startedCourses === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm mb-6 border border-slate-100 dark:border-slate-700">
                   <BookOpen size={32} className="text-slate-300" />
@@ -503,11 +507,18 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {Object.entries(progress).map(([courseId, courseProgress]) => {
+                {enrolledCourses.map((enrollment) => {
+                  const course = enrollment.course;
+                  if (!course) return null;
+                  
+                  // Пытаемся найти информацию о курсе по slug или используем дефолтную
+                  const courseId = course.slug || course._id;
                   const info = coursesInfo[courseId] || coursesInfo.html;
+                  const isCompleted = enrollment.status === "completed";
+
                   return (
                     <div
-                      key={courseId}
+                      key={enrollment._id}
                       className="group relative flex flex-col sm:flex-row sm:items-center gap-5 p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-indigo-200 shadow-sm transition-all duration-300"
                     >
                       <div
@@ -524,26 +535,26 @@ export default function ProfilePage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
                           <h4 className="font-bold text-lg leading-tight group-hover:text-[#3b5bdb] transition-colors dark:text-white">
-                            {info.title}
+                            {course.title}
                           </h4>
-                          <span className={`font-bold ${info.text}`}>
-                            {courseProgress.percentage}%
+                          <span className={`font-bold ${isCompleted ? 'text-emerald-600' : info.text}`}>
+                            {isCompleted ? 'Завершён' : 'В процессе'}
                           </span>
                         </div>
                         <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                           <div
-                            className={`absolute h-full bg-gradient-to-r ${info.gradient} transition-all duration-1000`}
-                            style={{ width: `${courseProgress.percentage}%` }}
+                            className={`absolute h-full bg-gradient-to-r ${isCompleted ? 'from-emerald-500 to-teal-500' : info.gradient} transition-all duration-1000`}
+                            style={{ width: isCompleted ? '100%' : '30%' }}
                           />
                         </div>
                       </div>
 
                       <div className="flex items-center gap-4">
                         <Link
-                          href={`/course/${courseId}`}
+                          href={`/courses/${courseId}`}
                           className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#3b5bdb] bg-indigo-50 dark:bg-indigo-500/10 rounded-xl hover:bg-[#3b5bdb] hover:text-white transition-all"
                         >
-                          Продолжить <ChevronRight size={16} />
+                          {isCompleted ? 'Повторить' : 'Продолжить'} <ChevronRight size={16} />
                         </Link>
                       </div>
                     </div>

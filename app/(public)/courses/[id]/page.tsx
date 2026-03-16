@@ -10,6 +10,7 @@ import { ICourse, ITag } from "@/types/types";
 import { coursesApi } from "@/lib/api/entities/api-courses";
 import { tagsApi } from "@/lib/api/entities/api-tags";
 import { enrollmentApi } from "@/lib/api/entities/api-enrollment";
+import { authClient } from "@/lib/auth-client";
 import { Toaster } from "react-hot-toast";
 import {
   Code,
@@ -23,7 +24,8 @@ import {
   Sun,
   Moon,
   Loader2,
-  Lock,
+  BookOpen,
+  LogIn,
 } from "lucide-react";
 
 const levelLabels: Record<string, string> = {
@@ -71,15 +73,24 @@ export default function CoursePage() {
   const router = useRouter();
   const toast = useToast();
   const { setTheme, resolvedTheme } = useTheme();
+  const { data: session } = authClient.useSession();
   const [mounted, setMounted] = useState(false);
-  const [isBuying, setIsBuying] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [course, setCourse] = useState<ICourse | null>(null);
   const [tags, setTags] = useState<ITag[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [checkingEnrollment, setCheckingEnrollment] = useState(false);
 
   const courseId = params.id as string;
-  const accessDenied = searchParams.get("access") === "denied";
+  const isLoggedIn = !!session?.user;
+
+  console.log("=== Course Page Debug ===", {
+    session,
+    isLoggedIn,
+    course,
+    isEnrolled,
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -87,12 +98,41 @@ export default function CoursePage() {
     checkEnrollment();
   }, [courseId]);
 
+  useEffect(() => {
+    if (isLoggedIn && course) {
+      checkEnrollment();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, course]);
+
+  const checkEnrollment = async () => {
+    if (!course) return;
+    try {
+      setCheckingEnrollment(true);
+      const response = await enrollmentApi.isEnrolled(course._id);
+      setIsEnrolled(response.isEnrolled);
+    } catch {
+      setIsEnrolled(false);
+    } finally {
+      setCheckingEnrollment(false);
+    }
+  };
+
   const loadCourse = async () => {
     try {
       setLoading(true);
       const response = await coursesApi.getAll();
       const found = response.courses?.find((c) => c.slug === courseId);
       setCourse(found || null);
+
+      // Загружаем теги курса
+      if (found && found.tags && found.tags.length > 0) {
+        const tagsResponse = await tagsApi.getAll();
+        const courseTags = tagsResponse.tags.filter((tag) =>
+          found.tags?.includes(tag._id)
+        );
+        setTags(courseTags);
+      }
     } catch (err) {
       console.error("Ошибка загрузки курса:", err);
       setCourse(null);
@@ -101,33 +141,31 @@ export default function CoursePage() {
     }
   };
 
-  const checkEnrollment = async () => {
+  const handleEnroll = async () => {
+    if (!course || !isLoggedIn) {
+      toast.error("Пожалуйста, войдите в аккаунт для записи на курс");
+      router.push("/login");
+      return;
+    }
+
+    setIsProcessing(true);
     try {
-      const result = await enrollmentApi.isEnrolled(courseId);
-      setIsEnrolled(result.isEnrolled);
+      await enrollmentApi.enroll(course._id);
+      setIsEnrolled(true);
+      toast.success("Вы успешно записались на курс!");
     } catch (error) {
-      // Пользователь не авторизован или ошибка API
-      setIsEnrolled(false);
+      const message = error instanceof Error ? error.message : "Ошибка при записи на курс";
+      toast.error(message);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleBuy = async () => {
-    if (!course) return;
-    setIsBuying(true);
-    try {
-      await enrollmentApi.enroll(courseId);
-      toast.success(`Вы успешно приобрели курс: ${course.title}!`);
-      setIsEnrolled(true);
-      // Перенаправляем на страницу обучения через 1 секунду
-      setTimeout(() => {
-        router.push(`/learn/${course._id}`);
-      }, 1000);
-    } catch (error) {
-      console.error("Ошибка покупки:", error);
-      toast.error("Не удалось приобрести курс. Попробуйте снова.");
-    } finally {
-      setIsBuying(false);
-    }
+  const handleGoToCourse = () => {
+    // Пока просто переходим на заглушку страницы курса
+    // В будущем здесь будет страница с наполнением курса
+    toast.loading("Страница курса в разработке");
+    // router.push(`/course/${courseId}`);
   };
 
   if (!mounted || loading) {
@@ -377,26 +415,37 @@ export default function CoursePage() {
 
               {course.isOpenForEnrollment ? (
                 isEnrolled ? (
-                  <Link
-                    href={`/learn/${course._id}`}
-                    className="w-full h-16 bg-green-600 hover:bg-green-700 text-white text-lg font-bold rounded-2xl shadow-lg shadow-green-500/25 transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle2 className="w-5 h-5" />
-                    Перейти к обучению
-                  </Link>
-                ) : (
                   <Button
-                    onClick={handleBuy}
-                    disabled={isBuying}
+                    onClick={handleGoToCourse}
+                    disabled={isProcessing}
+                    className="w-full h-16 bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-bold rounded-2xl shadow-lg shadow-emerald-500/25 transition-all active:scale-[0.98] mt-4"
+                  >
+                    <BookOpen className="w-5 h-5 mr-2" /> Перейти к курсу
+                  </Button>
+                ) : isLoggedIn ? (
+                  <Button
+                    onClick={handleEnroll}
+                    disabled={isProcessing || checkingEnrollment}
                     className="w-full h-16 bg-[#3b5bdb] hover:bg-[#2f4bbf] text-white text-lg font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] mt-4"
                   >
-                    {isBuying ? (
+                    {isProcessing || checkingEnrollment ? (
                       "Обработка..."
+                    ) : course.price === 0 ? (
+                      <>
+                        <CheckCircle2 className="w-5 h-5 mr-2" /> Записаться
+                      </>
                     ) : (
                       <>
-                        <CreditCard className="w-5 h-5 mr-2" /> Купить сейчас
+                        <CreditCard className="w-5 h-5 mr-2" /> Купить курс
                       </>
                     )}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => router.push("/login")}
+                    className="w-full h-16 bg-[#3b5bdb] hover:bg-[#2f4bbf] text-white text-lg font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] mt-4"
+                  >
+                    <LogIn className="w-5 h-5 mr-2" /> Войти для записи
                   </Button>
                 )
               ) : (
