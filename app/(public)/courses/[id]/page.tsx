@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { useTheme } from "next-themes";
 import { ICourse, ITag } from "@/types/types";
 import { coursesApi } from "@/lib/api/entities/api-courses";
 import { tagsApi } from "@/lib/api/entities/api-tags";
+import { enrollmentApi } from "@/lib/api/entities/api-enrollment";
 import { Toaster } from "react-hot-toast";
 import {
   Code,
@@ -22,6 +23,7 @@ import {
   Sun,
   Moon,
   Loader2,
+  Lock,
 } from "lucide-react";
 
 const levelLabels: Record<string, string> = {
@@ -65,6 +67,8 @@ const iconMap: Record<string, React.ReactNode> = {
 
 export default function CoursePage() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const toast = useToast();
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -72,12 +76,15 @@ export default function CoursePage() {
   const [course, setCourse] = useState<ICourse | null>(null);
   const [tags, setTags] = useState<ITag[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   const courseId = params.id as string;
+  const accessDenied = searchParams.get("access") === "denied";
 
   useEffect(() => {
     setMounted(true);
     loadCourse();
+    checkEnrollment();
   }, [courseId]);
 
   const loadCourse = async () => {
@@ -86,15 +93,6 @@ export default function CoursePage() {
       const response = await coursesApi.getAll();
       const found = response.courses?.find((c) => c.slug === courseId);
       setCourse(found || null);
-      
-      // Загружаем теги курса
-      if (found && found.tags && found.tags.length > 0) {
-        const tagsResponse = await tagsApi.getAll();
-        const courseTags = tagsResponse.tags.filter((tag) =>
-          found.tags?.includes(tag._id)
-        );
-        setTags(courseTags);
-      }
     } catch (err) {
       console.error("Ошибка загрузки курса:", err);
       setCourse(null);
@@ -103,13 +101,33 @@ export default function CoursePage() {
     }
   };
 
-  const handleBuy = () => {
+  const checkEnrollment = async () => {
+    try {
+      const result = await enrollmentApi.isEnrolled(courseId);
+      setIsEnrolled(result.isEnrolled);
+    } catch (error) {
+      // Пользователь не авторизован или ошибка API
+      setIsEnrolled(false);
+    }
+  };
+
+  const handleBuy = async () => {
     if (!course) return;
     setIsBuying(true);
-    setTimeout(() => {
-      setIsBuying(false);
+    try {
+      await enrollmentApi.enroll(courseId);
       toast.success(`Вы успешно приобрели курс: ${course.title}!`);
-    }, 1500);
+      setIsEnrolled(true);
+      // Перенаправляем на страницу обучения через 1 секунду
+      setTimeout(() => {
+        router.push(`/learn/${course._id}`);
+      }, 1000);
+    } catch (error) {
+      console.error("Ошибка покупки:", error);
+      toast.error("Не удалось приобрести курс. Попробуйте снова.");
+    } finally {
+      setIsBuying(false);
+    }
   };
 
   if (!mounted || loading) {
@@ -148,6 +166,38 @@ export default function CoursePage() {
 
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 transition-colors duration-300">
+      {/* Баннер access=denied */}
+      {accessDenied && !isEnrolled && (
+        <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
+            <Lock className="w-5 h-5 text-red-600 dark:text-red-400" />
+            <p className="text-red-800 dark:text-red-200 font-medium">
+              Для доступа к этому курсу необходимо его приобрести
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Баннер для купивших курс */}
+      {isEnrolled && (
+        <div className="bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <p className="text-green-800 dark:text-green-200 font-medium">
+                Вы записаны на этот курс
+              </p>
+            </div>
+            <Link
+              href={`/learn/${course._id}`}
+              className="text-green-700 dark:text-green-300 font-bold hover:underline"
+            >
+              Начать обучение →
+            </Link>
+          </div>
+        </div>
+      )}
+
       <Toaster
               position="top-center"
               toastOptions={{
@@ -326,19 +376,29 @@ export default function CoursePage() {
               </div>
 
               {course.isOpenForEnrollment ? (
-                <Button
-                  onClick={handleBuy}
-                  disabled={isBuying}
-                  className="w-full h-16 bg-[#3b5bdb] hover:bg-[#2f4bbf] text-white text-lg font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] mt-4"
-                >
-                  {isBuying ? (
-                    "Обработка..."
-                  ) : (
-                    <>
-                      <CreditCard className="w-5 h-5 mr-2" /> Купить сейчас
-                    </>
-                  )}
-                </Button>
+                isEnrolled ? (
+                  <Link
+                    href={`/learn/${course._id}`}
+                    className="w-full h-16 bg-green-600 hover:bg-green-700 text-white text-lg font-bold rounded-2xl shadow-lg shadow-green-500/25 transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                    Перейти к обучению
+                  </Link>
+                ) : (
+                  <Button
+                    onClick={handleBuy}
+                    disabled={isBuying}
+                    className="w-full h-16 bg-[#3b5bdb] hover:bg-[#2f4bbf] text-white text-lg font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] mt-4"
+                  >
+                    {isBuying ? (
+                      "Обработка..."
+                    ) : (
+                      <>
+                        <CreditCard className="w-5 h-5 mr-2" /> Купить сейчас
+                      </>
+                    )}
+                  </Button>
+                )
               ) : (
                 <div className="w-full h-16 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-lg font-bold rounded-2xl flex items-center justify-center mt-4">
                   Ждем набора
