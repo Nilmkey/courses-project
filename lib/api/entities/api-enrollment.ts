@@ -34,6 +34,7 @@ export interface EnrollResponse {
     enrolledAt: string;
     status: "active" | "completed" | "cancelled";
   };
+}
 export interface EnrollRequest {
   courseId: string;
 }
@@ -47,7 +48,7 @@ export const enrollmentApi = {
       "/v1/enrollment",
       { courseId },
       undefined,
-      true
+      true,
     );
   },
 
@@ -62,7 +63,11 @@ export const enrollmentApi = {
    * Получить все курсы пользователя
    */
   getMyCourses: async (): Promise<EnrollmentsListResponse> => {
-    return api.get<EnrollmentsListResponse>("/v1/enrollment/my", undefined, true);
+    return api.get<EnrollmentsListResponse>(
+      "/v1/enrollment/my",
+      undefined,
+      true,
+    );
   },
 
   /**
@@ -72,7 +77,7 @@ export const enrollmentApi = {
     return api.get<IsEnrolledResponse>(
       `/v1/enrollment/${courseId}/check`,
       undefined,
-      true
+      true,
     );
   },
 
@@ -81,13 +86,13 @@ export const enrollmentApi = {
    */
   updateStatus: async (
     courseId: string,
-    status: "active" | "completed" | "cancelled"
+    status: "active" | "completed" | "cancelled",
   ): Promise<EnrollmentResponse> => {
     return api.patch<EnrollmentResponse>(
       `/v1/enrollment/${courseId}/status`,
       { status },
       undefined,
-      true
+      true,
     );
   },
 };
