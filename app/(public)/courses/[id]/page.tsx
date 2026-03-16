@@ -12,6 +12,7 @@ import { tagsApi } from "@/lib/api/entities/api-tags";
 import { enrollmentApi } from "@/lib/api/entities/api-enrollment";
 import { authClient } from "@/lib/auth-client";
 import { Toaster } from "react-hot-toast";
+import Header from "@/components/ui/header";
 import {
   Code,
   ArrowLeft,
@@ -20,9 +21,6 @@ import {
   Clock,
   Trophy,
   Users,
-  User,
-  Sun,
-  Moon,
   Loader2,
   BookOpen,
   LogIn,
@@ -205,68 +203,21 @@ export default function CoursePage() {
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 transition-colors duration-300">
       <Toaster
-        position="top-center"
-        toastOptions={{
-          style: {
-            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
-            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
-            border:
-              resolvedTheme === "dark"
-                ? "1px solid #1e293b"
-                : "1px solid #e2e8f0",
-            borderRadius: "0.75rem",
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-          },
-        }}
-      />
-      <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2 transition-transform hover:scale-105 cursor-pointer"
-          >
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none">
-              <Code className="text-white w-6 h-6" />
-            </div>
-            <span className="text-xl font-black tracking-tight uppercase dark:text-white">
-              CodeLearn
-            </span>
-          </Link>
-
-          <div className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-500 dark:text-slate-400">
-            <Link href="/courses" className="text-blue-600">
-              Курсы
-            </Link>
-            <a href="#" className="hover:text-blue-600 transition-colors">
-              Практика
-            </a>
-            <a href="#" className="hover:text-blue-600 transition-colors">
-              Сообщество
-            </a>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() =>
-                setTheme(resolvedTheme === "dark" ? "light" : "dark")
-              }
-              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-            >
-              {resolvedTheme === "dark" ? (
-                <Sun size={20} className="text-yellow-400" />
-              ) : (
-                <Moon size={20} className="text-slate-600" />
-              )}
-            </button>
-
-            <Link href="/profile">
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                <User className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              </div>
-            </Link>
-          </div>
-        </div>
-      </nav>
+              position="top-center"
+              toastOptions={{
+                style: {
+                  background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
+                  color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+                  border:
+                    resolvedTheme === "dark"
+                      ? "1px solid #1e293b"
+                      : "1px solid #e2e8f0",
+                  borderRadius: "0.75rem",
+                  boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                },
+              }}
+            />
+      <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Link
