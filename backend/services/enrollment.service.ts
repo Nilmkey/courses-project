@@ -9,7 +9,7 @@ export interface EnrollmentCreateInput {
   course_id: string | Types.ObjectId;
 }
 
-export type EnrollmentStatus = 'active' | 'completed' | 'cancelled';
+export type EnrollmentStatus = "active" | "completed" | "cancelled";
 
 export interface PopulatedEnrollment extends Document {
   _id: Types.ObjectId;
@@ -32,19 +32,29 @@ export const enrollmentService = {
   async enroll(userId: string, courseId: string): Promise<IEnrollment> {
     const course = await Course.findById(courseId);
     if (!course) {
-      throw ApiError.notFound('Курс не найден');
+      throw ApiError.notFound("Курс не найден");
     }
 
     if (!course.isOpenForEnrollment) {
-      throw ApiError.badRequest('Набор на этот курс закрыт');
+      throw ApiError.badRequest("Набор на этот курс закрыт");
     }
 
-    const existing = await Enrollment.findOne({ user_id: userId, course_id: courseId });
+    if (!course.isOpenForEnrollment) {
+      throw ApiError.badRequest("Набор на этот курс закрыт");
+    }
+
+    const existing = await Enrollment.findOne({
+      user_id: userId,
+      course_id: courseId,
+    });
     if (existing) {
-      throw ApiError.conflict('Вы уже записаны на этот курс');
+      throw ApiError.conflict("Вы уже записаны на этот курс");
     }
 
-    const enrollment = await Enrollment.create({ user_id: userId, course_id: courseId });
+    const enrollment = await Enrollment.create({
+      user_id: userId,
+      course_id: courseId,
+    });
     return enrollment;
   },
 
@@ -64,7 +74,10 @@ export const enrollmentService = {
   },
 
   async isEnrolled(userId: string, courseId: string): Promise<boolean> {
-    const enrollment = await Enrollment.findOne({ user_id: userId, course_id: courseId });
+    const enrollment = await Enrollment.findOne({
+      user_id: userId,
+      course_id: courseId,
+    });
     return !!enrollment;
   },
 
