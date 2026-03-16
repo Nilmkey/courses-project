@@ -21,9 +21,6 @@ import {
   Clock,
   Trophy,
   Users,
-  User,
-  Sun,
-  Moon,
   Loader2,
   BookOpen,
   LogIn,
@@ -130,7 +127,7 @@ export default function CoursePage() {
       if (found && found.tags && found.tags.length > 0) {
         const tagsResponse = await tagsApi.getAll();
         const courseTags = tagsResponse.tags.filter((tag) =>
-          found.tags?.includes(tag._id)
+          found.tags?.includes(tag._id),
         );
         setTags(courseTags);
       }
@@ -155,7 +152,8 @@ export default function CoursePage() {
       setIsEnrolled(true);
       toast.success("Вы успешно записались на курс!");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Ошибка при записи на курс";
+      const message =
+        error instanceof Error ? error.message : "Ошибка при записи на курс";
       toast.error(message);
     } finally {
       setIsProcessing(false);
@@ -216,7 +214,7 @@ export default function CoursePage() {
               </p>
             </div>
             <Link
-              href={`/learn/${course._id}`}
+              href={`/learn/${course.slug}`}
               className="text-green-700 dark:text-green-300 font-bold hover:underline"
             >
               Начать обучение →
@@ -259,7 +257,9 @@ export default function CoursePage() {
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2" />
 
               <div className="relative z-10 flex flex-col items-start gap-6 ">
-                <div className={`p-4 bg-white rounded-3xl shadow-lg ${iconColor}`}>
+                <div
+                  className={`p-4 bg-white rounded-3xl shadow-lg ${iconColor}`}
+                >
                   {course.iconName && iconMap[course.iconName]
                     ? iconMap[course.iconName]
                     : iconMap["Code"]}
@@ -268,7 +268,7 @@ export default function CoursePage() {
                   <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
                     {course.title}
                   </h1>
-                  
+
                   {/* Теги курса */}
                   {tags.length > 0 && (
                     <div className="flex flex-wrap gap-2">
