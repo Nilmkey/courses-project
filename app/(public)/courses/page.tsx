@@ -45,7 +45,7 @@ const getLevelStyles = (level: CourseLevel) => {
 const CoursesPage = () => {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [filter, setFilter] = useState<"all" | "career" | "language">("all");
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [courses, setCourses] = useState<CourseApiResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,8 +68,13 @@ const CoursesPage = () => {
 
   if (!mounted) return null;
 
+  // Собираем все уникальные теги из курсов
+  const allTags = Array.from(
+    new Set(courses.flatMap((c) => c.tags || []))
+  ).sort();
+
   const filteredCourses =
-    filter === "all" ? courses : courses.filter((c) => c.type === filter);
+    selectedTag === null ? courses : courses.filter((c) => c.tags?.includes(selectedTag));
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f8faff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
@@ -132,21 +137,27 @@ const CoursesPage = () => {
         </p>
 
         <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {[
-            { value: "all", label: "Все курсы" },
-            { value: "career", label: "Профессии" },
-            { value: "language", label: "Языки" },
-          ].map((t) => (
+          <button
+            onClick={() => setSelectedTag(null)}
+            className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
+              selectedTag === null
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none scale-105"
+                : "bg-white dark:bg-slate-900 text-slate-500 border border-slate-200 dark:border-slate-800 hover:border-blue-300"
+            }`}
+          >
+            Все курсы
+          </button>
+          {allTags.map((tag) => (
             <button
-              key={t.value}
-              onClick={() => setFilter(t.value as typeof filter)}
-              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
-                filter === t.value
+              key={tag}
+              onClick={() => setSelectedTag(tag)}
+              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all capitalize ${
+                selectedTag === tag
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none scale-105"
                   : "bg-white dark:bg-slate-900 text-slate-500 border border-slate-200 dark:border-slate-800 hover:border-blue-300"
               }`}
             >
-              {t.label}
+              {tag}
             </button>
           ))}
         </div>

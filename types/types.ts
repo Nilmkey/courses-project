@@ -219,6 +219,7 @@ export interface CourseApiResponse {
   updatedAt: string;
   iconName?: string;
   type?: 'career' | 'language';
+  tags?: string[];
 }
 
 export interface LessonItem {
