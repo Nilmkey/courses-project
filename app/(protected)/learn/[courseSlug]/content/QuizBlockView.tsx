@@ -138,15 +138,7 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
           </button>
         ) : (
           <div className="flex items-center gap-6">
-            <div
-              className={`px-6 py-3 rounded-xl font-bold ${
-                score && score.correct === score.total
-                  ? "bg-green-100 text-green-700"
-                  : score && score.correct >= score.total / 2
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-red-100 text-red-700"
-              }`}
-            >
+            <div className="px-6 py-3 rounded-xl font-bold bg-gray-100 text-gray-700">
               Ваш результат: {score?.correct} из {score?.total}
             </div>
             <button
@@ -222,16 +214,6 @@ function QuestionCard({
           />
         )}
       </div>
-
-      {/* Пояснение после отправки */}
-      {submitted && question.explanation && (
-        <div className="mt-4 pl-11">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-            <span className="font-semibold">Пояснение:</span>{" "}
-            {question.explanation}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -274,21 +256,18 @@ function SingleChoiceOptions({
   onSelect,
 }: SingleChoiceOptionsProps) {
   const options = question.options || [];
-  const correctAnswerIndex = question.correctAnswerIndex ?? 0;
 
   return (
     <div className="space-y-2">
       {options.map((option, optIdx) => {
         const isSelected = answer === optIdx;
-        const isCorrect = optIdx === correctAnswerIndex;
 
         let buttonStyle = "bg-gray-50 border-gray-200 hover:bg-gray-100";
 
         if (submitted) {
-          if (isCorrect) {
-            buttonStyle = "bg-green-50 border-green-500";
-          } else if (isSelected && !isCorrect) {
-            buttonStyle = "bg-red-50 border-red-500";
+          if (isSelected) {
+            // Показываем только выбранный пользователем ответ
+            buttonStyle = "bg-gray-100 border-gray-300";
           }
         } else if (isSelected) {
           buttonStyle = "bg-blue-50 border-blue-500";
@@ -301,27 +280,12 @@ function SingleChoiceOptions({
             disabled={submitted}
             className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors disabled:cursor-not-allowed ${buttonStyle}`}
           >
-            {submitted && isCorrect ? (
-              <CheckCircle2
-                className="text-green-500 flex-shrink-0"
-                size={20}
-              />
-            ) : submitted && isSelected && !isCorrect ? (
-              <XCircle className="text-red-500 flex-shrink-0" size={20} />
-            ) : isSelected ? (
+            {isSelected ? (
               <CheckCircle2 className="text-blue-500 flex-shrink-0" size={20} />
             ) : (
               <Circle className="text-gray-400 flex-shrink-0" size={20} />
             )}
-            <span
-              className={`text-left text-gray-900 ${
-                submitted && isCorrect ? "font-semibold text-green-700" : ""
-              } ${
-                submitted && isSelected && !isCorrect
-                  ? "text-red-700 line-through"
-                  : ""
-              }`}
-            >
+            <span className="text-left text-gray-900">
               {option}
             </span>
           </button>
@@ -345,21 +309,18 @@ function MultipleChoiceOptions({
   onSelect,
 }: MultipleChoiceOptionsProps) {
   const options = question.options || [];
-  const correctAnswerIndices = question.correctAnswerIndices || [];
 
   return (
     <div className="space-y-2">
       {options.map((option, optIdx) => {
         const isSelected = answers.includes(optIdx);
-        const isCorrect = correctAnswerIndices.includes(optIdx);
 
         let buttonStyle = "bg-gray-50 border-gray-200 hover:bg-gray-100";
 
         if (submitted) {
-          if (isCorrect) {
-            buttonStyle = "bg-green-50 border-green-500";
-          } else if (isSelected && !isCorrect) {
-            buttonStyle = "bg-red-50 border-red-500";
+          if (isSelected) {
+            // Показываем только выбранные пользователем ответы
+            buttonStyle = "bg-gray-100 border-gray-300";
           }
         } else if (isSelected) {
           buttonStyle = "bg-blue-50 border-blue-500";
@@ -372,27 +333,12 @@ function MultipleChoiceOptions({
             disabled={submitted}
             className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors disabled:cursor-not-allowed ${buttonStyle}`}
           >
-            {submitted && isCorrect ? (
-              <CheckCircle2
-                className="text-green-500 flex-shrink-0"
-                size={20}
-              />
-            ) : submitted && isSelected && !isCorrect ? (
-              <XCircle className="text-red-500 flex-shrink-0" size={20} />
-            ) : isSelected ? (
+            {isSelected ? (
               <CheckCircle2 className="text-blue-500 flex-shrink-0" size={20} />
             ) : (
               <Circle className="text-gray-400 flex-shrink-0" size={20} />
             )}
-            <span
-              className={`text-left text-gray-900 ${
-                submitted && isCorrect ? "font-semibold text-green-700" : ""
-              } ${
-                submitted && isSelected && !isCorrect
-                  ? "text-red-700 line-through"
-                  : ""
-              }`}
-            >
+            <span className="text-left text-gray-900">
               {option}
             </span>
           </button>
@@ -415,11 +361,6 @@ function TextAnswerInput({
   submitted,
   onChange,
 }: TextAnswerInputProps) {
-  const correctAnswerText = question.correctAnswerText || "";
-  const isCorrect =
-    submitted &&
-    answer?.toLowerCase().trim() === correctAnswerText.toLowerCase().trim();
-
   return (
     <div className="space-y-3">
       <input
@@ -430,30 +371,10 @@ function TextAnswerInput({
         placeholder="Введите ваш ответ..."
         className={`w-full px-4 py-3 rounded-lg border-2 text-gray-900 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed ${
           submitted
-            ? isCorrect
-              ? "border-green-500 bg-green-50"
-              : "border-red-500 bg-red-50"
+            ? "border-gray-300 bg-gray-50"
             : "border-gray-500 focus:border-blue-500"
         }`}
       />
-
-      {submitted && (
-        <div
-          className={`text-sm text-gray-900 font-medium ${
-            isCorrect ? "text-green-600" : "text-red-600"
-          }`}
-        >
-          {isCorrect ? (
-            <span className="flex items-center gap-2">
-              <CheckCircle2 size={16} /> Правильно!
-            </span>
-          ) : (
-            <span className="flex items-center gap-2">
-              <XCircle size={16} /> Неправильный ответ
-            </span>
-          )}
-        </div>
-      )}
     </div>
   );
 }
