@@ -65,7 +65,7 @@ export function LessonItem({
       </div>
 
       {isExpanded && (
-        <div className="bg-white">
+        <div className="bg-white dark:bg-gray-800">
           {lesson.content_blocks.map((block, index) => {
             const blockId = block.id || block._id || '';
             return (

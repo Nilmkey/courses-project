@@ -160,13 +160,6 @@ export default function CoursePage() {
     }
   };
 
-  const handleGoToCourse = () => {
-    // Пока просто переходим на заглушку страницы курса
-    // В будущем здесь будет страница с наполнением курса
-    toast.error("Страница курса в разработке");
-    // router.push(`/course/${courseId}`);
-  };
-
   if (!mounted || loading) {
     return (
       <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 flex items-center justify-center">
@@ -201,28 +194,14 @@ export default function CoursePage() {
     ? `${course.price.toLocaleString("ru-RU")} ₸`
     : "Бесплатно";
 
+  const handleGoToCourse = () => {
+    // Пока просто переходим на заглушку страницы курса
+    // В будущем здесь будет страница с наполнением курса
+    router.push(`/learn/${course.slug}
+`);
+  };
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 transition-colors duration-300">
-      {/* Баннер для купивших курс */}
-      {isEnrolled && (
-        <div className="bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-              <p className="text-green-800 dark:text-green-200 font-medium">
-                Вы записаны на этот курс
-              </p>
-            </div>
-            <Link
-              href={`/learn/${course.slug}`}
-              className="text-green-700 dark:text-green-300 font-bold hover:underline"
-            >
-              Начать обучение →
-            </Link>
-          </div>
-        </div>
-      )}
-
       <Toaster
               position="top-center"
               toastOptions={{
