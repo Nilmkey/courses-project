@@ -24,14 +24,18 @@ export interface IsEnrolledResponse {
   isEnrolled: boolean;
 }
 
-export interface EnrollRequest {
-  courseId: string;
-}
-
 export interface EnrollResponse {
   success: boolean;
   message: string;
-  enrollment: EnrollmentResponse;
+  enrollment: {
+    _id: string;
+    user_id: string;
+    course_id: string;
+    enrolledAt: string;
+    status: "active" | "completed" | "cancelled";
+  };
+export interface EnrollRequest {
+  courseId: string;
 }
 
 export const enrollmentApi = {

@@ -16,6 +16,13 @@ export const coursesApi = {
       true,
     ),
 
+  getBySlug: (slug: string) =>
+    api.get<CourseWithSectionsResponse>(
+      `/v1/courses/${slug}`,
+      undefined,
+      true,
+    ),
+
   create: () =>
     api.post<CourseApiResponse>("/v1/courses", undefined, undefined, true),
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/button";
@@ -69,6 +69,7 @@ const iconMap: Record<string, React.ReactNode> = {
 
 export default function CoursePage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const toast = useToast();
   const { setTheme, resolvedTheme } = useTheme();
@@ -94,7 +95,7 @@ export default function CoursePage() {
   useEffect(() => {
     setMounted(true);
     loadCourse();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    checkEnrollment();
   }, [courseId]);
 
   useEffect(() => {
@@ -203,6 +204,38 @@ export default function CoursePage() {
 
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 transition-colors duration-300">
+      {/* Баннер access=denied */}
+      {accessDenied && !isEnrolled && (
+        <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
+            <Lock className="w-5 h-5 text-red-600 dark:text-red-400" />
+            <p className="text-red-800 dark:text-red-200 font-medium">
+              Для доступа к этому курсу необходимо его приобрести
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Баннер для купивших курс */}
+      {isEnrolled && (
+        <div className="bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <p className="text-green-800 dark:text-green-200 font-medium">
+                Вы записаны на этот курс
+              </p>
+            </div>
+            <Link
+              href={`/learn/${course._id}`}
+              className="text-green-700 dark:text-green-300 font-bold hover:underline"
+            >
+              Начать обучение →
+            </Link>
+          </div>
+        </div>
+      )}
+
       <Toaster
               position="top-center"
               toastOptions={{
