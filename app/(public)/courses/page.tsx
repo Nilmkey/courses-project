@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
-import { Code, ChevronRight, User, Sun, Moon, Loader2 } from "lucide-react";
+import { Code, ChevronRight, Loader2 } from "lucide-react";
 import { coursesApi } from "@/lib/api/entities/api-courses";
-import { CourseApiResponse, CourseLevel } from "@/types/types";
+import { tagsApi } from "@/lib/api/entities/api-tags";
+import { CourseApiResponse, CourseLevel, ITag } from "@/types/types";
+import HeaderNoCourses from "../../../components/ui/header-no-courses";
 
 const iconMap: Record<string, React.ReactNode> = {
   Layout: <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" /></svg>,
@@ -43,10 +44,10 @@ const getLevelStyles = (level: CourseLevel) => {
 };
 
 const CoursesPage = () => {
-  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [courses, setCourses] = useState<CourseApiResponse[]>([]);
+  const [tags, setTags] = useState<ITag[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -57,8 +58,12 @@ const CoursesPage = () => {
   const loadCourses = async () => {
     try {
       setLoading(true);
-      const data = await coursesApi.getAll();
-      setCourses(data.courses || []);
+      const [coursesData, tagsData] = await Promise.all([
+        coursesApi.getAll(),
+        tagsApi.getAll(),
+      ]);
+      setCourses(coursesData.courses || []);
+      setTags(tagsData.tags || []);
     } catch (err) {
       console.error("Ошибка загрузки курсов:", err);
     } finally {
@@ -68,68 +73,29 @@ const CoursesPage = () => {
 
   if (!mounted) return null;
 
-  // Собираем все уникальные теги из курсов
+  // Создаем маппинг ID тега → название
+  const tagIdToName = new Map(tags.map((t) => [t._id, t.name]));
+
+  // Собираем все уникальные теги из курсов и маппим их в названия
   const allTags = Array.from(
     new Set(courses.flatMap((c) => c.tags || []))
-  ).sort();
+  )
+    .map((tagId) => tagIdToName.get(tagId) || tagId)
+    .sort();
 
   const filteredCourses =
-    selectedTag === null ? courses : courses.filter((c) => c.tags?.includes(selectedTag));
+    selectedTag === null
+      ? courses
+      : courses.filter((c) =>
+          c.tags?.some((tagId) => tagIdToName.get(tagId) === selectedTag)
+        );
 
   // Фильтруем только опубликованные курсы для публичной страницы
   const publishedCourses = filteredCourses.filter((c) => c.isPublished);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f8faff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
-      <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2 transition-transform hover:scale-105 cursor-pointer"
-          >
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none">
-              <Code className="text-white w-6 h-6" />
-            </div>
-            <span className="text-xl font-black tracking-tight uppercase dark:text-white">
-              CodeLearn
-            </span>
-          </Link>
-
-          <div className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-500 dark:text-slate-400">
-            <Link href="/courses" className="text-blue-600">
-              Курсы
-            </Link>
-            <a href="#" className="hover:text-blue-600 transition-colors">
-              Практика
-            </a>
-            <a href="#" className="hover:text-blue-600 transition-colors">
-              Сообщество
-            </a>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() =>
-                setTheme(resolvedTheme === "dark" ? "light" : "dark")
-              }
-              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-            >
-              {resolvedTheme === "dark" ? (
-                <Sun size={20} className="text-yellow-400" />
-              ) : (
-                <Moon size={20} className="text-slate-600" />
-              )}
-            </button>
-
-            <Link href="/profile">
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                <User className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              </div>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+      <HeaderNoCourses />
       <section className="flex-grow py-16 px-4 max-w-6xl mx-auto text-center">
         <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
           Выбери свой путь в <span className="text-blue-600">IT</span>
@@ -165,12 +131,12 @@ const CoursesPage = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left justify-items-center">
           {loading
             ? [1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-96 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 animate-pulse flex items-center justify-center"
+                  className="w-[320px] h-[380px] bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 animate-pulse flex items-center justify-center"
                 >
                   <Loader2 className="animate-spin text-slate-300" />
                 </div>
@@ -179,7 +145,7 @@ const CoursesPage = () => {
                 return (
                   <div
                     key={course._id}
-                    className="group relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-8 flex flex-col h-full transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40 dark:hover:shadow-blue-900/20 overflow-hidden cursor-pointer"
+                    className="group relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-8 flex flex-col h-[350px] w-[350px] transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40 dark:hover:shadow-blue-900/20 overflow-hidden cursor-pointer"
                     onClick={() => {
                       if (course.slug) {
                         window.location.href = `/courses/${course.slug}`;
@@ -199,7 +165,7 @@ const CoursesPage = () => {
                     </div>
                   </div>
 
-                  <div className="flex-grow">
+                  <div className="flex-grow overflow-y-auto">
                     <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-3 leading-tight group-hover:text-blue-600 transition-colors">
                       {course.title}
                     </h3>
