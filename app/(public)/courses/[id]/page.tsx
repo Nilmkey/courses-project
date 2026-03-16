@@ -129,7 +129,7 @@ export default function CoursePage() {
       if (found && found.tags && found.tags.length > 0) {
         const tagsResponse = await tagsApi.getAll();
         const courseTags = tagsResponse.tags.filter((tag) =>
-          found.tags?.includes(tag._id)
+          found.tags?.includes(tag._id),
         );
         setTags(courseTags);
       }
@@ -154,7 +154,8 @@ export default function CoursePage() {
       setIsEnrolled(true);
       toast.success("Вы успешно записались на курс!");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Ошибка при записи на курс";
+      const message =
+        error instanceof Error ? error.message : "Ошибка при записи на курс";
       toast.error(message);
     } finally {
       setIsProcessing(false);
@@ -215,7 +216,7 @@ export default function CoursePage() {
               </p>
             </div>
             <Link
-              href={`/learn/${course._id}`}
+              href={`/learn/${course.slug}`}
               className="text-green-700 dark:text-green-300 font-bold hover:underline"
             >
               Начать обучение →
@@ -225,20 +226,20 @@ export default function CoursePage() {
       )}
 
       <Toaster
-              position="top-center"
-              toastOptions={{
-                style: {
-                  background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
-                  color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
-                  border:
-                    resolvedTheme === "dark"
-                      ? "1px solid #1e293b"
-                      : "1px solid #e2e8f0",
-                  borderRadius: "0.75rem",
-                  boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-                },
-              }}
-            />
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
+            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+            border:
+              resolvedTheme === "dark"
+                ? "1px solid #1e293b"
+                : "1px solid #e2e8f0",
+            borderRadius: "0.75rem",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+          },
+        }}
+      />
       <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
@@ -305,7 +306,9 @@ export default function CoursePage() {
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2" />
 
               <div className="relative z-10 flex flex-col items-start gap-6 ">
-                <div className={`p-4 bg-white rounded-3xl shadow-lg ${iconColor}`}>
+                <div
+                  className={`p-4 bg-white rounded-3xl shadow-lg ${iconColor}`}
+                >
                   {course.iconName && iconMap[course.iconName]
                     ? iconMap[course.iconName]
                     : iconMap["Code"]}
@@ -314,7 +317,7 @@ export default function CoursePage() {
                   <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
                     {course.title}
                   </h1>
-                  
+
                   {/* Теги курса */}
                   {tags.length > 0 && (
                     <div className="flex flex-wrap gap-2">
