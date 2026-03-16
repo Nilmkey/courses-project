@@ -12,6 +12,7 @@ import { tagsApi } from "@/lib/api/entities/api-tags";
 import { enrollmentApi } from "@/lib/api/entities/api-enrollment";
 import { authClient } from "@/lib/auth-client";
 import { Toaster } from "react-hot-toast";
+import Header from "@/components/ui/header";
 import {
   Code,
   ArrowLeft,
@@ -164,7 +165,7 @@ export default function CoursePage() {
   const handleGoToCourse = () => {
     // Пока просто переходим на заглушку страницы курса
     // В будущем здесь будет страница с наполнением курса
-    toast.loading("Страница курса в разработке");
+    toast.error("Страница курса в разработке");
     // router.push(`/course/${courseId}`);
   };
 
@@ -239,54 +240,7 @@ export default function CoursePage() {
                 },
               }}
             />
-      <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2 transition-transform hover:scale-105 cursor-pointer"
-          >
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none">
-              <Code className="text-white w-6 h-6" />
-            </div>
-            <span className="text-xl font-black tracking-tight uppercase dark:text-white">
-              CodeLearn
-            </span>
-          </Link>
-
-          <div className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-500 dark:text-slate-400">
-            <Link href="/courses" className="text-blue-600">
-              Курсы
-            </Link>
-            <a href="#" className="hover:text-blue-600 transition-colors">
-              Практика
-            </a>
-            <a href="#" className="hover:text-blue-600 transition-colors">
-              Сообщество
-            </a>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() =>
-                setTheme(resolvedTheme === "dark" ? "light" : "dark")
-              }
-              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-            >
-              {resolvedTheme === "dark" ? (
-                <Sun size={20} className="text-yellow-400" />
-              ) : (
-                <Moon size={20} className="text-slate-600" />
-              )}
-            </button>
-
-            <Link href="/profile">
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                <User className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              </div>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Link
