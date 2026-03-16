@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { useTheme } from "next-themes";
 import { ICourse, ITag } from "@/types/types";
 import { coursesApi } from "@/lib/api/entities/api-courses";
 import { tagsApi } from "@/lib/api/entities/api-tags";
+import { enrollmentApi } from "@/lib/api/entities/api-enrollment";
+import { authClient } from "@/lib/auth-client";
 import { Toaster } from "react-hot-toast";
 import {
   Code,
@@ -22,6 +24,8 @@ import {
   Sun,
   Moon,
   Loader2,
+  BookOpen,
+  LogIn,
 } from "lucide-react";
 
 const levelLabels: Record<string, string> = {
@@ -65,20 +69,53 @@ const iconMap: Record<string, React.ReactNode> = {
 
 export default function CoursePage() {
   const params = useParams();
+  const router = useRouter();
   const toast = useToast();
   const { setTheme, resolvedTheme } = useTheme();
+  const { data: session } = authClient.useSession();
   const [mounted, setMounted] = useState(false);
-  const [isBuying, setIsBuying] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [course, setCourse] = useState<ICourse | null>(null);
   const [tags, setTags] = useState<ITag[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [checkingEnrollment, setCheckingEnrollment] = useState(false);
 
   const courseId = params.id as string;
+  const isLoggedIn = !!session?.user;
+
+  console.log("=== Course Page Debug ===", {
+    session,
+    isLoggedIn,
+    course,
+    isEnrolled,
+  });
 
   useEffect(() => {
     setMounted(true);
     loadCourse();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
+
+  useEffect(() => {
+    if (isLoggedIn && course) {
+      checkEnrollment();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, course]);
+
+  const checkEnrollment = async () => {
+    if (!course) return;
+    try {
+      setCheckingEnrollment(true);
+      const response = await enrollmentApi.isEnrolled(course._id);
+      setIsEnrolled(response.isEnrolled);
+    } catch {
+      setIsEnrolled(false);
+    } finally {
+      setCheckingEnrollment(false);
+    }
+  };
 
   const loadCourse = async () => {
     try {
@@ -86,7 +123,7 @@ export default function CoursePage() {
       const response = await coursesApi.getAll();
       const found = response.courses?.find((c) => c.slug === courseId);
       setCourse(found || null);
-      
+
       // Загружаем теги курса
       if (found && found.tags && found.tags.length > 0) {
         const tagsResponse = await tagsApi.getAll();
@@ -103,13 +140,31 @@ export default function CoursePage() {
     }
   };
 
-  const handleBuy = () => {
-    if (!course) return;
-    setIsBuying(true);
-    setTimeout(() => {
-      setIsBuying(false);
-      toast.success(`Вы успешно приобрели курс: ${course.title}!`);
-    }, 1500);
+  const handleEnroll = async () => {
+    if (!course || !isLoggedIn) {
+      toast.error("Пожалуйста, войдите в аккаунт для записи на курс");
+      router.push("/login");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      await enrollmentApi.enroll(course._id);
+      setIsEnrolled(true);
+      toast.success("Вы успешно записались на курс!");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Ошибка при записи на курс";
+      toast.error(message);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleGoToCourse = () => {
+    // Пока просто переходим на заглушку страницы курса
+    // В будущем здесь будет страница с наполнением курса
+    toast.loading("Страница курса в разработке");
+    // router.push(`/course/${courseId}`);
   };
 
   if (!mounted || loading) {
@@ -326,19 +381,40 @@ export default function CoursePage() {
               </div>
 
               {course.isOpenForEnrollment ? (
-                <Button
-                  onClick={handleBuy}
-                  disabled={isBuying}
-                  className="w-full h-16 bg-[#3b5bdb] hover:bg-[#2f4bbf] text-white text-lg font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] mt-4"
-                >
-                  {isBuying ? (
-                    "Обработка..."
-                  ) : (
-                    <>
-                      <CreditCard className="w-5 h-5 mr-2" /> Купить сейчас
-                    </>
-                  )}
-                </Button>
+                isEnrolled ? (
+                  <Button
+                    onClick={handleGoToCourse}
+                    disabled={isProcessing}
+                    className="w-full h-16 bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-bold rounded-2xl shadow-lg shadow-emerald-500/25 transition-all active:scale-[0.98] mt-4"
+                  >
+                    <BookOpen className="w-5 h-5 mr-2" /> Перейти к курсу
+                  </Button>
+                ) : isLoggedIn ? (
+                  <Button
+                    onClick={handleEnroll}
+                    disabled={isProcessing || checkingEnrollment}
+                    className="w-full h-16 bg-[#3b5bdb] hover:bg-[#2f4bbf] text-white text-lg font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] mt-4"
+                  >
+                    {isProcessing || checkingEnrollment ? (
+                      "Обработка..."
+                    ) : course.price === 0 ? (
+                      <>
+                        <CheckCircle2 className="w-5 h-5 mr-2" /> Записаться
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-5 h-5 mr-2" /> Купить курс
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => router.push("/login")}
+                    className="w-full h-16 bg-[#3b5bdb] hover:bg-[#2f4bbf] text-white text-lg font-bold rounded-2xl shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] mt-4"
+                  >
+                    <LogIn className="w-5 h-5 mr-2" /> Войти для записи
+                  </Button>
+                )
               ) : (
                 <div className="w-full h-16 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-lg font-bold rounded-2xl flex items-center justify-center mt-4">
                   Ждем набора
