@@ -76,6 +76,9 @@ const CoursesPage = () => {
   const filteredCourses =
     selectedTag === null ? courses : courses.filter((c) => c.tags?.includes(selectedTag));
 
+  // Фильтруем только опубликованные курсы для публичной страницы
+  const publishedCourses = filteredCourses.filter((c) => c.isPublished);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f8faff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
       <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
@@ -172,7 +175,7 @@ const CoursesPage = () => {
                   <Loader2 className="animate-spin text-slate-300" />
                 </div>
               ))
-            : filteredCourses.map((course) => {
+            : publishedCourses.map((course) => {
                 return (
                   <div
                     key={course._id}
@@ -211,12 +214,12 @@ const CoursesPage = () => {
                     <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
                       <div className="flex items-center gap-2">
                         <div
-                          className={`w-2 h-2 rounded-full animate-pulse ${course.isPublished ? "bg-emerald-500" : "bg-slate-300"}`}
+                          className={`w-2 h-2 rounded-full animate-pulse ${course.isOpenForEnrollment ? "bg-emerald-500" : "bg-slate-300"}`}
                         />
                         <span
-                          className={`text-[11px] font-black uppercase tracking-tighter ${course.isPublished ? "text-emerald-600" : "text-slate-400"}`}
+                          className={`text-[11px] font-black uppercase tracking-tighter ${course.isOpenForEnrollment ? "text-emerald-600" : "text-slate-400"}`}
                         >
-                          {course.isPublished
+                          {course.isOpenForEnrollment
                             ? "Набор открыт"
                             : "Набор закрыт"}
                         </span>
@@ -224,12 +227,12 @@ const CoursesPage = () => {
 
                       <div
                         className={`flex items-center gap-1 font-bold text-sm transition-all ${
-                          course.isPublished
+                          course.isOpenForEnrollment
                             ? "text-blue-600 group-hover:gap-3"
                             : "text-slate-300"
                         }`}
                       >
-                        {course.isPublished
+                        {course.isOpenForEnrollment
                           ? "Подробнее"
                           : "Ждем старта"}
                         <ChevronRight className="w-4 h-4" />

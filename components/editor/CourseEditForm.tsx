@@ -8,6 +8,8 @@ import { CourseDescriptionInput } from "./CourseDescriptionInput";
 import { CourseLevelSelect, type CourseLevel } from "./CourseLevelSelect";
 import { CoursePriceSlider } from "./CoursePriceSlider";
 import { CoursePublishToggle } from "./CoursePublishToggle";
+import { CourseEnrollmentToggle } from "./CourseEnrollmentToggle";
+import { TagSelector } from "./TagSelector";
 import { Button } from "@/components/ui/button";
 import { coursesApi } from "@/lib/api/entities/api-courses";
 import { useToast } from "@/hooks/useToast";
@@ -19,6 +21,8 @@ const defaultCourseData: CourseFormData = {
   level: "beginner",
   price: 0,
   isPublished: false,
+  isOpenForEnrollment: false,
+  tags: [],
 };
 
 export function CourseEditForm() {
@@ -47,6 +51,8 @@ export function CourseEditForm() {
           level: response.level as CourseLevel,
           price: response.price,
           isPublished: response.isPublished,
+          isOpenForEnrollment: response.isOpenForEnrollment ?? false,
+          tags: response.tags ?? [],
         };
         setInitialData(courseData);
         setFormData(courseData);
@@ -99,7 +105,9 @@ export function CourseEditForm() {
       formData.description !== initialData.description ||
       formData.level !== initialData.level ||
       formData.price !== initialData.price ||
-      formData.isPublished !== initialData.isPublished
+      formData.isPublished !== initialData.isPublished ||
+      formData.isOpenForEnrollment !== initialData.isOpenForEnrollment ||
+      JSON.stringify(formData.tags) !== JSON.stringify(initialData.tags)
     );
   }, [formData, initialData, isSaved]);
 
@@ -186,9 +194,7 @@ export function CourseEditForm() {
             </p>
           </div>
 
-          {/* Form Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-xl p-8 space-y-8">
-            {/* Title & Description */}
+          <div className="bg-white dark:bg-slate-900 rounded-2rem border border-slate-100 dark:border-slate-800 shadow-xl p-8 space-y-8">
             <div className="space-y-6">
               <CourseTitleInput
                 value={formData.title}
@@ -200,26 +206,36 @@ export function CourseEditForm() {
               />
             </div>
 
-            {/* Level Selection */}
             <CourseLevelSelect
               value={formData.level}
               onChange={(value) => updateField("level", value)}
             />
 
-            {/* Price Slider */}
             <CoursePriceSlider
               value={formData.price}
               onChange={(value) => updateField("price", value)}
             />
 
-            {/* Publish Toggle */}
             <CoursePublishToggle
               isPublished={formData.isPublished}
               onToggle={() => updateField("isPublished", !formData.isPublished)}
             />
+
+            {/* Enrollment Toggle */}
+            <CourseEnrollmentToggle
+              isOpenForEnrollment={formData.isOpenForEnrollment}
+              onToggle={() => updateField("isOpenForEnrollment", !formData.isOpenForEnrollment)}
+            />
+
+            {/* Tag Selector */}
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+              <TagSelector
+                selectedTagIds={formData.tags || []}
+                onChange={(tagIds) => updateField("tags", tagIds)}
+              />
+            </div>
           </div>
 
-          {/* Info Card */}
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 p-6">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-blue-100 dark:bg-blue-800 rounded-xl">

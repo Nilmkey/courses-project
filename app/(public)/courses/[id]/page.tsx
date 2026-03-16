@@ -6,8 +6,9 @@ import Link from "next/link";
 import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
-import { ICourse } from "@/types/types";
+import { ICourse, ITag } from "@/types/types";
 import { coursesApi } from "@/lib/api/entities/api-courses";
+import { tagsApi } from "@/lib/api/entities/api-tags";
 import { Toaster } from "react-hot-toast";
 import {
   Code,
@@ -69,6 +70,7 @@ export default function CoursePage() {
   const [mounted, setMounted] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
   const [course, setCourse] = useState<ICourse | null>(null);
+  const [tags, setTags] = useState<ITag[]>([]);
   const [loading, setLoading] = useState(true);
 
   const courseId = params.id as string;
@@ -84,6 +86,15 @@ export default function CoursePage() {
       const response = await coursesApi.getAll();
       const found = response.courses?.find((c) => c.slug === courseId);
       setCourse(found || null);
+      
+      // Загружаем теги курса
+      if (found && found.tags && found.tags.length > 0) {
+        const tagsResponse = await tagsApi.getAll();
+        const courseTags = tagsResponse.tags.filter((tag) =>
+          found.tags?.includes(tag._id)
+        );
+        setTags(courseTags);
+      }
     } catch (err) {
       console.error("Ошибка загрузки курса:", err);
       setCourse(null);
@@ -228,6 +239,19 @@ export default function CoursePage() {
                     {course.title}
                   </h1>
                   
+                  {/* Теги курса */}
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map((tag) => (
+                        <span
+                          key={tag._id}
+                          className="px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-bold hover:bg-white/30 transition-colors cursor-default"
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -301,7 +325,7 @@ export default function CoursePage() {
                 </div>
               </div>
 
-              {course.isPublished ? (
+              {course.isOpenForEnrollment ? (
                 <Button
                   onClick={handleBuy}
                   disabled={isBuying}
