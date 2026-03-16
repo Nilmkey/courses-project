@@ -204,18 +204,6 @@ export default function CoursePage() {
 
   return (
     <div className="min-h-screen bg-[#f8faff] dark:bg-slate-950 transition-colors duration-300">
-      {/* Баннер access=denied */}
-      {accessDenied && !isEnrolled && (
-        <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
-            <Lock className="w-5 h-5 text-red-600 dark:text-red-400" />
-            <p className="text-red-800 dark:text-red-200 font-medium">
-              Для доступа к этому курсу необходимо его приобрести
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Баннер для купивших курс */}
       {isEnrolled && (
         <div className="bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800">
