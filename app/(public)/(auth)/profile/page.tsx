@@ -551,7 +551,7 @@ export default function ProfilePage() {
 
                       <div className="flex items-center gap-4">
                         <Link
-                          href={`/courses/${courseId}`}
+                          href={`/learn/${course.slug}`}
                           className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#3b5bdb] bg-indigo-50 dark:bg-indigo-500/10 rounded-xl hover:bg-[#3b5bdb] hover:text-white transition-all"
                         >
                           {isCompleted ? 'Повторить' : 'Продолжить'} <ChevronRight size={16} />
