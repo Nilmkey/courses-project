@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { db } from "./lib/db";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
+import type { StreakObj, ExtendedUser } from "./types";
 
 export const auth = betterAuth({
   database: mongodbAdapter(db),
@@ -19,8 +20,8 @@ export const auth = betterAuth({
         defaultValue: "student",
       },
       streak: {
-        type: "number",
-        defaultValue: 0,
+        type: "json",
+        defaultValue: { count: 0, isFire: false, updateAt: new Date() },
       },
       image: {
         type: "string",
@@ -41,12 +42,4 @@ export const auth = betterAuth({
   },
 });
 
-export interface ExtendedUser {
-  id: string;
-  email: string;
-  name: string;
-  image?: string;
-  role: "student" | "teacher" | "admin";
-  streak: number;
-  createdAt?: Date;
-}
+export type { StreakObj, ExtendedUser };
