@@ -1,4 +1,3 @@
-// api/v1/progress/progress.router.ts
 import { Router } from "express";
 import { progressController } from "./progress.controller";
 import { validateRequest } from "./progress.middleware";

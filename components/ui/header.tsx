@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -22,7 +22,7 @@ import {
   X,
 } from "lucide-react";
 
-export default function Header() {2
+export default function Header() {
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
