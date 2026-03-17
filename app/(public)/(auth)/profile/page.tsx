@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -120,12 +120,12 @@ export default function ProfilePage() {
       return;
     }
 
-    if (session?.user) {
+    if (session?.user && enrolledCourses.length === 0 && !loadingCourses) {
       loadEnrolledCourses();
     }
-  }, [session, isPending, router]);
+  }, [session, isPending, router, enrolledCourses.length, loadingCourses]);
 
-  const loadEnrolledCourses = async () => {
+  const loadEnrolledCourses = useCallback(async () => {
     try {
       setLoadingCourses(true);
       const response = await enrollmentApi.getMyCourses();
@@ -137,7 +137,7 @@ export default function ProfilePage() {
     } finally {
       setLoadingCourses(false);
     }
-  };
+  }, []);
 
   if (!mounted || isPending) {
     return (
@@ -551,7 +551,7 @@ export default function ProfilePage() {
 
                       <div className="flex items-center gap-4">
                         <Link
-                          href={`/courses/${courseId}`}
+                          href={`/learn/${course.slug}`}
                           className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#3b5bdb] bg-indigo-50 dark:bg-indigo-500/10 rounded-xl hover:bg-[#3b5bdb] hover:text-white transition-all"
                         >
                           {isCompleted ? 'Повторить' : 'Продолжить'} <ChevronRight size={16} />
