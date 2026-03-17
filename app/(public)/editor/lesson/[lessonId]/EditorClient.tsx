@@ -6,11 +6,24 @@ import { useConstructor } from "@/hooks/useConstructor";
 import { db } from "@/lib/db";
 import debounce from "lodash/debounce";
 import { infoLesson } from "@/types/types";
-import { lessonsBlocksApi, toCourseBlock } from "@/lib/api/entities/api-lessons";
+import {
+  lessonsBlocksApi,
+  toCourseBlock,
+} from "@/lib/api/entities/api-lessons";
+import { Loader2 } from "lucide-react";
 
 const DndEditor = dynamic(() => import("./editorCore"), {
   ssr: false,
-  loading: () => <div>Загрузка редактора...</div>,
+  loading: () => (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="w-12 h-12 animate-spin text-[#3b5bdb]" />
+        <p className="text-sm font-black text-slate-400 tracking-[0.2em] uppercase animate-pulse">
+          Загрузка редактора
+        </p>
+      </div>
+    </div>
+  ),
 });
 
 export default function DndPage() {
@@ -18,34 +31,29 @@ export default function DndPage() {
   const { blocks, setBlocks, lessonInfo, setLessonInfo } = useConstructor();
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Загружаем данные с сервера при монтировании
   useEffect(() => {
     let cancelled = false;
-    
+
     const loadData = async () => {
       try {
-        // Пробуем загрузить с сервера
         const lesson = await lessonsBlocksApi.getById(lessonId);
-        
+
         if (!cancelled) {
-          // Конвертируем блоки сервера в локальный формат
           const convertedBlocks = lesson.content_blocks.map(toCourseBlock);
           setBlocks(convertedBlocks);
-          
-          // Обновляем информацию об уроке
-          setLessonInfo(prev => ({
+
+          setLessonInfo((prev) => ({
             ...prev,
             title: lesson.title,
             order_index: lesson.order_index,
             sectionId: lesson.section_id,
           }));
-          
+
           setIsLoaded(true);
         }
       } catch (error) {
         console.error("Ошибка загрузки урока с сервера:", error);
-        
-        // Fallback: загружаем из IndexedDB если сервер недоступен
+
         if (!cancelled) {
           const localLesson = await db.lessons.get(lessonId);
           if (localLesson) {
@@ -56,9 +64,9 @@ export default function DndPage() {
         }
       }
     };
-    
+
     loadData();
-    
+
     return () => {
       cancelled = true;
     };
@@ -95,7 +103,18 @@ export default function DndPage() {
 
   return (
     <div onMouseDown={(e) => e.stopPropagation()}>
-      {isLoaded ? <DndEditor /> : <div>Загрузка редактора...</div>}
+      {isLoaded ? (
+        <DndEditor />
+      ) : (
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 animate-spin text-[#3b5bdb]" />
+            <p className="text-sm font-black text-slate-400 tracking-[0.2em] uppercase animate-pulse">
+              Загрузка редактора
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
