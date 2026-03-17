@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import { Section, SectionLesson } from "@/types/types";
 import { LessonItem } from "./LessonItem";
-// import { useConstructor } from "@/hooks/useConstructor";
 
 export interface SectionItemProps {
   section: Section;
@@ -44,10 +43,6 @@ export interface SectionItemProps {
   onToggleDraft?: (sectionId: string) => void;
 }
 
-/**
- * Компонент секции с вложенным DnD для уроков
- * Оптимизирован с React.memo для минимизации ререндеров
- */
 export const SectionItem = memo(function SectionItem({
   section,
   isOverlay = false,
@@ -62,10 +57,8 @@ export const SectionItem = memo(function SectionItem({
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
 
-  // Проверка, является ли секция временной (ещё не сохранена)
-  const isPending = section.id.startsWith('temp_');
+  const isPending = section.id.startsWith("temp_");
 
-  // Sensors для внутреннего DnD (уроки)
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -90,8 +83,6 @@ export const SectionItem = memo(function SectionItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  // ========== Обработчики секции ==========
-
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       onTitleChange?.(section.id, e.target.value);
@@ -115,8 +106,6 @@ export const SectionItem = memo(function SectionItem({
     onToggleDraft?.(section.id);
   }, [section.id, onToggleDraft]);
 
-  // ========== Обработчики уроков (внутренний DnD) ==========
-
   const handleLessonDragStart = useCallback((event: DragStartEvent) => {
     setActiveLessonId(event.active.id as string);
   }, []);
@@ -126,7 +115,6 @@ export const SectionItem = memo(function SectionItem({
       const { active, over } = event;
 
       if (over && active.id !== over.id) {
-        // Извлекаем lesson_id из уникального ID
         const activeLessonId = (active.id as string).replace(
           `${section.id}-lesson-`,
           "",
@@ -170,7 +158,6 @@ export const SectionItem = memo(function SectionItem({
     [section.id, onRemoveLesson],
   );
 
-  // Находим активный урок для DragOverlay
   const activeLesson = activeLessonId
     ? section.lessons.find(
         (l) => `${section.id}-lesson-${l.lesson_id}` === activeLessonId,
@@ -183,29 +170,36 @@ export const SectionItem = memo(function SectionItem({
       style={style}
       className={`
         group
-        rounded-xl border bg-white shadow-sm
-        ${isOverlay ? "border-blue-400 shadow-xl scale-105" : "border-slate-200"}
+        rounded-2xl border bg-white dark:bg-slate-900
         transition-all duration-200
+        ${
+          isOverlay
+            ? "border-indigo-400 shadow-xl shadow-indigo-500/10 scale-105"
+            : "border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:shadow-indigo-500/5"
+        }
       `}
     >
-      <div className="flex items-center gap-3 p-4 border-b border-slate-100">
+      <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-slate-800">
         <div
           {...attributes}
           {...listeners}
           className="
-            cursor-grab p-1 
-            hover:bg-slate-100 rounded 
+            cursor-grab p-1
+            hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg
             transition-colors
           "
         >
-          <GripVertical size={20} className="text-slate-400" />
+          <GripVertical
+            size={18}
+            className="text-slate-300 dark:text-slate-600"
+          />
         </div>
 
         <button
           onClick={handleToggleExpand}
-          className="p-1 hover:bg-slate-100 rounded transition-colors text-slate-500"
+          className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-400 dark:text-slate-500"
         >
-          {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+          {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
         </button>
 
         <input
@@ -214,26 +208,26 @@ export const SectionItem = memo(function SectionItem({
           onChange={handleTitleChange}
           disabled={isPending}
           className={`
-            flex-1 font-semibold text-slate-900
+            flex-1 font-bold text-slate-800 dark:text-white text-sm
             bg-transparent border-none outline-none
-            focus:ring-2 focus:ring-blue-500 rounded px-2 py-1
-            ${isPending ? 'opacity-50 cursor-not-allowed' : ''}
+            focus:ring-2 focus:ring-[#3b5bdb]/30 rounded-lg px-2 py-1
+            placeholder:text-slate-400 dark:placeholder:text-slate-600
+            ${isPending ? "opacity-50 cursor-not-allowed" : ""}
           `}
           placeholder="Название секции"
         />
 
-        {/* Индикатор статуса с кликом */}
         <button
           onClick={handleToggleDraft}
           disabled={isPending}
           className={`
-            flex items-center gap-1 px-2 py-1 rounded-full transition-colors
+            flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors
             ${
               isPending
-                ? 'opacity-50 cursor-not-allowed'
+                ? "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800 text-slate-400"
                 : section.isDraft
-                  ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                  : "bg-green-100 text-green-700 hover:bg-green-200"
+                  ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-500/20 border border-amber-100 dark:border-amber-500/20"
+                  : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-100 dark:border-emerald-500/20"
             }
           `}
           title={
@@ -246,55 +240,53 @@ export const SectionItem = memo(function SectionItem({
         >
           {section.isDraft ? (
             <>
-              <CircleDashed size={14} />
-              <span className="text-xs font-medium">Черновик</span>
+              <CircleDashed size={12} />
+              <span>Черновик</span>
             </>
           ) : (
             <>
-              <CheckCircle2 size={14} />
-              <span className="text-xs font-medium">Опубликовано</span>
+              <CheckCircle2 size={12} />
+              <span>Опубликовано</span>
             </>
           )}
         </button>
 
-        {/* Количество уроков */}
-        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
           {section.lessons.length}{" "}
           {section.lessons.length === 1 ? "урок" : "уроков"}
         </span>
 
-        {/* Индикатор черновика секции */}
-
-        {/* Actions */}
-        <div className={`flex gap-1 transition-opacity ${
-          isPending ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-        }`}>
+        <div
+          className={`flex gap-1 transition-opacity ${
+            isPending ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          }`}
+        >
           <button
             onClick={handleRemove}
             disabled={isPending}
             className={`
-              p-2 rounded-lg transition-colors
+              p-2 rounded-xl transition-colors
               ${
                 isPending
-                  ? 'text-slate-300 cursor-not-allowed'
-                  : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
+                  ? "text-slate-300 dark:text-slate-600 cursor-not-allowed"
+                  : "text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
               }
             `}
-            title={isPending ? "Нельзя удалить во время создания" : "Удалить секцию"}
+            title={
+              isPending ? "Нельзя удалить во время создания" : "Удалить секцию"
+            }
           >
             {isPending ? (
-              <Loader2 size={18} className="animate-spin" />
+              <Loader2 size={16} className="animate-spin" />
             ) : (
-              <Trash2 size={18} />
+              <Trash2 size={16} />
             )}
           </button>
         </div>
       </div>
 
-      {/* Контент секции (уроки) */}
       {isExpanded && (
-        <div className="p-4 space-y-2">
-          {/* Вложенный DnD для уроков */}
+        <div className="p-4 space-y-2 bg-slate-50/30 dark:bg-slate-800/20 rounded-b-2xl">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -309,12 +301,12 @@ export const SectionItem = memo(function SectionItem({
             >
               {section.lessons.length > 0 ? (
                 section.lessons.map((lesson) => {
-                  const isLessonPending = lesson.lesson_id.startsWith('temp_');
+                  const isLessonPending = lesson.lesson_id.startsWith("temp_");
                   return (
                     <div
                       key={`${section.id}-lesson-${lesson.lesson_id}`}
                       className={`relative transition-all duration-300 ${
-                        isLessonPending ? 'opacity-70' : ''
+                        isLessonPending ? "opacity-70" : ""
                       }`}
                     >
                       <LessonItem
@@ -325,8 +317,8 @@ export const SectionItem = memo(function SectionItem({
                         onRemove={handleRemoveLesson}
                       />
                       {isLessonPending && (
-                        <div className="absolute top-2 right-2 flex items-center gap-1 text-xs text-blue-600 font-medium animate-pulse">
-                          <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
+                        <div className="absolute top-2 right-2 flex items-center gap-1 text-[10px] text-[#3b5bdb] font-black uppercase tracking-widest animate-pulse">
+                          <div className="w-1.5 h-1.5 bg-[#3b5bdb] rounded-full" />
                           Создание...
                         </div>
                       )}
@@ -334,13 +326,12 @@ export const SectionItem = memo(function SectionItem({
                   );
                 })
               ) : (
-                <div className="text-center py-6 text-slate-400 text-sm">
+                <div className="text-center py-8 text-slate-400 dark:text-slate-600 text-sm font-medium">
                   В этой секции пока нет уроков
                 </div>
               )}
             </SortableContext>
 
-            {/* DragOverlay для уроков */}
             <DragOverlay
               dropAnimation={{
                 sideEffects: defaultDropAnimationSideEffects({
@@ -360,20 +351,19 @@ export const SectionItem = memo(function SectionItem({
             </DragOverlay>
           </DndContext>
 
-          {/* Кнопка добавления урока */}
           <button
             onClick={handleAddLesson}
             className="
-              w-full py-3 px-4 
-              border-2 border-dashed border-slate-200 
-              rounded-lg 
-              hover:bg-slate-50 hover:border-slate-300 
+              w-full py-3 px-4
+              border-2 border-dashed border-indigo-100 dark:border-indigo-500/20
+              rounded-xl
+              hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5 hover:border-indigo-200 dark:hover:border-indigo-500/30
               transition-all duration-200
               flex items-center justify-center gap-2
-              text-sm text-slate-500 hover:text-slate-700
+              text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-[#3b5bdb] dark:hover:text-indigo-400
             "
           >
-            <Plus size={18} />
+            <Plus size={15} />
             Добавить урок
           </button>
         </div>

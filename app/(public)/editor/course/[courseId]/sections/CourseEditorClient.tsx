@@ -7,6 +7,7 @@ import { CourseEditorCore } from "./CourseEditorCore";
 import { useSection } from "@/hooks/useSection";
 import { sectionsApi } from "@/lib/api/entities/api-sections";
 import { useToast } from "@/hooks/useToast";
+import { Loader2 } from "lucide-react";
 
 export function CourseEditorClient() {
   const { courseId } = useParams<{ courseId: string }>();
@@ -23,7 +24,6 @@ export function CourseEditorClient() {
       try {
         const response = await sectionsApi.getByCourse(courseId);
 
-        // Преобразуем ответ сервера в формат Section
         const loadedSections: Section[] = response.sections.map((section) => ({
           id: section._id,
           title: section.title,
@@ -48,13 +48,11 @@ export function CourseEditorClient() {
 
     loadSections();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId]); // Убрали setSections и toast из зависимостей
+  }, [courseId]);
 
   const handleSave = useCallback(
     async (updatedSections: Section[]) => {
       try {
-        // Сохранение происходит в CourseEditorCore через sectionsApi
-        // Здесь просто показываем уведомление
         toast.success("Все изменения сохранены!");
       } catch (err) {
         console.error("Error saving course:", err);
@@ -65,19 +63,16 @@ export function CourseEditorClient() {
 
   if (!isLoaded) {
     return (
-      <div className="max-w-4xl mx-auto py-16 px-4">
-        <div className="flex flex-col items-center justify-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-500">Загрузка редактора...</p>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 animate-spin text-[#3b5bdb]" />
+          <p className="text-sm font-black text-slate-400 tracking-[0.2em] uppercase animate-pulse">
+            Загрузка редактора
+          </p>
         </div>
       </div>
     );
   }
 
-  return (
-    <CourseEditorCore
-      courseId={courseId}
-      onSave={handleSave}
-    />
-  );
+  return <CourseEditorCore courseId={courseId} onSave={handleSave} />;
 }

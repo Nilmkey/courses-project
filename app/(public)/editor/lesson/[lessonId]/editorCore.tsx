@@ -1,8 +1,18 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { useTheme } from "next-themes";
+import {
+  ArrowLeft,
+  Loader2,
+  BookOpen,
+  FileText,
+  Video,
+  HelpCircle,
+  Sun,
+  Moon,
+} from "lucide-react";
 import {
   DndContext,
   DragOverlay,
@@ -24,7 +34,10 @@ import DragItem from "@/components/ui/dragItem";
 import { AddItemButton } from "@/components/ui/addItemButton";
 import { useConstructor } from "@/hooks/useConstructor";
 import { EditorWindow } from "@/components/editor/EditorWindow";
-import { lessonsBlocksApi, toLessonBlockData } from "@/lib/api/entities/api-lessons";
+import {
+  lessonsBlocksApi,
+  toLessonBlockData,
+} from "@/lib/api/entities/api-lessons";
 import { useToast } from "@/hooks/useToast";
 
 export default function Editor() {
@@ -32,10 +45,16 @@ export default function Editor() {
   const router = useRouter();
   const { lessonId } = params as { lessonId: string };
   const { blocks, setBlocks, lessonInfo, setLessonInfo } = useConstructor();
+  const { setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const toast = useToast();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -88,10 +107,7 @@ export default function Editor() {
     [setLessonInfo],
   );
 
-  // Проверка, является ли ID временным
   const isTempId = useCallback((id: string) => id.startsWith("temp_"), []);
-
-  // ========== Сохранение ==========
 
   const handleSave = useCallback(async () => {
     if (!lessonId) {
@@ -101,13 +117,11 @@ export default function Editor() {
 
     setIsSaving(true);
     try {
-      // Конвертируем блоки в формат для API
       const contentBlocks = blocks.map((block, index) => ({
         ...toLessonBlockData(block),
         order_index: index,
       }));
 
-      // Отправляем обновление урока на сервер
       await lessonsBlocksApi.update(lessonId, {
         title: lessonInfo.title,
         content_blocks: contentBlocks,
@@ -124,39 +138,54 @@ export default function Editor() {
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-10">
         <div className="flex items-center gap-4">
           <button
             onClick={handleGoBack}
             className="
-              flex items-center gap-2 px-4 py-2
-              text-slate-600 hover:text-slate-900
-              hover:bg-slate-100 rounded-lg
-              transition-colors
+              flex items-center gap-2 px-4 py-2.5
+              text-slate-500 dark:text-slate-400 hover:text-[#3b5bdb] dark:hover:text-indigo-400
+              hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl
+              transition-all duration-200 font-semibold text-sm
             "
           >
-            <ArrowLeft size={20} />
-            <span className="font-medium">Назад к секциям</span>
+            <ArrowLeft size={18} />
+            <span>Назад к секциям</span>
           </button>
+
+
+          {mounted && (
+            <button
+              onClick={() =>
+                setTheme(resolvedTheme === "dark" ? "light" : "dark")
+              }
+              className="p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              {resolvedTheme === "dark" ? (
+                <Sun size={18} className="text-yellow-400" />
+              ) : (
+                <Moon size={18} className="text-slate-600" />
+              )}
+            </button>
+          )}
         </div>
+
         <button
           onClick={handleSave}
           disabled={isSaving}
           className={`
-            px-6 py-3 rounded-lg font-medium transition-all
-            shadow-sm hover:shadow-md
+            px-6 py-2.5 text-white rounded-xl font-bold text-sm
+            transition-all duration-200
             ${
               isSaving
-                ? "bg-slate-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+                ? "bg-slate-300 dark:bg-slate-700 cursor-not-allowed text-slate-500 dark:text-slate-400"
+                : "bg-gradient-to-r from-[#3b5bdb] to-[#5c7cfa] hover:shadow-lg hover:shadow-indigo-500/25 hover:-translate-y-0.5"
             }
-            text-white
           `}
         >
           {isSaving ? (
             <span className="flex items-center gap-2">
-              <Loader2 size={18} className="animate-spin" />
+              <Loader2 size={16} className="animate-spin" />
               Сохранение...
             </span>
           ) : (
@@ -165,20 +194,33 @@ export default function Editor() {
         </button>
       </div>
 
-      <h1 className="text-3xl font-bold text-slate-900 mb-2">Редактор урока</h1>
-      
-      {/* Название урока */}
       <div className="mb-8">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#3b5bdb] to-[#5c7cfa] flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
+            <BookOpen size={20} />
+          </div>
+          <h1 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">
+            Редактор урока
+          </h1>
+        </div>
+
         <input
           type="text"
-          placeholder="[название урока]"
+          placeholder="Название урока..."
           value={lessonInfo.title}
           onChange={(e) => handleLessonChange(e.target.value)}
-          className="w-full bg-transparent text-2xl text-slate-800 placeholder-slate-200 outline-none"
+          className="
+            w-full bg-transparent
+            text-xl font-bold text-slate-800 dark:text-white
+            placeholder:text-slate-300 dark:placeholder:text-slate-600
+            outline-none border-none
+            border-b-2 border-transparent focus:border-indigo-200 dark:focus:border-indigo-500/30
+            pb-2 transition-colors duration-200
+          "
         />
       </div>
 
-      <p className="text-slate-500 mb-8">
+      <p className="text-sm font-medium text-slate-400 dark:text-slate-500 mb-8">
         Перетаскивайте блоки для изменения порядка
       </p>
 
@@ -225,30 +267,81 @@ export default function Editor() {
 
       <AddItemButton />
 
-      {/* Статистика */}
-      <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200">
-        <div className="flex items-center gap-6 text-sm text-slate-600">
-          <span>
-            <strong className="text-slate-900">{blocks.length}</strong> блоков
-          </span>
-          <span>
-            <strong className="text-slate-900">
-              {blocks.filter((b) => b.type === "text").length}
-            </strong>{" "}
-            текстовых
-          </span>
-          <span>
-            <strong className="text-slate-900">
-              {blocks.filter((b) => b.type === "video").length}
-            </strong>{" "}
-            видео
-          </span>
-          <span>
-            <strong className="text-slate-900">
-              {blocks.filter((b) => b.type === "quiz").length}
-            </strong>{" "}
-            викторин
-          </span>
+      <div className="mt-8 p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+        <div className="flex items-center gap-5 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
+              <BookOpen
+                size={16}
+                className="text-[#3b5bdb] dark:text-indigo-400"
+              />
+            </div>
+            <div>
+              <div className="text-xl font-extrabold text-slate-800 dark:text-white">
+                {blocks.length}
+              </div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                блоков
+              </div>
+            </div>
+          </div>
+
+          <div className="w-px h-10 bg-slate-100 dark:bg-slate-800" />
+
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+              <FileText
+                size={16}
+                className="text-emerald-600 dark:text-emerald-400"
+              />
+            </div>
+            <div>
+              <div className="text-xl font-extrabold text-slate-800 dark:text-white">
+                {blocks.filter((b) => b.type === "text").length}
+              </div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                текстовых
+              </div>
+            </div>
+          </div>
+
+          <div className="w-px h-10 bg-slate-100 dark:bg-slate-800" />
+
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center">
+              <Video
+                size={16}
+                className="text-violet-600 dark:text-violet-400"
+              />
+            </div>
+            <div>
+              <div className="text-xl font-extrabold text-slate-800 dark:text-white">
+                {blocks.filter((b) => b.type === "video").length}
+              </div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                видео
+              </div>
+            </div>
+          </div>
+
+          <div className="w-px h-10 bg-slate-100 dark:bg-slate-800" />
+
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
+              <HelpCircle
+                size={16}
+                className="text-amber-600 dark:text-amber-400"
+              />
+            </div>
+            <div>
+              <div className="text-xl font-extrabold text-slate-800 dark:text-white">
+                {blocks.filter((b) => b.type === "quiz").length}
+              </div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                викторин
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
