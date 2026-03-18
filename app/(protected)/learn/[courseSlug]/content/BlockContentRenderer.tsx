@@ -30,13 +30,13 @@ export function BlockContentRenderer() {
       </div>
 
       {block.type === "text" && (
-        <TextBlockView content={(block as ITextBlock).content} />
+        <TextBlockView key={block.id || block._id} content={(block as ITextBlock).content} />
       )}
       {block.type === "video" && (
-        <VideoBlockView content={(block as IVideoBlock).content} />
+        <VideoBlockView key={block.id || block._id} content={(block as IVideoBlock).content} />
       )}
       {block.type === "quiz" && (
-        <QuizBlockView content={(block as IQuizBlock).content} />
+        <QuizBlockView key={block.id || block._id} content={(block as IQuizBlock).content} />
       )}
     </div>
   );

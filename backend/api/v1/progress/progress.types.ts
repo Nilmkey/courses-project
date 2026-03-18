@@ -30,6 +30,19 @@ export interface UpdateLessonProgressRequest {
   };
 }
 
+export interface GetLessonProgressRequest {
+  params: { lessonId: string };
+  query: {
+    courseId: string;
+  };
+}
+
+export interface InitializeProgressRequest {
+  body: {
+    courseId: string;
+  };
+}
+
 export interface QuizAnswerResponse {
   questionId: string;
   selectedAnswer: number | number[] | string;
@@ -47,6 +60,16 @@ export interface CourseProgressResponse {
   totalLessons: number;
   completedLessons: number;
   progress: number;
+}
+
+export interface CourseProgressDetailResponse {
+  _id: string;
+  user_id: string;
+  course_id: string;
+  lessons: LessonProgressResponse[];
+  overallProgress: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ProgressDetailResponse {

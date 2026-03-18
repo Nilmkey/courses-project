@@ -11,7 +11,7 @@ import { ApiError } from "@/lib/api/api-client";
 import { API_BASE_URL } from "@/config/config";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
-import { enrollmentApi, EnrollmentResponse } from "@/lib/api/entities/api-enrollment";
+import { enrollmentApi, EnrollmentResponse, EnrollmentWithProgress } from "@/lib/api/entities/api-enrollment";
 import {
   Code,
   Flame,
@@ -91,7 +91,7 @@ export default function ProfilePage() {
 
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
-  const [enrolledCourses, setEnrolledCourses] = useState<EnrollmentResponse[]>([]);
+  const [enrolledCourses, setEnrolledCourses] = useState<EnrollmentWithProgress[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [_isUploading, setIsUploading] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
@@ -128,9 +128,9 @@ export default function ProfilePage() {
   const loadEnrolledCourses = useCallback(async () => {
     try {
       setLoadingCourses(true);
-      const response = await enrollmentApi.getMyCourses();
-      console.log("=== Enrolled Courses Debug ===", response);
-      setEnrolledCourses(response.enrollments || []);
+      const enrollments = await enrollmentApi.getMyCoursesWithProgress();
+      console.log("=== Enrolled Courses Debug ===", enrollments);
+      setEnrolledCourses(enrollments || []);
     } catch (error) {
       console.error("Ошибка загрузки курсов:", error);
       setEnrolledCourses([]);
@@ -436,7 +436,7 @@ export default function ProfilePage() {
             icon={<Flame size={22} className="text-orange-500" />}
             bg="bg-orange-50 dark:bg-orange-500/10"
             border="border-orange-100 dark:border-orange-500/20"
-            value={user?.streak.count || 0}
+            value={typeof user?.streak === 'object' ? (user.streak as any).count || 0 : user?.streak || 0}
             label="Дней подряд"
           />
           <StatCard
@@ -510,11 +510,16 @@ export default function ProfilePage() {
                 {enrolledCourses.map((enrollment) => {
                   const course = enrollment.course;
                   if (!course) return null;
-                  
+
                   // Пытаемся найти информацию о курсе по slug или используем дефолтную
                   const courseId = course.slug || course._id;
                   const info = coursesInfo[courseId] || coursesInfo.html;
                   const isCompleted = enrollment.status === "completed";
+                  const progress = enrollment.progress?.progress || 0;
+                  
+                  // Получаем количество секций из курса (если есть sections)
+                  const totalSections = (course as any).sections?.length || 0;
+                  const completedSections = isCompleted ? totalSections : Math.floor((progress / 100) * totalSections);
 
                   return (
                     <div
@@ -538,14 +543,52 @@ export default function ProfilePage() {
                             {course.title}
                           </h4>
                           <span className={`font-bold ${isCompleted ? 'text-emerald-600' : info.text}`}>
-                            {isCompleted ? 'Завершён' : 'В процессе'}
+                            {isCompleted ? 'Завершён' : `${progress}%`}
                           </span>
                         </div>
+                        
+                        {/* Прогресс-бар */}
                         <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                           <div
                             className={`absolute h-full bg-gradient-to-r ${isCompleted ? 'from-emerald-500 to-teal-500' : info.gradient} transition-all duration-1000`}
-                            style={{ width: isCompleted ? '100%' : '30%' }}
+                            style={{ width: `${progress}%` }}
                           />
+                        </div>
+                        
+                        {/* Детали прогресса: уроки и секции */}
+                        <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                          <span className="flex items-center gap-1">
+                            <BookOpen size={12} />
+                            <span>
+                              <span className="font-bold text-slate-700 dark:text-slate-300">
+                                {enrollment.progress?.completedLessons || 0}
+                              </span>{" "}
+                              из{" "}
+                              <span className="font-bold text-slate-700 dark:text-slate-300">
+                                {enrollment.progress?.totalLessons || 0}
+                              </span>{" "}
+                              уроков
+                            </span>
+                          </span>
+                          
+                          {totalSections > 0 && (
+                            <>
+                              <span className="w-px h-3 bg-slate-300 dark:bg-slate-600" />
+                              <span className="flex items-center gap-1">
+                                <Target size={12} />
+                                <span>
+                                  <span className="font-bold text-slate-700 dark:text-slate-300">
+                                    {completedSections}
+                                  </span>{" "}
+                                  из{" "}
+                                  <span className="font-bold text-slate-700 dark:text-slate-300">
+                                    {totalSections}
+                                  </span>{" "}
+                                  секций
+                                </span>
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
 

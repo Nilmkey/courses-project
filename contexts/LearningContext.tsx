@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState, useCallback, useMemo } from "react";
+import { createContext, useState, useCallback, useMemo, useEffect } from "react";
 import type {
   ICourse,
   ISection,
@@ -55,6 +55,8 @@ export interface LearningContextType {
     lessonId: string,
     answers: IQuizAnswer[]
   ) => Promise<void>;
+  resetLessonProgress: (lessonId: string) => Promise<void>;
+  completeBlock: (lessonId: string, blockId: string) => Promise<void>;
 
   // Утилиты
   getLessonStatus: (lessonId: string) => LessonStatus;
@@ -98,26 +100,76 @@ export function LearningContextProvider({
   >({});
 
   const [overallProgress, setOverallProgress] = useState(initialProgress);
+  const [isLoadingProgress, setIsLoadingProgress] = useState(true);
 
-  // Инициализация прогресса при загрузке
-  useMemo(() => {
-    const progress: Record<string, LessonProgressData> = {};
+  // Загрузка прогресса с сервера при монтировании
+  useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        setIsLoadingProgress(true);
+        
+        // Загружаем полный прогресс курса
+        const progressDetail = await progressApi.getFullCourseProgress(course._id);
+        
+        // Инициализируем прогресс для всех уроков
+        const progress: Record<string, LessonProgressData> = {};
 
-    for (const section of sections) {
-      for (const lesson of section.lessons) {
-        progress[lesson._id] = {
-          lessonId: lesson._id,
-          status: "not-started",
-          completedBlocks: 0,
-          totalBlocks: lesson.content_blocks.length,
-          quizAnswers: [],
-          isCompleted: false,
-        };
+        for (const section of sections) {
+          for (const lesson of section.lessons) {
+            // Проверяем, есть ли прогресс для этого урока
+            const lessonProgressData = progressDetail.lessons.find(
+              (l) => l.lesson_id === lesson._id
+            );
+
+            const isCompleted = lessonProgressData?.completed || false;
+            const quizAnswers = lessonProgressData?.quizAnswers || [];
+
+            progress[lesson._id] = {
+              lessonId: lesson._id,
+              status: isCompleted ? "completed" : "not-started",
+              completedBlocks: isCompleted ? lesson.content_blocks.length : 0,
+              totalBlocks: lesson.content_blocks.length,
+              quizAnswers,
+              isCompleted,
+            };
+          }
+        }
+
+        // Обновляем общий прогресс из сервера
+        setOverallProgress({
+          totalLessons: progressDetail.lessons.length || Object.keys(progress).length,
+          completedLessons: progressDetail.lessons.filter(l => l.completed).length,
+          progress: progressDetail.overallProgress,
+        });
+
+        setLessonProgress(progress);
+      } catch (error) {
+        console.error("Ошибка загрузки прогресса:", error);
+        // Инициализируем пустой прогресс при ошибке
+        const progress: Record<string, LessonProgressData> = {};
+
+        for (const section of sections) {
+          for (const lesson of section.lessons) {
+            progress[lesson._id] = {
+              lessonId: lesson._id,
+              status: "not-started",
+              completedBlocks: 0,
+              totalBlocks: lesson.content_blocks.length,
+              quizAnswers: [],
+              isCompleted: false,
+            };
+          }
+        }
+
+        setLessonProgress(progress);
+        setOverallProgress(initialProgress);
+      } finally {
+        setIsLoadingProgress(false);
       }
-    }
+    };
 
-    setLessonProgress(progress);
-  }, [sections]);
+    loadProgress();
+  }, [course._id, sections, initialProgress]);
 
   // Навигация к блоку
   const navigateToBlock = useCallback(
@@ -264,11 +316,10 @@ export function LearningContextProvider({
   const markLessonComplete = useCallback(
     async (lessonId: string) => {
       try {
-        // Находим courseId из контекста
         const courseId = course._id;
 
-        // Отправляем на сервер (закомментировано пока API не реализовано)
-        // await progressApi.markLessonComplete(lessonId, courseId);
+        // Отправляем на сервер
+        await progressApi.markLessonComplete(lessonId, courseId);
 
         // Обновляем локальное состояние
         setLessonProgress((prev) => {
@@ -282,16 +333,18 @@ export function LearningContextProvider({
             completedBlocks: current.totalBlocks,
           };
 
-          // Обновляем общий прогресс
+          // Подсчитываем завершенные уроки
           const completedLessons = Object.values(prev).filter(
-            (l) => l.lessonId !== lessonId && l.isCompleted
+            (l) => l.isCompleted || l.lessonId === lessonId
           ).length;
 
+          const totalLessons = Object.keys(prev).length;
+          const progress = Math.round((completedLessons / totalLessons) * 100);
+
           setOverallProgress({
-            totalLessons: Object.keys(prev).length,
-            completedLessons: completedLessons + 1,
-            progress:
-              ((completedLessons + 1) / Object.keys(prev).length) * 100,
+            totalLessons,
+            completedLessons,
+            progress,
           });
 
           return {
@@ -320,12 +373,12 @@ export function LearningContextProvider({
       try {
         const courseId = course._id;
 
-        // Отправляем на сервер (закомментировано пока API не реализовано)
-        // await progressApi.updateLessonProgress(lessonId, {
-        //   courseId,
-        //   completed: false,
-        //   quizAnswers: answers,
-        // });
+        // Отправляем на сервер
+        await progressApi.updateLessonProgress(lessonId, {
+          courseId,
+          completed: false,
+          quizAnswers: answers,
+        });
 
         // Обновляем локальное состояние
         setLessonProgress((prev) => {
@@ -350,6 +403,83 @@ export function LearningContextProvider({
       }
     },
     [course._id]
+  );
+
+  // Сбросить прогресс урока
+  const resetLessonProgress = useCallback(
+    async (lessonId: string) => {
+      try {
+        const courseId = course._id;
+
+        // Отправляем на сервер
+        await progressApi.resetLessonProgress(lessonId, courseId);
+
+        // Обновляем локальное состояние
+        setLessonProgress((prev) => {
+          const current = prev[lessonId];
+          if (!current) return prev;
+
+          const updated = {
+            ...current,
+            status: "not-started" as LessonStatus,
+            isCompleted: false,
+            completedBlocks: 0,
+            quizAnswers: [],
+          };
+
+          // Подсчитываем завершенные уроки
+          const completedLessons = Object.values(prev).filter(
+            (l) => l.isCompleted && l.lessonId !== lessonId
+          ).length;
+
+          const totalLessons = Object.keys(prev).length;
+          const progress = Math.round((completedLessons / totalLessons) * 100);
+
+          setOverallProgress({
+            totalLessons,
+            completedLessons,
+            progress,
+          });
+
+          return {
+            ...prev,
+            [lessonId]: updated,
+          };
+        });
+
+        toast.success("Прогресс урока сброшен");
+      } catch (error) {
+        console.error("Ошибка при сбросе прогресса:", error);
+        toast.error("Не удалось сбросить прогресс");
+      }
+    },
+    [course._id, toast]
+  );
+
+  // Завершить блок
+  const completeBlock = useCallback(
+    async (lessonId: string, blockId: string) => {
+      // Обновляем локальное состояние - увеличиваем количество пройденных блоков
+      setLessonProgress((prev) => {
+        const current = prev[lessonId];
+        if (!current) return prev;
+
+        const newCompletedBlocks = Math.min(current.completedBlocks + 1, current.totalBlocks);
+        
+        // Проверяем, все ли блоки пройдены
+        const allBlocksCompleted = newCompletedBlocks >= current.totalBlocks;
+
+        return {
+          ...prev,
+          [lessonId]: {
+            ...current,
+            completedBlocks: newCompletedBlocks,
+            status: allBlocksCompleted ? "completed" : current.status,
+          },
+        };
+      });
+    },
+    []
   );
 
   // Получить статус урока
@@ -410,6 +540,8 @@ export function LearningContextProvider({
     navigateToPreviousBlock,
     markLessonComplete,
     updateQuizAnswers,
+    resetLessonProgress,
+    completeBlock,
     getLessonStatus,
     getLessonProgress,
     getCurrentBlock,

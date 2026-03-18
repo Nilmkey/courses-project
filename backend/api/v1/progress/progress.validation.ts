@@ -31,6 +31,15 @@ export const getCourseProgressSchema = z.object({
   }),
 });
 
+export const getLessonProgressSchema = z.object({
+  params: z.object({
+    lessonId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Неверный формат ID урока'),
+  }),
+  query: z.object({
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Неверный формат ID курса'),
+  }),
+});
+
 export const updateLessonProgressSchema = z.object({
   params: z.object({
     lessonId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Неверный формат ID урока'),
@@ -39,5 +48,11 @@ export const updateLessonProgressSchema = z.object({
     courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Неверный формат ID курса'),
     completed: z.boolean(),
     quizAnswers: z.array(QuizAnswerSchema).optional(),
+  }),
+});
+
+export const initializeProgressSchema = z.object({
+  body: z.object({
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Неверный формат ID курса'),
   }),
 });
