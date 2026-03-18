@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useLearning } from "@/hooks/useLearning";
 import { SectionItem } from "./SectionItem";
+import { StreakFire } from "@/components/StreakFire";
 import { BookOpen, ArrowLeft, Sun, Moon } from "lucide-react";
 
 export function CourseSidebar() {
@@ -68,6 +69,11 @@ export function CourseSidebar() {
 
       {/* Статистика */}
       <div className="p-4 border-t bg-gray-50 dark:bg-gray-900 dark:border-gray-700">
+        {/* Стрик */}
+        <div className="mb-3">
+          <StreakFire size="sm" showCount={true} />
+        </div>
+        
         <div className="text-xs text-gray-500 dark:text-gray-400">
           <span className="font-semibold">{sections.length}</span> секций •{" "}
           <span className="font-semibold">

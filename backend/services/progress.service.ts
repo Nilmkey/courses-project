@@ -2,6 +2,7 @@ import { Progress, Lesson, Section, Course } from "../models";
 import type { IProgress, IQuizAnswer } from "../models";
 import { Types } from "mongoose";
 import { ApiError } from "../utils/ApiError";
+import { streakService } from "./streak.service";
 
 export interface QuizAnswerInput {
   questionId: string;
@@ -50,6 +51,7 @@ export const progressService = {
     studentId: string,
     lessonId: string,
     courseId: string,
+    headers?: Headers,
   ): Promise<IProgress | null> {
     // Проверка целостности данных
     await validateLessonBelongsToCourse(lessonId, courseId);
@@ -78,6 +80,14 @@ export const progressService = {
         returnDocument: "after",
       },
     ).lean();
+
+    // Продлеваем стрик пользователя после успешного сохранения прогресса
+    try {
+      await streakService.extendStreak(studentId, headers);
+    } catch (error) {
+      // Логгируем ошибку, но не прерываем основной поток
+      console.error("[Progress] Не удалось обновить стрик:", error);
+    }
 
     return progress;
   },
