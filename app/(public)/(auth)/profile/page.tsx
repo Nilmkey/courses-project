@@ -95,6 +95,7 @@ export default function ProfilePage() {
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [_isUploading, setIsUploading] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
+  const [hasLoadedCourses, setHasLoadedCourses] = useState(false); // Флаг загрузки
   const toast = useToast();
 
   const user = session?.user as unknown as ExtendedUser | undefined;
@@ -120,10 +121,11 @@ export default function ProfilePage() {
       return;
     }
 
-    if (session?.user && enrolledCourses.length === 0 && !loadingCourses) {
+    // Загружаем курсы только один раз при наличии сессии
+    if (session?.user && !loadingCourses && !hasLoadedCourses) {
       loadEnrolledCourses();
     }
-  }, [session, isPending, router, enrolledCourses.length, loadingCourses]);
+  }, [session, isPending, router, loadingCourses, hasLoadedCourses]);
 
   const loadEnrolledCourses = useCallback(async () => {
     try {
@@ -131,9 +133,11 @@ export default function ProfilePage() {
       const enrollments = await enrollmentApi.getMyCoursesWithProgress();
       console.log("=== Enrolled Courses Debug ===", enrollments);
       setEnrolledCourses(enrollments || []);
+      setHasLoadedCourses(true); // Помечаем, что курсы загружены
     } catch (error) {
       console.error("Ошибка загрузки курсов:", error);
       setEnrolledCourses([]);
+      setHasLoadedCourses(true); // Помечаем, что курсы загружены (даже если ошибка)
     } finally {
       setLoadingCourses(false);
     }
