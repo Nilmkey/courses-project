@@ -113,8 +113,8 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">Викторина</h2>
-      <p className="text-gray-500 mb-8">
+      <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Викторина</h2>
+      <p className="text-slate-500 dark:text-slate-400 mb-8">
         Ответьте на все вопросы и нажмите &quot;Проверить ответы&quot;
       </p>
 
@@ -139,18 +139,18 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
           <button
             onClick={checkAnswers}
             disabled={Object.keys(answers).length === 0}
-            className="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25"
+            className="px-8 py-4 bg-[#3b5bdb] text-white rounded-xl font-bold hover:bg-[#2f4a9e] transition-colors disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25"
           >
             Проверить ответы
           </button>
         ) : (
           <div className="flex items-center gap-6">
-            <div className="px-6 py-3 rounded-xl font-bold bg-gray-100 text-gray-700">
+            <div className="px-6 py-3 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
               Ваш результат: {score?.correct} из {score?.total}
             </div>
             <button
               onClick={resetQuiz}
-              className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+              className="px-6 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               Попробовать снова
             </button>
@@ -182,13 +182,13 @@ function QuestionCard({
   onTextAnswer,
 }: QuestionCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
       <div className="flex items-start gap-3 mb-4">
-        <span className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center font-bold text-sm">
+        <span className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center font-bold text-sm">
           {index + 1}
         </span>
         <div className="flex-1">
-          <p className="font-semibold text-gray-900">{question.questionText}</p>
+          <p className="font-semibold text-slate-900 dark:text-white">{question.questionText}</p>
           <QuestionTypeBadge type={question.type} />
         </div>
       </div>
@@ -227,14 +227,14 @@ function QuestionCard({
 
 function QuestionTypeBadge({ type }: { type: string }) {
   const badges = {
-    single: { label: "Один ответ", color: "bg-purple-100 text-purple-700" },
+    single: { label: "Один ответ", color: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400" },
     multiple: {
       label: "Несколько ответов",
-      color: "bg-indigo-100 text-indigo-700",
+      color: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400",
     },
     text: {
       label: "Текстовый ответ",
-      color: "bg-emerald-100 text-emerald-700",
+      color: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
     },
   };
 
@@ -269,15 +269,15 @@ function SingleChoiceOptions({
       {options.map((option, optIdx) => {
         const isSelected = answer === optIdx;
 
-        let buttonStyle = "bg-gray-50 border-gray-200 hover:bg-gray-100";
+        let buttonStyle = "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700";
 
         if (submitted) {
           if (isSelected) {
             // Показываем только выбранный пользователем ответ
-            buttonStyle = "bg-gray-100 border-gray-300";
+            buttonStyle = "bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600";
           }
         } else if (isSelected) {
-          buttonStyle = "bg-blue-50 border-blue-500";
+          buttonStyle = "bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400";
         }
 
         return (
@@ -290,9 +290,9 @@ function SingleChoiceOptions({
             {isSelected ? (
               <CheckCircle2 className="text-blue-500 flex-shrink-0" size={20} />
             ) : (
-              <Circle className="text-gray-400 flex-shrink-0" size={20} />
+              <Circle className="text-slate-400 dark:text-slate-500 flex-shrink-0" size={20} />
             )}
-            <span className="text-left text-gray-900">
+            <span className="text-left text-slate-900 dark:text-white">
               {option}
             </span>
           </button>
@@ -322,15 +322,15 @@ function MultipleChoiceOptions({
       {options.map((option, optIdx) => {
         const isSelected = answers.includes(optIdx);
 
-        let buttonStyle = "bg-gray-50 border-gray-200 hover:bg-gray-100";
+        let buttonStyle = "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700";
 
         if (submitted) {
           if (isSelected) {
             // Показываем только выбранные пользователем ответы
-            buttonStyle = "bg-gray-100 border-gray-300";
+            buttonStyle = "bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600";
           }
         } else if (isSelected) {
-          buttonStyle = "bg-blue-50 border-blue-500";
+          buttonStyle = "bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400";
         }
 
         return (
@@ -343,9 +343,9 @@ function MultipleChoiceOptions({
             {isSelected ? (
               <CheckCircle2 className="text-blue-500 flex-shrink-0" size={20} />
             ) : (
-              <Circle className="text-gray-400 flex-shrink-0" size={20} />
+              <Circle className="text-slate-400 dark:text-slate-500 flex-shrink-0" size={20} />
             )}
-            <span className="text-left text-gray-900">
+            <span className="text-left text-slate-900 dark:text-white">
               {option}
             </span>
           </button>
@@ -376,10 +376,10 @@ function TextAnswerInput({
         onChange={(e) => onChange(question.id, e.target.value)}
         disabled={submitted}
         placeholder="Введите ваш ответ..."
-        className={`w-full px-4 py-3 rounded-lg border-2 text-gray-900 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed ${
+        className={`w-full px-4 py-3 rounded-lg border-2 text-slate-900 dark:text-white transition-colors disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:cursor-not-allowed ${
           submitted
-            ? "border-gray-300 bg-gray-50"
-            : "border-gray-500 focus:border-blue-500"
+            ? "border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800"
+            : "border-slate-500 dark:border-slate-600 focus:border-blue-500 dark:focus:border-blue-400"
         }`}
       />
     </div>

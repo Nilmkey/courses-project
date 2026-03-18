@@ -55,7 +55,7 @@ export function BlockItem({
       className={`w-full flex items-center gap-3 px-12 py-2.5 text-sm transition-colors ${
         isActive
           ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-          : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
+          : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200"
       }`}
     >
       {isCompleted ? (
@@ -64,7 +64,7 @@ export function BlockItem({
         <Icon
           size={14}
           className={`flex-shrink-0 ${
-            isActive ? "text-blue-500" : "text-gray-400 dark:text-gray-500"
+            isActive ? "text-blue-500" : "text-slate-400 dark:text-slate-500"
           }`}
         />
       )}
