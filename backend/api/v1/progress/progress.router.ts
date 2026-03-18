@@ -6,11 +6,22 @@ import {
   resetProgressSchema,
   getCourseProgressSchema,
   updateLessonProgressSchema,
+  getLessonProgressSchema,
+  initializeProgressSchema,
 } from "./progress.validation";
 import { authMiddleware } from "../../../middleware/auth.middleware";
 
 const router = Router();
 
+// Получить полный прогресс курса с деталями
+router.get(
+  "/course/:courseId/full",
+  authMiddleware,
+  validateRequest(getCourseProgressSchema),
+  progressController.getFullCourseProgress.bind(progressController),
+);
+
+// Получить сводный прогресс курса (проценты)
 router.get(
   "/course/:courseId",
   authMiddleware,
@@ -18,6 +29,15 @@ router.get(
   progressController.getCourseProgress.bind(progressController),
 );
 
+// Получить прогресс по конкретному уроку (ответы на quiz)
+router.get(
+  "/lesson/:lessonId",
+  authMiddleware,
+  validateRequest(getLessonProgressSchema),
+  progressController.getLessonProgress.bind(progressController),
+);
+
+// Отметить урок как пройденный
 router.post(
   "/lesson/:lessonId/complete",
   authMiddleware,
@@ -25,6 +45,15 @@ router.post(
   progressController.markComplete.bind(progressController),
 );
 
+// Обновить прогресс урока (например, ответы на quiz)
+router.patch(
+  "/lesson/:lessonId",
+  authMiddleware,
+  validateRequest(updateLessonProgressSchema),
+  progressController.updateLessonProgress.bind(progressController),
+);
+
+// Сбросить прогресс урока
 router.post(
   "/lesson/:lessonId/reset",
   authMiddleware,
@@ -32,11 +61,12 @@ router.post(
   progressController.resetProgress.bind(progressController),
 );
 
-router.patch(
-  "/lesson/:lessonId",
+// Инициализировать прогресс при записи на курс
+router.post(
+  "/initialize",
   authMiddleware,
-  validateRequest(updateLessonProgressSchema),
-  progressController.updateLessonProgress.bind(progressController),
+  validateRequest(initializeProgressSchema),
+  progressController.initializeProgress.bind(progressController),
 );
 
 export default router;

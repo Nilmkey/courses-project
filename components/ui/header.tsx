@@ -94,10 +94,10 @@ export default function Header() {
             {mounted && user && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-full border border-orange-100 dark:border-orange-800/50 group transition-all hover:scale-105">
                 <Flame
-                  className={`w-5 h-5 ${user.streak > 0 ? "text-orange-500 animate-pulse" : "text-orange-500"}`}
+                  className={`w-5 h-5 ${typeof user.streak === 'object' ? (user.streak as any).count > 0 : (user.streak || 0) > 0 ? "text-orange-500 animate-pulse" : "text-orange-500"}`}
                 />
                 <span className="text-sm font-black text-orange-600 dark:text-orange-400">
-                  {user.streak || 0}
+                  {typeof user.streak === 'object' ? (user.streak as any).count : user.streak || 0}
                 </span>
               </div>
             )}

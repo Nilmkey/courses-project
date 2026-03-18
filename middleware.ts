@@ -40,10 +40,14 @@ export async function middleware(request: NextRequest) {
   }
 
   // Проверка доступа к страницам обучения /learn/[courseSlug]
-  const learnMatch = request.nextUrl.pathname.match(/^\/learn\/([^/]+)$/);
+  const learnMatch = request.nextUrl.pathname.match(/^\/learn\/([^/]+)(\/.*)?$/);
   if (learnMatch) {
     const courseSlug = learnMatch[1];
-    console.log("--- Проверка доступа к обучению ---", { courseSlug });
+    console.log("--- Проверка доступа к обучению ---", { 
+      courseSlug,
+      pathname: request.nextUrl.pathname,
+      hasCookie: !!request.headers.get("cookie")
+    });
 
     try {
       // Получаем сессию пользователя
@@ -55,16 +59,17 @@ export async function middleware(request: NextRequest) {
       );
 
       if (!sessionResponse.ok) {
-        console.log("Пользователь не авторизован, редирект на логин");
+        console.log("❌ Пользователь не авторизован (401), редирект на логин");
         const loginUrl = new URL("/login", request.url);
         loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
         return NextResponse.redirect(loginUrl);
       }
 
       const session = await sessionResponse.json();
-      
+      console.log("✅ Сессия получена:", session?.user?.email);
+
       if (!session?.user) {
-        console.log("Сессия не найдена, редирект на логин");
+        console.log("❌ Сессия не найдена, редирект на логин");
         const loginUrl = new URL("/login", request.url);
         loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
         return NextResponse.redirect(loginUrl);
@@ -72,7 +77,7 @@ export async function middleware(request: NextRequest) {
 
       // Админ имеет доступ ко всем курсам
       if (session.user.role === "admin") {
-        console.log("Админ имеет доступ к курсу");
+        console.log("✅ Админ имеет доступ к курсу");
         return NextResponse.next();
       }
 
@@ -85,12 +90,12 @@ export async function middleware(request: NextRequest) {
       );
 
       if (!courseResponse.ok) {
-        console.log("Курс не найден");
+        console.log("❌ Курс не найден");
         return NextResponse.redirect(new URL("/courses", request.url));
       }
 
       const course = await courseResponse.json();
-      
+
       // Проверяем enrollment
       const enrollmentResponse = await fetch(
         `http://localhost:7777/api/v1/enrollment/${course._id}/check`,
@@ -102,16 +107,16 @@ export async function middleware(request: NextRequest) {
       if (enrollmentResponse.ok) {
         const enrollmentData = await enrollmentResponse.json();
         if (enrollmentData.isEnrolled) {
-          console.log("Пользователь записан на курс, доступ разрешен");
+          console.log("✅ Пользователь записан на курс, доступ разрешен");
           return NextResponse.next();
         }
       }
 
       // Пользователь не записан на курс - редирект на страницу курса
-      console.log("Пользователь не записан на курс, редирект на страницу курса");
+      console.log("⚠️ Пользователь не записан на курс, редирект на страницу курса");
       return NextResponse.redirect(new URL(`/courses/${courseSlug}`, request.url));
     } catch (error) {
-      console.error("Ошибка в middleware обучения:", error);
+      console.error("❌ Ошибка в middleware обучения:", error);
       return NextResponse.redirect(new URL("/courses", request.url));
     }
   }

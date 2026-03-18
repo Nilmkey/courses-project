@@ -1,8 +1,9 @@
 // services/enrollment.service.ts
-import { Enrollment, Course } from '../models';
+import { Enrollment, Course, Progress } from '../models';
 import { ApiError } from '../utils/ApiError';
 import type { IEnrollment } from '../models';
 import type { Types, Document } from 'mongoose';
+import { progressService } from './progress.service';
 
 export interface EnrollmentCreateInput {
   user_id: string | Types.ObjectId;
@@ -53,10 +54,20 @@ export const enrollmentService = {
       user_id: userId,
       course_id: courseId,
     });
+
+    // Инициализируем прогресс для нового курса
+    await progressService.initializeProgress(userId, courseId);
+
     return enrollment;
   },
 
   async unenroll(userId: string, courseId: string): Promise<void> {
+    // Удаляем прогресс вместе с записью
+    await Progress.deleteOne({
+      user_id: userId,
+      course_id: courseId,
+    });
+
     await Enrollment.findOneAndDelete({ user_id: userId, course_id: courseId });
   },
 
@@ -64,11 +75,32 @@ export const enrollmentService = {
     const enrollments = await Enrollment.find({ user_id: userId })
       .populate<{ course_id: PopulatedEnrollment['course_id'] }>('course_id')
       .lean();
-    
+
     // Фильтруем записи, где курс не был найден (удалён)
     return enrollments
       .filter((e): e is typeof e & { course_id: PopulatedEnrollment['course_id'] } => !!e.course_id)
       .map((e) => e as unknown as PopulatedEnrollment);
+  },
+
+  async getMyCoursesWithSections(userId: string): Promise<PopulatedEnrollment[]> {
+    const enrollments = await Enrollment.find({ user_id: userId })
+      .populate<{ course_id: PopulatedEnrollment['course_id'] }>('course_id')
+      .lean();
+
+    // Фильтруем записи, где курс не был найден (удалён)
+    const filteredEnrollments = enrollments
+      .filter((e): e is typeof e & { course_id: PopulatedEnrollment['course_id'] } => !!e.course_id)
+      .map((e) => e as unknown as PopulatedEnrollment);
+
+    // Для каждого курса отдельно получаем секции
+    for (const enrollment of filteredEnrollments) {
+      const sections = await import('../models/Section').then(m => 
+        m.Section.find({ course_id: enrollment.course_id._id }).sort({ order_index: 1 }).lean()
+      );
+      (enrollment.course_id as any).sections = sections;
+    }
+
+    return filteredEnrollments;
   },
 
   async isEnrolled(userId: string, courseId: string): Promise<boolean> {
@@ -91,7 +123,27 @@ export const enrollmentService = {
     )
     .populate<{ course_id: PopulatedEnrollment['course_id'] }>('course_id')
     .lean();
-    
+
     return updated as PopulatedEnrollment | null;
+  },
+
+  /**
+   * Получить прогресс пользователя по всем курсам
+   */
+  async getMyCoursesWithProgress(userId: string): Promise<PopulatedEnrollment[]> {
+    const enrollments = await this.getMyCourses(userId);
+
+    // Для каждого курса получаем прогресс
+    for (const enrollment of enrollments) {
+      const progress = await progressService.getCourseProgress(
+        userId,
+        enrollment.course_id._id.toString()
+      );
+
+      // Добавляем информацию о прогрессе в объект enrollment (как дополнительное поле)
+      (enrollment as any).progress = progress;
+    }
+
+    return enrollments;
   },
 };

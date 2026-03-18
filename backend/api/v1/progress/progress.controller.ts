@@ -6,9 +6,12 @@ import type {
   ResetProgressRequest,
   GetCourseProgressRequest,
   UpdateLessonProgressRequest,
+  GetLessonProgressRequest,
+  InitializeProgressRequest,
   CourseProgressResponse,
   LessonProgressResponse,
   QuizAnswerResponse,
+  CourseProgressDetailResponse,
 } from "./progress.types";
 import { ApiError } from "../../../utils/ApiError";
 import type { AuthenticatedUser } from "../../../middleware/auth.middleware";
@@ -46,6 +49,94 @@ const toCourseProgressResponse = (
 });
 
 export const progressController = {
+  /**
+   * Получить полный прогресс курса с деталями по урокам
+   */
+  async getFullCourseProgress(
+    req: Request<GetCourseProgressRequest["params"]>,
+    res: Response<CourseProgressDetailResponse>,
+  ): Promise<void> {
+    const { courseId } = req.params;
+
+    const authReq = req as AuthRequest;
+    if (!authReq.user) {
+      throw ApiError.unauthorized("Требуется авторизация");
+    }
+
+    const progress = await progressService.getFullCourseProgress(
+      authReq.user.id,
+      courseId,
+    );
+
+    if (!progress) {
+      throw ApiError.notFound("Курс не найден");
+    }
+
+    res.json(progress);
+  },
+
+  /**
+   * Получить сводный прогресс курса (проценты)
+   */
+  async getCourseProgress(
+    req: Request<GetCourseProgressRequest["params"]>,
+    res: Response<CourseProgressResponse>,
+  ): Promise<void> {
+    const { courseId } = req.params;
+
+    const authReq = req as AuthRequest;
+    if (!authReq.user) {
+      throw ApiError.unauthorized("Требуется авторизация");
+    }
+
+    const progress = await progressService.getCourseProgress(
+      authReq.user.id,
+      courseId,
+    );
+
+    if (!progress) {
+      throw ApiError.notFound("Курс не найден или прогресс не отслеживается");
+    }
+
+    res.json(toCourseProgressResponse(progress));
+  },
+
+  /**
+   * Получить прогресс по конкретному уроку
+   */
+  async getLessonProgress(
+    req: Request<
+      GetLessonProgressRequest["params"],
+      unknown,
+      unknown,
+      GetLessonProgressRequest["query"]
+    >,
+    res: Response<QuizAnswerResponse[]>,
+  ): Promise<void> {
+    const { lessonId } = req.params;
+    const { courseId } = req.query;
+
+    const authReq = req as AuthRequest;
+    if (!authReq.user) {
+      throw ApiError.unauthorized("Требуется авторизация");
+    }
+
+    const answers = await progressService.getLessonProgress(
+      authReq.user.id,
+      lessonId,
+      courseId,
+    );
+
+    if (!answers) {
+      throw ApiError.notFound("Прогресс урока не найден");
+    }
+
+    res.json(answers.map(toQuizAnswerResponse));
+  },
+
+  /**
+   * Отметить урок как пройденный
+   */
   async markComplete(
     req: Request<
       MarkLessonCompleteRequest["params"],
@@ -83,6 +174,9 @@ export const progressController = {
     res.json(toLessonProgressResponse(lessonProgress));
   },
 
+  /**
+   * Сбросить прогресс урока
+   */
   async resetProgress(
     req: Request<
       ResetProgressRequest["params"],
@@ -103,29 +197,9 @@ export const progressController = {
     res.status(204).send();
   },
 
-  async getCourseProgress(
-    req: Request<GetCourseProgressRequest["params"]>,
-    res: Response<CourseProgressResponse>,
-  ): Promise<void> {
-    const { courseId } = req.params;
-
-    const authReq = req as AuthRequest;
-    if (!authReq.user) {
-      throw ApiError.unauthorized("Требуется авторизация");
-    }
-
-    const progress = await progressService.getCourseProgress(
-      authReq.user.id,
-      courseId,
-    );
-
-    if (!progress) {
-      throw ApiError.notFound("Курс не найден или прогресс не отслеживается");
-    }
-
-    res.json(toCourseProgressResponse(progress));
-  },
-
+  /**
+   * Обновить прогресс урока (например, ответы на quiz)
+   */
   async updateLessonProgress(
     req: Request<
       UpdateLessonProgressRequest["params"],
@@ -166,5 +240,23 @@ export const progressController = {
     }
 
     res.json(toLessonProgressResponse(lessonProgress));
+  },
+
+  /**
+   * Инициализировать прогресс при записи на курс
+   */
+  async initializeProgress(
+    req: Request<unknown, unknown, InitializeProgressRequest["body"]>,
+    res: Response<void>,
+  ): Promise<void> {
+    const { courseId } = req.body;
+
+    const authReq = req as AuthRequest;
+    if (!authReq.user) {
+      throw ApiError.unauthorized("Требуется авторизация");
+    }
+
+    await progressService.initializeProgress(authReq.user.id, courseId);
+    res.status(204).send();
   },
 };

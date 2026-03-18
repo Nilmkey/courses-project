@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { CheckCircle2, Circle, XCircle } from "lucide-react";
 import { CompletionButton } from "@/components/learning/CompletionButton";
 import { useLearning } from "@/hooks/useLearning";
@@ -15,6 +15,13 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
   const [score, setScore] = useState<{ correct: number; total: number } | null>(
     null,
   );
+
+  // Сброс состояния при изменении контента (переход к другому блоку)
+  useEffect(() => {
+    setAnswers({});
+    setSubmitted(false);
+    setScore(null);
+  }, [content]);
 
   // Обработка ответа для одиночного выбора
   const handleSingleAnswer = useCallback(
