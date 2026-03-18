@@ -179,9 +179,11 @@ export default function AdminDashboard() {
                       <Code className="w-8 h-8 text-white/80" />
                     </div>
                     <div className="flex-1 text-center sm:text-left">
-                      <h3 className="text-lg font-black dark:text-white">
-                        {course.title}
-                      </h3>
+                      <Link href={`/learn/${course.slug}`}>
+                        <h3 className="text-lg font-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">
+                          {course.title}
+                        </h3>
+                      </Link>
                       <p className="text-xs font-mono text-blue-500 tracking-tight">
                         /{course.slug}
                       </p>
