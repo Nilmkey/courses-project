@@ -436,7 +436,7 @@ export default function ProfilePage() {
             icon={<Flame size={22} className="text-orange-500" />}
             bg="bg-orange-50 dark:bg-orange-500/10"
             border="border-orange-100 dark:border-orange-500/20"
-            value={user?.streak || 0}
+            value={user?.streak.count || 0}
             label="Дней подряд"
           />
           <StatCard
