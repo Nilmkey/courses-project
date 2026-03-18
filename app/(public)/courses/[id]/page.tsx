@@ -146,6 +146,18 @@ export default function CoursePage() {
       return;
     }
 
+    // Если пользователь уже записан, просто переходим к курсу
+    if (isEnrolled) {
+      router.push(`/learn/${course.slug}`);
+      return;
+    }
+
+    // Если набор закрыт, показываем ошибку
+    if (!course.isOpenForEnrollment) {
+      toast.error("Набор на этот курс закрыт");
+      return;
+    }
+
     setIsProcessing(true);
     try {
       await enrollmentApi.enroll(course._id);
@@ -334,16 +346,16 @@ export default function CoursePage() {
                 </div>
               </div>
 
-              {course.isOpenForEnrollment ? (
-                isEnrolled ? (
-                  <Button
-                    onClick={handleGoToCourse}
-                    disabled={isProcessing}
-                    className="w-full h-16 bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-bold rounded-2xl shadow-lg shadow-emerald-500/25 transition-all active:scale-[0.98] mt-4"
-                  >
-                    <BookOpen className="w-5 h-5 mr-2" /> Перейти к курсу
-                  </Button>
-                ) : isLoggedIn ? (
+              {isEnrolled ? (
+                <Button
+                  onClick={handleGoToCourse}
+                  disabled={isProcessing}
+                  className="w-full h-16 bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-bold rounded-2xl shadow-lg shadow-emerald-500/25 transition-all active:scale-[0.98] mt-4"
+                >
+                  <BookOpen className="w-5 h-5 mr-2" /> Перейти к курсу
+                </Button>
+              ) : course.isOpenForEnrollment ? (
+                isLoggedIn ? (
                   <Button
                     onClick={handleEnroll}
                     disabled={isProcessing || checkingEnrollment}

@@ -35,20 +35,18 @@ export const enrollmentService = {
       throw ApiError.notFound("Курс не найден");
     }
 
-    if (!course.isOpenForEnrollment) {
-      throw ApiError.badRequest("Набор на этот курс закрыт");
-    }
-
-    if (!course.isOpenForEnrollment) {
-      throw ApiError.badRequest("Набор на этот курс закрыт");
-    }
-
+    // Проверяем, записан ли уже пользователь на этот курс
     const existing = await Enrollment.findOne({
       user_id: userId,
       course_id: courseId,
     });
     if (existing) {
       throw ApiError.conflict("Вы уже записаны на этот курс");
+    }
+
+    // Если набор закрыт и пользователь еще не записан - запрещаем запись
+    if (!course.isOpenForEnrollment) {
+      throw ApiError.badRequest("Набор на этот курс закрыт");
     }
 
     const enrollment = await Enrollment.create({
