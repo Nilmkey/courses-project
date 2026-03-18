@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useLearning } from "@/hooks/useLearning";
 import { SectionItem } from "./SectionItem";
+import { StreakFire } from "@/components/StreakFire";
 import { BookOpen, ArrowLeft, Sun, Moon, Trophy } from "lucide-react";
 
 export function CourseSidebar() {

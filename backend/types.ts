@@ -1,7 +1,7 @@
 export interface StreakObj {
   count: number;
   isFire: boolean;
-  updateAt: Date;
+  updatedAt: Date;
 }
 
 export interface ExtendedUser {

@@ -11,7 +11,12 @@ import { ApiError } from "@/lib/api/api-client";
 import { API_BASE_URL } from "@/config/config";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
-import { enrollmentApi, EnrollmentResponse, EnrollmentWithProgress } from "@/lib/api/entities/api-enrollment";
+import {
+  enrollmentApi,
+  EnrollmentResponse,
+  EnrollmentWithProgress,
+} from "@/lib/api/entities/api-enrollment";
+import { useStreak } from "@/hooks/useStreak";
 import {
   Code,
   Flame,
@@ -91,7 +96,9 @@ export default function ProfilePage() {
 
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
-  const [enrolledCourses, setEnrolledCourses] = useState<EnrollmentWithProgress[]>([]);
+  const [enrolledCourses, setEnrolledCourses] = useState<
+    EnrollmentWithProgress[]
+  >([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [_isUploading, setIsUploading] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
@@ -166,8 +173,10 @@ export default function ProfilePage() {
   const totalPercentage =
     startedCourses > 0
       ? Math.round(
-          enrolledCourses.reduce((sum, e) => sum + (e.status === "completed" ? 100 : 0), 0) /
-            startedCourses,
+          enrolledCourses.reduce(
+            (sum, e) => sum + (e.status === "completed" ? 100 : 0),
+            0,
+          ) / startedCourses,
         )
       : 0;
 
@@ -284,7 +293,6 @@ export default function ProfilePage() {
       },
     );
   };
-
 
   return (
     <div className="min-h-screen bg-[#f0f5ff] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 flex flex-col">
@@ -436,13 +444,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            icon={<Flame size={22} className="text-orange-500" />}
-            bg="bg-orange-50 dark:bg-orange-500/10"
-            border="border-orange-100 dark:border-orange-500/20"
-            value={typeof user?.streak === 'object' ? (user.streak as any).count || 0 : user?.streak || 0}
-            label="Дней подряд"
-          />
+          <StreakStatCard />
           <StatCard
             icon={<Target size={22} className="text-[#3b5bdb]" />}
             bg="bg-indigo-50 dark:bg-indigo-500/10"
@@ -520,10 +522,12 @@ export default function ProfilePage() {
                   const info = coursesInfo[courseId] || coursesInfo.html;
                   const isCompleted = enrollment.status === "completed";
                   const progress = enrollment.progress?.progress || 0;
-                  
+
                   // Получаем количество секций из курса (если есть sections)
                   const totalSections = (course as any).sections?.length || 0;
-                  const completedSections = isCompleted ? totalSections : Math.floor((progress / 100) * totalSections);
+                  const completedSections = isCompleted
+                    ? totalSections
+                    : Math.floor((progress / 100) * totalSections);
 
                   return (
                     <div
@@ -546,19 +550,21 @@ export default function ProfilePage() {
                           <h4 className="font-bold text-lg leading-tight group-hover:text-[#3b5bdb] transition-colors dark:text-white">
                             {course.title}
                           </h4>
-                          <span className={`font-bold ${isCompleted ? 'text-emerald-600' : info.text}`}>
-                            {isCompleted ? 'Завершён' : `${progress}%`}
+                          <span
+                            className={`font-bold ${isCompleted ? "text-emerald-600" : info.text}`}
+                          >
+                            {isCompleted ? "Завершён" : `${progress}%`}
                           </span>
                         </div>
-                        
+
                         {/* Прогресс-бар */}
                         <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                           <div
-                            className={`absolute h-full bg-gradient-to-r ${isCompleted ? 'from-emerald-500 to-teal-500' : info.gradient} transition-all duration-1000`}
+                            className={`absolute h-full bg-gradient-to-r ${isCompleted ? "from-emerald-500 to-teal-500" : info.gradient} transition-all duration-1000`}
                             style={{ width: `${progress}%` }}
                           />
                         </div>
-                        
+
                         {/* Детали прогресса: уроки и секции */}
                         <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
                           <span className="flex items-center gap-1">
@@ -574,7 +580,7 @@ export default function ProfilePage() {
                               уроков
                             </span>
                           </span>
-                          
+
                           {totalSections > 0 && (
                             <>
                               <span className="w-px h-3 bg-slate-300 dark:bg-slate-600" />
@@ -601,7 +607,8 @@ export default function ProfilePage() {
                           href={`/learn/${course.slug}`}
                           className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#3b5bdb] bg-indigo-50 dark:bg-indigo-500/10 rounded-xl hover:bg-[#3b5bdb] hover:text-white transition-all"
                         >
-                          {isCompleted ? 'Повторить' : 'Продолжить'} <ChevronRight size={16} />
+                          {isCompleted ? "Повторить" : "Продолжить"}{" "}
+                          <ChevronRight size={16} />
                         </Link>
                       </div>
                     </div>
@@ -640,12 +647,21 @@ interface StatCardProps {
   icon: React.ReactNode;
   bg: string;
   border: string;
-  value: string | number;
+  value?: string | number;
   label: string;
   suffix?: string;
+  customContent?: React.ReactNode;
 }
 
-function StatCard({ icon, bg, border, value, label, suffix }: StatCardProps) {
+function StatCard({
+  icon,
+  bg,
+  border,
+  value,
+  label,
+  suffix,
+  customContent
+}: StatCardProps) {
   return (
     <div
       className={`flex flex-col items-center justify-center p-5 rounded-2xl bg-white dark:bg-slate-900 border ${border} shadow-sm transition-all duration-300 hover:-translate-y-1 group`}
@@ -655,11 +671,39 @@ function StatCard({ icon, bg, border, value, label, suffix }: StatCardProps) {
       >
         {icon}
       </div>
-      <div className="text-2xl font-extrabold text-slate-800 dark:text-white flex items-center gap-1">
-        {value} {suffix && <span className="text-lg">{suffix}</span>}
+      {customContent ? (
+        customContent
+      ) : (
+        <>
+          <div className="text-2xl font-extrabold text-slate-800 dark:text-white flex items-center gap-1">
+            {value} {suffix && <span className="text-lg">{suffix}</span>}
+          </div>
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+            {label}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function StreakStatCard() {
+  const { count, isLoading } = useStreak();
+
+  return (
+    <div
+      className={`flex flex-col items-center justify-center p-5 rounded-2xl bg-white dark:bg-slate-900 border border-orange-100 dark:border-orange-500/20 shadow-sm transition-all duration-300 hover:-translate-y-1 group`}
+    >
+      <div
+        className={`w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center mb-3`}
+      >
+        <Flame size={22} className="text-orange-500" />
+      </div>
+      <div className="text-3xl font-extrabold text-slate-800 dark:text-white">
+        {isLoading ? "..." : count}
       </div>
       <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
-        {label}
+        дней подряд
       </div>
     </div>
   );
