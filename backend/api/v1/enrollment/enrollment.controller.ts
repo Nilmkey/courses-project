@@ -93,15 +93,15 @@ export const enrollmentController = {
       throw ApiError.unauthorized("Требуется авторизация");
     }
 
-    const enrollments = await enrollmentService.getMyCourses(authReq.user.id);
+    const enrollments = await enrollmentService.getMyCoursesWithSections(authReq.user.id);
     console.log("=== Backend getMyCourses ===", JSON.stringify(enrollments, null, 2));
-    
+
     const response = enrollments.map((e) =>
       toEnrollmentResponse(e as unknown as EnrollmentData),
     );
-    
+
     console.log("=== Backend Response ===", JSON.stringify(response, null, 2));
-    
+
     res.json({
       enrollments: response,
     });

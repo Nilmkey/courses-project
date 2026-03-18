@@ -1,4 +1,5 @@
 import { api } from "../api-client";
+import { progressApi } from "./api-progress";
 
 export interface EnrollmentResponse {
   _id: string;
@@ -13,6 +14,14 @@ export interface EnrollmentResponse {
     slug: string;
     thumbnail?: string;
     level: string;
+  };
+}
+
+export interface EnrollmentWithProgress extends EnrollmentResponse {
+  progress?: {
+    totalLessons: number;
+    completedLessons: number;
+    progress: number;
   };
 }
 
@@ -60,7 +69,43 @@ export const enrollmentApi = {
   },
 
   /**
-   * Получить все курсы пользователя
+   * Получить все курсы пользователя с прогрессом
+   */
+  getMyCoursesWithProgress: async (): Promise<EnrollmentWithProgress[]> => {
+    const response = await api.get<EnrollmentsListResponse>(
+      "/v1/enrollment/my",
+      undefined,
+      true,
+    );
+    
+    // Получаем прогресс для каждого курса
+    const enrollmentsWithProgress: EnrollmentWithProgress[] = [];
+    
+    for (const enrollment of response.enrollments) {
+      try {
+        const progress = await progressApi.getCourseProgress(enrollment.course_id);
+        enrollmentsWithProgress.push({
+          ...enrollment,
+          progress,
+        });
+      } catch (error) {
+        // Если не удалось получить прогресс, используем дефолтное значение
+        enrollmentsWithProgress.push({
+          ...enrollment,
+          progress: {
+            totalLessons: 0,
+            completedLessons: 0,
+            progress: 0,
+          },
+        });
+      }
+    }
+    
+    return enrollmentsWithProgress;
+  },
+
+  /**
+   * Получить все курсы пользователя (без прогресса)
    */
   getMyCourses: async (): Promise<EnrollmentsListResponse> => {
     return api.get<EnrollmentsListResponse>(

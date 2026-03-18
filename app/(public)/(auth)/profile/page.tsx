@@ -11,7 +11,10 @@ import { ApiError } from "@/lib/api/api-client";
 import { API_BASE_URL } from "@/config/config";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
-import { enrollmentApi, EnrollmentResponse } from "@/lib/api/entities/api-enrollment";
+import {
+  enrollmentApi,
+  EnrollmentResponse,
+} from "@/lib/api/entities/api-enrollment";
 import { StreakFire } from "@/components/StreakFire";
 import {
   Code,
@@ -92,7 +95,9 @@ export default function ProfilePage() {
 
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
-  const [enrolledCourses, setEnrolledCourses] = useState<EnrollmentResponse[]>([]);
+  const [enrolledCourses, setEnrolledCourses] = useState<
+    EnrollmentWithProgress[]
+  >([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [_isUploading, setIsUploading] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
@@ -129,9 +134,9 @@ export default function ProfilePage() {
   const loadEnrolledCourses = useCallback(async () => {
     try {
       setLoadingCourses(true);
-      const response = await enrollmentApi.getMyCourses();
-      console.log("=== Enrolled Courses Debug ===", response);
-      setEnrolledCourses(response.enrollments || []);
+      const enrollments = await enrollmentApi.getMyCoursesWithProgress();
+      console.log("=== Enrolled Courses Debug ===", enrollments);
+      setEnrolledCourses(enrollments || []);
     } catch (error) {
       console.error("Ошибка загрузки курсов:", error);
       setEnrolledCourses([]);
@@ -163,8 +168,10 @@ export default function ProfilePage() {
   const totalPercentage =
     startedCourses > 0
       ? Math.round(
-          enrolledCourses.reduce((sum, e) => sum + (e.status === "completed" ? 100 : 0), 0) /
-            startedCourses,
+          enrolledCourses.reduce(
+            (sum, e) => sum + (e.status === "completed" ? 100 : 0),
+            0,
+          ) / startedCourses,
         )
       : 0;
 
@@ -281,7 +288,6 @@ export default function ProfilePage() {
       },
     );
   };
-
 
   return (
     <div className="min-h-screen bg-[#f0f5ff] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 flex flex-col">
@@ -517,11 +523,18 @@ export default function ProfilePage() {
                 {enrolledCourses.map((enrollment) => {
                   const course = enrollment.course;
                   if (!course) return null;
-                  
+
                   // Пытаемся найти информацию о курсе по slug или используем дефолтную
                   const courseId = course.slug || course._id;
                   const info = coursesInfo[courseId] || coursesInfo.html;
                   const isCompleted = enrollment.status === "completed";
+                  const progress = enrollment.progress?.progress || 0;
+
+                  // Получаем количество секций из курса (если есть sections)
+                  const totalSections = (course as any).sections?.length || 0;
+                  const completedSections = isCompleted
+                    ? totalSections
+                    : Math.floor((progress / 100) * totalSections);
 
                   return (
                     <div
@@ -544,15 +557,55 @@ export default function ProfilePage() {
                           <h4 className="font-bold text-lg leading-tight group-hover:text-[#3b5bdb] transition-colors dark:text-white">
                             {course.title}
                           </h4>
-                          <span className={`font-bold ${isCompleted ? 'text-emerald-600' : info.text}`}>
-                            {isCompleted ? 'Завершён' : 'В процессе'}
+                          <span
+                            className={`font-bold ${isCompleted ? "text-emerald-600" : info.text}`}
+                          >
+                            {isCompleted ? "Завершён" : `${progress}%`}
                           </span>
                         </div>
+
+                        {/* Прогресс-бар */}
                         <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                           <div
-                            className={`absolute h-full bg-gradient-to-r ${isCompleted ? 'from-emerald-500 to-teal-500' : info.gradient} transition-all duration-1000`}
-                            style={{ width: isCompleted ? '100%' : '30%' }}
+                            className={`absolute h-full bg-gradient-to-r ${isCompleted ? "from-emerald-500 to-teal-500" : info.gradient} transition-all duration-1000`}
+                            style={{ width: `${progress}%` }}
                           />
+                        </div>
+
+                        {/* Детали прогресса: уроки и секции */}
+                        <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                          <span className="flex items-center gap-1">
+                            <BookOpen size={12} />
+                            <span>
+                              <span className="font-bold text-slate-700 dark:text-slate-300">
+                                {enrollment.progress?.completedLessons || 0}
+                              </span>{" "}
+                              из{" "}
+                              <span className="font-bold text-slate-700 dark:text-slate-300">
+                                {enrollment.progress?.totalLessons || 0}
+                              </span>{" "}
+                              уроков
+                            </span>
+                          </span>
+
+                          {totalSections > 0 && (
+                            <>
+                              <span className="w-px h-3 bg-slate-300 dark:bg-slate-600" />
+                              <span className="flex items-center gap-1">
+                                <Target size={12} />
+                                <span>
+                                  <span className="font-bold text-slate-700 dark:text-slate-300">
+                                    {completedSections}
+                                  </span>{" "}
+                                  из{" "}
+                                  <span className="font-bold text-slate-700 dark:text-slate-300">
+                                    {totalSections}
+                                  </span>{" "}
+                                  секций
+                                </span>
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -561,7 +614,8 @@ export default function ProfilePage() {
                           href={`/learn/${course.slug}`}
                           className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#3b5bdb] bg-indigo-50 dark:bg-indigo-500/10 rounded-xl hover:bg-[#3b5bdb] hover:text-white transition-all"
                         >
-                          {isCompleted ? 'Повторить' : 'Продолжить'} <ChevronRight size={16} />
+                          {isCompleted ? "Повторить" : "Продолжить"}{" "}
+                          <ChevronRight size={16} />
                         </Link>
                       </div>
                     </div>

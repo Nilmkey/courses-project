@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
@@ -39,6 +39,7 @@ import {
   toLessonBlockData,
 } from "@/lib/api/entities/api-lessons";
 import { useToast } from "@/hooks/useToast";
+import { Toaster } from "react-hot-toast";
 
 export default function Editor() {
   const params = useParams();
@@ -109,9 +110,76 @@ export default function Editor() {
 
   const isTempId = useCallback((id: string) => id.startsWith("temp_"), []);
 
+  const validateBlocks = useCallback((): string | null => {
+    // Проверка названия урока
+    if (!lessonInfo.title.trim()) {
+      return "Укажите название урока";
+    }
+
+    // Проверка блоков
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      const blockNumber = i + 1;
+
+      // Проверка названия блока
+      if (!block.title.trim()) {
+        return `Блок #${blockNumber}: укажите название блока`;
+      }
+
+      // Проверка содержимого блока в зависимости от типа
+      if (block.type === "text") {
+        if (!block.content.text?.trim()) {
+          return `Блок #${blockNumber} (текст): добавьте текстовое содержимое`;
+        }
+      } else if (block.type === "video") {
+        if (!block.content.url?.trim()) {
+          return `Блок #${blockNumber} (видео): укажите ссылку на видео`;
+        }
+      } else if (block.type === "quiz") {
+        if (!block.content.questions || block.content.questions.length === 0) {
+          return `Блок #${blockNumber} (викторина): добавьте хотя бы один вопрос`;
+        }
+
+        // Проверка каждого вопроса в викторине
+        for (let j = 0; j < block.content.questions.length; j++) {
+          const question = block.content.questions[j];
+          if (!question.questionText.trim()) {
+            return `Блок #${blockNumber} (викторина), вопрос #${j + 1}: укажите текст вопроса`;
+          }
+
+          // Проверка вариантов ответов для single и multiple
+          if (question.type === "single" || question.type === "multiple") {
+            if (!question.options || question.options.length === 0) {
+              return `Блок #${blockNumber} (викторина), вопрос #${j + 1}: добавьте варианты ответов`;
+            }
+            if (
+              (question.type === "single" && question.correctAnswerIndex === undefined) ||
+              (question.type === "multiple" && (!question.correctAnswerIndices || question.correctAnswerIndices.length === 0))
+            ) {
+              return `Блок #${blockNumber} (викторина), вопрос #${j + 1}: укажите правильный ответ`;
+            }
+          } else if (question.type === "text") {
+            if (!question.correctAnswerText?.trim()) {
+              return `Блок #${blockNumber} (викторина), вопрос #${j + 1}: укажите правильный ответ`;
+            }
+          }
+        }
+      }
+    }
+
+    return null;
+  }, [blocks, lessonInfo.title]);
+
   const handleSave = useCallback(async () => {
     if (!lessonId) {
       toast.error("ID урока не определён");
+      return;
+    }
+
+    // Валидация данных перед сохранением
+    const validationError = validateBlocks();
+    if (validationError) {
+      toast.error(validationError);
       return;
     }
 
@@ -134,10 +202,25 @@ export default function Editor() {
     } finally {
       setIsSaving(false);
     }
-  }, [blocks, lessonId, lessonInfo.title, toast]);
+  }, [blocks, lessonId, lessonInfo.title, toast, validateBlocks]);
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: resolvedTheme === "dark" ? "#0a0a0a" : "#ffffff",
+            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+            border:
+              resolvedTheme === "dark"
+                ? "1px solid #1e293b"
+                : "1px solid #e2e8f0",
+            borderRadius: "0.75rem",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+          },
+        }}
+      />
       <div className="flex items-center justify-between mb-10">
         <div className="flex items-center gap-4">
           <button
@@ -152,7 +235,6 @@ export default function Editor() {
             <ArrowLeft size={18} />
             <span>Назад к секциям</span>
           </button>
-
 
           {mounted && (
             <button

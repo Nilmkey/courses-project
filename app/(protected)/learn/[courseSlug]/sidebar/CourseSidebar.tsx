@@ -12,7 +12,7 @@ export function CourseSidebar() {
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const { course, sections } = useLearning();
+  const { course, sections, overallProgress } = useLearning();
 
   useEffect(() => {
     setMounted(true);
@@ -32,10 +32,12 @@ export function CourseSidebar() {
             <ArrowLeft size={16} />
             <span className="font-medium">Назад</span>
           </button>
-          
+
           {mounted && (
             <button
-              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              onClick={() =>
+                setTheme(resolvedTheme === "dark" ? "light" : "dark")
+              }
               className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               title="Переключить тему"
             >
@@ -47,7 +49,7 @@ export function CourseSidebar() {
             </button>
           )}
         </div>
-        
+
         {/* Название курса */}
         <div className="flex items-center gap-2 mb-2">
           <BookOpen className="w-5 h-5 text-blue-600" />
@@ -58,6 +60,63 @@ export function CourseSidebar() {
         <h2 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-2">
           {course.title}
         </h2>
+      </div>
+
+      {/* Прогресс курса */}
+      <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-b dark:border-gray-700">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Trophy
+              className={`w-4 h-4 ${
+                overallProgress.progress === 100
+                  ? "text-yellow-500"
+                  : "text-emerald-600"
+              }`}
+            />
+            <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
+              Ваш прогресс
+            </span>
+          </div>
+          <span
+            className={`text-lg font-black ${
+              overallProgress.progress === 100
+                ? "text-yellow-600"
+                : "text-emerald-600"
+            }`}
+          >
+            {overallProgress.progress}%
+          </span>
+        </div>
+
+        {/* Прогресс-бар */}
+        <div className="relative h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div
+            className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ease-out ${
+              overallProgress.progress === 100
+                ? "bg-gradient-to-r from-yellow-400 to-yellow-500"
+                : "bg-gradient-to-r from-emerald-500 to-green-500"
+            }`}
+            style={{ width: `${overallProgress.progress}%` }}
+          />
+        </div>
+
+        <div className="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <span>
+            <span className="font-bold text-gray-700 dark:text-gray-200">
+              {overallProgress.completedLessons}
+            </span>{" "}
+            из{" "}
+            <span className="font-bold text-gray-700 dark:text-gray-200">
+              {overallProgress.totalLessons}
+            </span>{" "}
+            уроков
+          </span>
+          {overallProgress.progress === 100 && (
+            <span className="text-xs font-bold text-yellow-600 animate-pulse">
+              🎉 Курс завершён!
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Список секций */}
@@ -73,7 +132,7 @@ export function CourseSidebar() {
         <div className="mb-3">
           <StreakFire size="sm" showCount={true} />
         </div>
-        
+
         <div className="text-xs text-gray-500 dark:text-gray-400">
           <span className="font-semibold">{sections.length}</span> секций •{" "}
           <span className="font-semibold">

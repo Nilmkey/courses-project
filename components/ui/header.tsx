@@ -98,9 +98,7 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-2">
-            {mounted && user && (
-              <StreakFire showCount={true} size="sm" />
-            )}
+            {mounted && user && <StreakFire showCount={true} size="sm" />}
 
             {mounted && (
               <Button
