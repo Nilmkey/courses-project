@@ -41,8 +41,8 @@ export function LessonItem({
       <div
         className={`flex items-center gap-2 px-8 py-2.5 cursor-pointer transition-colors ${
           isActive
-            ? "bg-blue-50 border-l-2 border-blue-500"
-            : "hover:bg-gray-100 border-l-2 border-transparent"
+            ? "bg-blue-50 dark:bg-blue-900/20 border-l-2 border-[#3b5bdb] dark:border-indigo-400"
+            : "hover:bg-slate-100 dark:hover:bg-slate-800 border-l-2 border-transparent"
         }`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
@@ -51,13 +51,13 @@ export function LessonItem({
         </span>
         <span
           className={`text-sm font-medium ${
-            isActive ? "text-blue-700" : "text-gray-700"
+            isActive ? "text-blue-700 dark:text-blue-300" : "text-slate-700 dark:text-slate-300"
           }`}
         >
           {lesson.title}
         </span>
         {lesson.content_blocks.length > 0 && (
-          <span className="ml-auto text-xs text-gray-400">
+          <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
             {lesson.content_blocks.length}{" "}
             {lesson.content_blocks.length === 1 ? "блок" : "блоков"}
           </span>
@@ -65,7 +65,7 @@ export function LessonItem({
       </div>
 
       {isExpanded && (
-        <div className="bg-white dark:bg-gray-800">
+        <div className="bg-white dark:bg-slate-800">
           {lesson.content_blocks.map((block, index) => {
             const blockId = block.id || block._id || '';
             return (

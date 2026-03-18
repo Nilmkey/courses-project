@@ -43,7 +43,7 @@ const ReadonlyEditor = ({ content }: ReadonlyEditorProps) => {
 export function TextBlockView({ content }: { content: ITextBlock["content"] }) {
   return (
     <div>
-      <div className="bg-white rounded-xl border border-gray-200 p-8 mb-6 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-8 mb-6 shadow-sm">
         <MilkdownProvider>
           <ReadonlyEditor content={content.text || ""} />
         </MilkdownProvider>

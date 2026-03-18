@@ -79,7 +79,7 @@ export function VideoBlockView({
     <div>
       {/* Заголовок видео */}
       {content.titleVideo && (
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
           {content.titleVideo}
         </h2>
       )}
@@ -90,11 +90,11 @@ export function VideoBlockView({
           <VideoPreview embedUrl={embedUrl} isDirectVideo={isDirectVideo} />
         </div>
       ) : (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-8 mb-6 text-center">
-          <div className="text-red-600 font-medium">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-8 mb-6 text-center">
+          <div className="text-red-600 dark:text-red-400 font-medium">
             Неподдерживаемый формат видео
           </div>
-          <p className="text-red-500 text-sm mt-2">
+          <p className="text-red-500 dark:text-red-400 text-sm mt-2">
             Пожалуйста, используйте ссылки на YouTube, Vimeo или прямые ссылки
             на .mp4/.webm/.ogg файлы
           </p>
