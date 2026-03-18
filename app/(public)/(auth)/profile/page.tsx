@@ -14,8 +14,9 @@ import { useToast } from "@/hooks/useToast";
 import {
   enrollmentApi,
   EnrollmentResponse,
+  EnrollmentWithProgress,
 } from "@/lib/api/entities/api-enrollment";
-import { StreakFire } from "@/components/StreakFire";
+import { useStreak } from "@/hooks/useStreak";
 import {
   Code,
   Flame,
@@ -443,19 +444,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div
-            className={`flex flex-col items-center justify-center p-5 rounded-2xl bg-white dark:bg-slate-900 border border-orange-100 dark:border-orange-500/20 shadow-sm transition-all duration-300 hover:-translate-y-1 group`}
-          >
-            <div
-              className={`w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center mb-3`}
-            >
-              <Flame size={22} className="text-orange-500" />
-            </div>
-            <StreakFire showCount={true} size="md" />
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">
-              Дней подряд
-            </div>
-          </div>
+          <StreakStatCard />
           <StatCard
             icon={<Target size={22} className="text-[#3b5bdb]" />}
             bg="bg-indigo-50 dark:bg-indigo-500/10"
@@ -658,12 +647,21 @@ interface StatCardProps {
   icon: React.ReactNode;
   bg: string;
   border: string;
-  value: string | number;
+  value?: string | number;
   label: string;
   suffix?: string;
+  customContent?: React.ReactNode;
 }
 
-function StatCard({ icon, bg, border, value, label, suffix }: StatCardProps) {
+function StatCard({
+  icon,
+  bg,
+  border,
+  value,
+  label,
+  suffix,
+  customContent
+}: StatCardProps) {
   return (
     <div
       className={`flex flex-col items-center justify-center p-5 rounded-2xl bg-white dark:bg-slate-900 border ${border} shadow-sm transition-all duration-300 hover:-translate-y-1 group`}
@@ -673,11 +671,39 @@ function StatCard({ icon, bg, border, value, label, suffix }: StatCardProps) {
       >
         {icon}
       </div>
-      <div className="text-2xl font-extrabold text-slate-800 dark:text-white flex items-center gap-1">
-        {value} {suffix && <span className="text-lg">{suffix}</span>}
+      {customContent ? (
+        customContent
+      ) : (
+        <>
+          <div className="text-2xl font-extrabold text-slate-800 dark:text-white flex items-center gap-1">
+            {value} {suffix && <span className="text-lg">{suffix}</span>}
+          </div>
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+            {label}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function StreakStatCard() {
+  const { count, isLoading } = useStreak();
+
+  return (
+    <div
+      className={`flex flex-col items-center justify-center p-5 rounded-2xl bg-white dark:bg-slate-900 border border-orange-100 dark:border-orange-500/20 shadow-sm transition-all duration-300 hover:-translate-y-1 group`}
+    >
+      <div
+        className={`w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center mb-3`}
+      >
+        <Flame size={22} className="text-orange-500" />
+      </div>
+      <div className="text-3xl font-extrabold text-slate-800 dark:text-white">
+        {isLoading ? "..." : count}
       </div>
       <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
-        {label}
+        дней подряд
       </div>
     </div>
   );
