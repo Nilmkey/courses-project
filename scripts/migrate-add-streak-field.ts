@@ -1,65 +1,62 @@
-import { MongoClient, ObjectId } from "mongodb";
+import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
-
 dotenv.config();
 
 const DB_URL =
-  process.env.DB_URL || "mongodb://localhost:27017/courses-project";
+  process.env.DB_URL ?? "mongodb://localhost:27017/courses-project";
+const DB_NAME = process.env.DB_NAME ?? "courses-project";
+const COLLECTION_NAME = "user";
+const isDryRun = process.argv.includes("--dry-run");
 
-async function migrateUsers() {
-  const client = new MongoClient(DB_URL);
+// ✅ Ищем тех, у кого streak отсутствует или null
+const STREAK_FILTER = {
+  $or: [{ streak: { $exists: false } }, { streak: null }],
+};
+
+async function migrateUsers(): Promise<void> {
+  const client = new MongoClient(DB_URL, {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 10000,
+  });
+  const startTime = Date.now();
 
   try {
     await client.connect();
-    console.log("✅ Подключено к базе данных");
+    const collection = client.db(DB_NAME).collection(COLLECTION_NAME);
 
-    const db = client.db();
-    const usersCollection = db.collection("user"); // better-auth использует коллекцию 'user'
+    const total = await collection.countDocuments();
+    const toUpdate = await collection.countDocuments(STREAK_FILTER);
+    console.log(`📊 Всего документов: ${total}`);
+    console.log(`🔍 Требуют обновления: ${toUpdate}`);
 
-    // Находим всех пользователей, у которых нет поля streak или оно null
-    const usersWithoutStreak = await usersCollection
-      .find({
-        $or: [{ streak: { $exists: false } }, { streak: null }],
-      })
-      .toArray();
-
-    if (usersWithoutStreak.length === 0) {
-      console.log("✅ У всех пользователей уже есть поле streak");
-      await client.close();
+    if (isDryRun) {
+      console.log("[DRY RUN] Изменений не вносим");
       return;
     }
 
-    console.log(
-      `🔍 Найдено ${usersWithoutStreak.length} пользователей для обновления`,
-    );
+    if (toUpdate === 0) {
+      console.log("✅ Все пользователи уже имеют поле streak");
+      return;
+    }
 
-    // Обновляем всех пользователей, устанавливая streak по умолчанию
-    const result = await usersCollection.updateMany(
-      {
-        $or: [{ streak: { $exists: false } }, { streak: null }],
-      },
-      {
-        $set: {
-          streak: {
-            count: 0,
-            isFire: false,
-            updateAt: new Date(),
-          },
+    // ✅ Простой $set, без агрегационного pipeline
+    const result = await collection.updateMany(STREAK_FILTER, {
+      $set: {
+        streak: {
+          count: 0,
+          isFire: false,
+          updatedAt: new Date(),
         },
       },
-    );
+    });
 
-    console.log(`✅ Успешно обновлено ${result.modifiedCount} пользователей`);
-    console.log(
-      "📋 Поле streak инициализировано: { count: 0, isFire: false, updateAt: new Date() }",
-    );
-
-    await client.close();
-    console.log("🔌 Отключено от базы данных");
+    console.log(`✅ Обновлено: ${result.modifiedCount} пользователей`);
+    console.log(`⏱ Выполнено за ${Date.now() - startTime}ms`);
   } catch (error) {
-    console.error("❌ Ошибка:", error);
-    await client.close();
+    console.error("❌ Ошибка миграции:", error);
     process.exit(1);
+  } finally {
+    await client.close();
   }
 }
 
