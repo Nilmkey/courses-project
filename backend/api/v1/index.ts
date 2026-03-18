@@ -7,6 +7,7 @@ import enrollmentRouter from "./enrollment/enrollment.router";
 import progressRouter from "./progress/progress.router";
 import usersRouter from "./users/users.router";
 import tagsRouter from "./tags/tags.router";
+import streakRouter from "./streak/streak.router";
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.use("/enrollment", enrollmentRouter);
 router.use("/progress", progressRouter);
 router.use("/users", usersRouter);
 router.use("/tags", tagsRouter);
+router.use("/streak", streakRouter);
 
 export default router;

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useLearning } from "@/hooks/useLearning";
 import { SectionItem } from "./SectionItem";
+import { StreakFire } from "@/components/StreakFire";
 import { BookOpen, ArrowLeft, Sun, Moon, Trophy } from "lucide-react";
 
 export function CourseSidebar() {
@@ -34,7 +35,9 @@ export function CourseSidebar() {
 
           {mounted && (
             <button
-              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              onClick={() =>
+                setTheme(resolvedTheme === "dark" ? "light" : "dark")
+              }
               className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               title="Переключить тему"
             >
@@ -63,24 +66,28 @@ export function CourseSidebar() {
       <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-b dark:border-gray-700">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Trophy className={`w-4 h-4 ${
-              overallProgress.progress === 100 
-                ? "text-yellow-500" 
-                : "text-emerald-600"
-            }`} />
+            <Trophy
+              className={`w-4 h-4 ${
+                overallProgress.progress === 100
+                  ? "text-yellow-500"
+                  : "text-emerald-600"
+              }`}
+            />
             <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
               Ваш прогресс
             </span>
           </div>
-          <span className={`text-lg font-black ${
-            overallProgress.progress === 100 
-              ? "text-yellow-600" 
-              : "text-emerald-600"
-          }`}>
+          <span
+            className={`text-lg font-black ${
+              overallProgress.progress === 100
+                ? "text-yellow-600"
+                : "text-emerald-600"
+            }`}
+          >
             {overallProgress.progress}%
           </span>
         </div>
-        
+
         {/* Прогресс-бар */}
         <div className="relative h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
           <div
@@ -92,7 +99,7 @@ export function CourseSidebar() {
             style={{ width: `${overallProgress.progress}%` }}
           />
         </div>
-        
+
         <div className="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
           <span>
             <span className="font-bold text-gray-700 dark:text-gray-200">
@@ -121,6 +128,11 @@ export function CourseSidebar() {
 
       {/* Статистика */}
       <div className="p-4 border-t bg-gray-50 dark:bg-gray-900 dark:border-gray-700">
+        {/* Стрик */}
+        <div className="mb-3">
+          <StreakFire size="sm" showCount={true} />
+        </div>
+
         <div className="text-xs text-gray-500 dark:text-gray-400">
           <span className="font-semibold">{sections.length}</span> секций •{" "}
           <span className="font-semibold">

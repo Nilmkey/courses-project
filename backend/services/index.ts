@@ -3,6 +3,7 @@ export { sectionsService } from "./sections.service";
 export { lessonsService } from "./lessons.service";
 export { enrollmentService } from "./enrollment.service";
 export { progressService } from "./progress.service";
+export { streakService } from "./streak.service";
 
 export type {
   SectionCreateInput as SectionServiceCreateInput,
