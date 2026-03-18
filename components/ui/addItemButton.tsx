@@ -18,14 +18,14 @@ function MenuOption({ icon, label, description, onClick }: MenuLinkProps) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-start gap-3 px-3 py-2 text-left transition-all hover:bg-slate-50 rounded-lg group"
+      className="w-full flex items-start gap-3 px-3 py-2 text-left transition-all hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg group"
     >
-      <div className="mt-1 p-2 bg-slate-100 rounded-md text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+      <div className="mt-1 p-2 bg-slate-100 dark:bg-slate-700 rounded-md text-slate-600 dark:text-slate-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/20 group-hover:text-[#3b5bdb] dark:group-hover:text-indigo-400 transition-colors">
         {icon}
       </div>
       <div>
-        <div className="text-sm font-medium text-slate-900">{label}</div>
-        <div className="text-xs text-slate-500">{description}</div>
+        <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{label}</div>
+        <div className="text-xs text-slate-500 dark:text-slate-400">{description}</div>
       </div>
     </button>
   );
@@ -52,15 +52,15 @@ export function AddItemButton() {
   }, []);
 
   return (
-    <div className="relative flex flex-col items-center py-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 transition-all group mt-6">
+    <div className="relative flex flex-col items-center py-8 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all group mt-6">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex flex-col items-center gap-3 focus:outline-none"
       >
-        <div className="p-4 bg-white rounded-full shadow-sm border border-slate-200 text-slate-400 group-hover:text-blue-500 group-hover:scale-110 transition-all duration-300">
+        <div className="p-4 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 text-slate-400 group-hover:text-[#3b5bdb] dark:group-hover:text-indigo-400 group-hover:scale-110 transition-all duration-300">
           <Plus size={32} />
         </div>
-        <span className="text-sm font-medium text-slate-500 group-hover:text-slate-700">
+        <span className="text-sm font-medium text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300">
           Добавить новый блок
         </span>
       </button>
@@ -68,9 +68,9 @@ export function AddItemButton() {
       {isOpen && (
         <div
           ref={menuRef}
-          className="absolute top-full mt-4 z-50 w-50 bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-200 p-2 animate-in fade-in zoom-in-95 duration-200 origin-top"
+          className="absolute top-full mt-4 z-50 w-50 bg-white dark:bg-slate-800 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-slate-700 p-2 animate-in fade-in zoom-in-95 duration-200 origin-top"
         >
-          <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Тип контента
           </div>
 

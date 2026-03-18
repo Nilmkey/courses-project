@@ -11,3 +11,52 @@
 .milkdown .editor {
   line-height: 0.2;
 }
+
+.dark .milkdown .editor {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .milkdown .editor p,
+.dark .milkdown .editor span,
+.dark .milkdown .editor div {
+  color: #f1f5f9 !important;
+}
+
+.dark .milkdown .editor h1,
+.dark .milkdown .editor h2,
+.dark .milkdown .editor h3,
+.dark .milkdown .editor h4,
+.dark .milkdown .editor h5,
+.dark .milkdown .editor h6 {
+  color: #f1f5f9 !important;
+}
+
+.dark .milkdown .editor {
+  border: 1px solid #334155 !important;
+  box-shadow: none !important;
+}
+
+.dark .milkdown .editor-focused {
+  border-color: #475569 !important;
+}
+
+.dark .milkdown .editor .cm-editor,
+.dark .milkdown .editor .ProseMirror {
+  border: none !important;
+}
+
+.dark .milkdown .editor [data-placeholder]::before,
+.dark .milkdown .editor .placeholder::before,
+.dark .milkdown .editor ::placeholder {
+  color: #cbd5e1 !important;
+  opacity: 1 !important;
+}
+
+.dark .milkdown .editor p.is-editor-empty:first-child::before,
+.dark .milkdown .editor > p:first-child:empty::before {
+  color: #cbd5e1 !important;
+  content: attr(data-placeholder);
+  opacity: 1 !important;
+  pointer-events: none;
+}
