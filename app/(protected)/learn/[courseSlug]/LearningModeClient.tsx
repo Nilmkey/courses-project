@@ -27,9 +27,9 @@ export default function LearningModeClient({
       sections={sections}
       initialProgress={initialProgress}
     >
-      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="flex h-screen bg-slate-50 dark:bg-slate-950">
         {/* Левая колонка — навигация */}
-        <aside className="w-80 border-r bg-white dark:bg-gray-800 dark:border-gray-700 overflow-y-auto flex-shrink-0">
+        <aside className="w-80 border-r bg-white dark:bg-slate-900 dark:border-slate-700 overflow-y-auto flex-shrink-0">
           <CourseSidebar />
         </aside>
 

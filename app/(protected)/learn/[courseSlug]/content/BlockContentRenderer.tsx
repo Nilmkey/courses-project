@@ -21,12 +21,12 @@ export function BlockContentRenderer() {
   return (
     <div>
       {/* Хлебные крошки */}
-      <div className="mb-6 text-sm text-gray-500">
+      <div className="mb-6 text-sm text-slate-500 dark:text-slate-400">
         <span>{section?.title}</span>
         <span className="mx-2">/</span>
         <span>{lesson?.title}</span>
         <span className="mx-2">/</span>
-        <span className="text-gray-900 font-medium">{block.title}</span>
+        <span className="text-slate-900 dark:text-white font-medium">{block.title}</span>
       </div>
 
       {block.type === "text" && (

@@ -21,7 +21,7 @@ export const auth = betterAuth({
       },
       streak: {
         type: "json",
-        defaultValue: { count: 0, isFire: false, updateAt: new Date() },
+        defaultValue: { count: 0, isFire: false, updatedAt: new Date() },
       },
       image: {
         type: "string",

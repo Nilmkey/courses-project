@@ -44,7 +44,7 @@ export function CompletionButton() {
   return (
     <button
       onClick={handleClick}
-      className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-500/25 active:scale-95"
+      className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-500/25 active:scale-95 dark:bg-green-600 dark:hover:bg-green-700"
     >
       <CheckCircle size={20} />
       {isLastBlock ? "Завершить блок и урок" : "Завершить блок"}

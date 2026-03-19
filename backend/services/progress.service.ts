@@ -2,6 +2,7 @@ import { Progress, Lesson, Section, Course, Enrollment } from "../models";
 import type { IProgress, IQuizAnswer } from "../models";
 import { Types, Document } from "mongoose";
 import { ApiError } from "../utils/ApiError";
+import { streakService } from "./streak.service";
 
 export interface QuizAnswerInput {
   questionId: string;
@@ -66,7 +67,11 @@ async function validateLessonBelongsToCourse(
 async function calculateOverallProgress(
   userId: string,
   courseId: string,
-): Promise<{ totalLessons: number; completedLessons: number; progress: number }> {
+): Promise<{
+  totalLessons: number;
+  completedLessons: number;
+  progress: number;
+}> {
   // Получаем все секции курса
   const sections = await Section.find({ course_id: courseId });
   const sectionIds = sections.map((s) => s._id);
@@ -85,12 +90,18 @@ async function calculateOverallProgress(
     course_id: courseId,
   });
 
-  if (!progressDoc || !progressDoc.lessons || progressDoc.lessons.length === 0) {
+  if (
+    !progressDoc ||
+    !progressDoc.lessons ||
+    progressDoc.lessons.length === 0
+  ) {
     return { totalLessons, completedLessons: 0, progress: 0 };
   }
 
   // Считаем завершенные уроки
-  const completedLessons = progressDoc.lessons.filter((l) => l.completed).length;
+  const completedLessons = progressDoc.lessons.filter(
+    (l) => l.completed,
+  ).length;
   const progress = (completedLessons / totalLessons) * 100;
 
   return {
@@ -197,8 +208,12 @@ export const progressService = {
         })),
       })),
       overallProgress: progressDoc.overallProgress,
-      createdAt: (progressDoc as any).createdAt?.toISOString() || new Date().toISOString(),
-      updatedAt: (progressDoc as any).updatedAt?.toISOString() || new Date().toISOString(),
+      createdAt:
+        (progressDoc as any).createdAt?.toISOString() ||
+        new Date().toISOString(),
+      updatedAt:
+        (progressDoc as any).updatedAt?.toISOString() ||
+        new Date().toISOString(),
     };
   },
 
@@ -239,80 +254,41 @@ export const progressService = {
     studentId: string,
     lessonId: string,
     courseId: string,
+    headers?: Headers,
   ): Promise<IProgress | null> {
     await validateLessonBelongsToCourse(lessonId, courseId);
 
     const lessonObjId = new Types.ObjectId(lessonId);
     const courseObjId = new Types.ObjectId(courseId);
 
-    let progress: IProgress | null;
-
-    // Проверяем существование прогресса
-    const existingProgress = await Progress.findOne({
-      user_id: studentId,
-      course_id: courseObjId,
-    });
-
-    if (existingProgress) {
-      const lessonExists = existingProgress.lessons.some(
-        (l) => l.lesson_id.toString() === lessonId,
-      );
-
-      if (lessonExists) {
-        progress = await Progress.findOneAndUpdate(
-          {
-            user_id: studentId,
-            course_id: courseObjId,
-            "lessons.lesson_id": lessonObjId,
-          },
-          {
-            $set: {
-              "lessons.$.completed": true,
-              "lessons.$.completedAt": new Date(),
-            },
-          },
-          { returnDocument: "after" },
-        ).lean();
-      } else {
-        progress = await Progress.findOneAndUpdate(
-          { user_id: studentId, course_id: courseObjId },
-          {
-            $push: {
-              lessons: {
-                lesson_id: lessonObjId,
-                completed: true,
-                completedAt: new Date(),
-              },
-            },
-          },
-          { returnDocument: "after" },
-        ).lean();
-      }
-    } else {
-      const newProgress = await Progress.create({
-        user_id: studentId,
-        course_id: courseObjId,
-        lessons: [
-          {
+    const progress = await Progress.findOneAndUpdate(
+      { user_id: studentId, course_id: courseObjId },
+      {
+        $set: {
+          "lessons.$[lesson].completed": true,
+          "lessons.$[lesson].completedAt": new Date(),
+        },
+        $addToSet: {
+          lessons: {
             lesson_id: lessonObjId,
             completed: true,
             completedAt: new Date(),
           },
-        ],
-        overallProgress: 0,
-      });
-      progress = newProgress.toObject();
-    }
+        },
+      },
+      {
+        arrayFilters: [{ "lesson.lesson_id": lessonObjId }],
+        upsert: true,
+        returnDocument: "after",
+      },
+    ).lean();
 
-    // Обновляем общий прогресс
-    if (progress) {
-      const progressData = await calculateOverallProgress(studentId, courseId);
-      await Progress.findByIdAndUpdate(progress._id, {
-        overallProgress: progressData.progress,
-      });
-
-      // Обновляем статус enrollment
-      await updateEnrollmentStatus(studentId, courseId, progressData.progress);
+    // Продлеваем стрик пользователя после успешного сохранения прогресса
+    try {
+      await streakService.extendStreak(studentId, headers);
+    } catch (error) {
+      // Логгируем ошибку, но не прерываем основной поток
+      console.error("[Progress] Не удалось обновить стрик:", error);
     }
 
     return progress;
@@ -482,10 +458,7 @@ export const progressService = {
   /**
    * Инициализировать прогресс при записи на курс
    */
-  async initializeProgress(
-    studentId: string,
-    courseId: string,
-  ): Promise<void> {
+  async initializeProgress(studentId: string, courseId: string): Promise<void> {
     await initializeProgressIfNotExists(studentId, courseId);
   },
 

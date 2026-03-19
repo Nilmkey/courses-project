@@ -12,14 +12,14 @@ export function ProgressBar({ value, className = "" }: ProgressBarProps) {
   return (
     <div className={`w-full ${className}`}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-600">Прогресс курса</span>
-        <span className="text-sm font-bold text-blue-600">
+        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Прогресс курса</span>
+        <span className="text-sm font-bold text-[#3b5bdb] dark:text-indigo-400">
           {clampedValue.toFixed(0)}%
         </span>
       </div>
-      <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+      <div className="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500 ease-out rounded-full"
+          className="h-full bg-gradient-to-r from-[#3b5bdb] to-[#5c7cfa] transition-all duration-500 ease-out rounded-full"
           style={{ width: `${clampedValue}%` }}
         />
       </div>
