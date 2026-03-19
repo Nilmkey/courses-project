@@ -1,0 +1,20 @@
+{
+  "name": "mongodb-migrations",
+  "version": "1.0.0",
+  "description": "MongoDB migration scripts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migrate": "tsx scripts/migrations/migrate-streak-field.ts migrate",
+    "rollback": "tsx scripts/migrations/migrate-streak-field.ts rollback",
+    "dry-run": "tsx scripts/migrations/migrate-streak-field.ts dry-run"
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}
