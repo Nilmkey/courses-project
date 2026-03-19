@@ -26,13 +26,15 @@ import { useTheme } from "next-themes";
 import { ArrowLeft, Loader2, BookOpen, Layers, Sun, Moon } from "lucide-react";
 import { sectionsApi, lessonsApi } from "@/lib/api/entities/api-sections";
 import { useToast } from "@/hooks/useToast";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 
 interface CourseEditorCoreProps {
   courseId: string;
   onSave?: (sections: Section[]) => void;
+  initialSections?: Section[] | null;
 }
 
-export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
+export function CourseEditorCore({ courseId, onSave, initialSections }: CourseEditorCoreProps) {
   const {
     sections,
     setSections,
@@ -52,12 +54,30 @@ export function CourseEditorCore({ onSave }: CourseEditorCoreProps) {
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
   const params = useParams();
-  const { courseId } = params as { courseId: string };
   const toast = useToast();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Проверка наличия несохраненных изменений
+  const hasUnsavedChanges = useCallback(() => {
+    if (!initialSections) return false;
+
+    // Сравниваем текущее состояние с начальным
+    const current = JSON.stringify(sections);
+    const initial = JSON.stringify(initialSections);
+
+    return current !== initial;
+  }, [sections, initialSections]);
+
+  // Отключаем отслеживание несохраненных изменений, т.к. все изменения
+  // автоматически сохраняются в БД при каждом действии
+  useUnsavedChanges({
+    hasUnsavedChanges,
+    message: "У вас есть несохраненные изменения в секциях. Вы уверены, что хотите уйти?",
+    enabled: false,
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

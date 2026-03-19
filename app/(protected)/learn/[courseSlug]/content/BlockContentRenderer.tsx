@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { useLearning } from "@/hooks/useLearning";
 import { TextBlockView } from "./TextBlockView";
@@ -11,21 +12,27 @@ import type { ITextBlock, IVideoBlock, IQuizBlock } from "@/types/types";
 export function BlockContentRenderer() {
   const { getCurrentBlock, getCurrentLesson, getCurrentSection, getLessonProgress } = useLearning();
 
-  const block = getCurrentBlock();
-  const lesson = getCurrentLesson();
-  const section = getCurrentSection();
+  const block = getCurrentBlock;
+  const lesson = getCurrentLesson;
+  const section = getCurrentSection;
+
+  // Оптимизируем проверку завершенности с useMemo
+  const isBlockCompleted = useMemo(() => {
+    if (!block || !lesson?._id) return false;
+    
+    const blockId = block.id || block._id || '';
+    const lessonProgress = getLessonProgress(lesson._id);
+    
+    return lessonProgress?.blocks?.some(
+      (b) => b.blockId === blockId && b.completed
+    ) || false;
+  }, [block, lesson?._id, getLessonProgress]);
 
   if (!block) {
     return <EmptyState />;
   }
 
   const blockId = block.id || block._id || '';
-  
-  // Проверяем, завершен ли текущий блок
-  const lessonProgress = getLessonProgress(lesson?._id || '');
-  const isBlockCompleted = lessonProgress?.blocks?.some(
-    (b) => b.blockId === blockId && b.completed
-  );
 
   return (
     <div>
@@ -44,13 +51,13 @@ export function BlockContentRenderer() {
       </div>
 
       {block.type === "text" && (
-        <TextBlockView key={blockId} content={(block as ITextBlock).content} blockId={blockId} />
+        <TextBlockView content={(block as ITextBlock).content} />
       )}
       {block.type === "video" && (
-        <VideoBlockView key={blockId} content={(block as IVideoBlock).content} blockId={blockId} />
+        <VideoBlockView content={(block as IVideoBlock).content} />
       )}
       {block.type === "quiz" && (
-        <QuizBlockView key={blockId} content={(block as IQuizBlock).content} blockId={blockId} />
+        <QuizBlockView content={(block as IQuizBlock).content} />
       )}
     </div>
   );
