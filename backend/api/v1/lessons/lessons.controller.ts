@@ -89,6 +89,15 @@ export const lessonsController = {
       section_id: sectionId,
     });
 
+    // Получаем courseId и пересчитываем прогресс
+    const sectionDoc = await import('../../../models/Section').then(m => 
+      m.Section.findById(sectionId).lean()
+    );
+    if (sectionDoc) {
+      const progressService = await import('../../../services/progress.service');
+      await progressService.progressService.recalculateCourseProgress(sectionDoc.course_id.toString());
+    }
+
     res.status(201).json(toLessonResponse(lesson as unknown as LessonData));
   },
 
@@ -114,6 +123,21 @@ export const lessonsController = {
     }
 
     const lesson = await lessonsService.update(id, updateData);
+    
+    // Получаем courseId и пересчитываем прогресс
+    const lessonDoc = await import('../../../models/Lesson').then(m => 
+      m.Lesson.findById(id).lean()
+    );
+    if (lessonDoc) {
+      const sectionDoc = await import('../../../models/Section').then(m => 
+        m.Section.findById(lessonDoc.section_id).lean()
+      );
+      if (sectionDoc) {
+        const progressService = await import('../../../services/progress.service');
+        await progressService.progressService.recalculateCourseProgress(sectionDoc.course_id.toString());
+      }
+    }
+    
     res.json(toLessonResponse(lesson as unknown as LessonData));
   },
 
@@ -131,7 +155,24 @@ export const lessonsController = {
       throw ApiError.forbidden("Удалять уроки могут только преподаватели");
     }
 
+    // Получаем courseId перед удалением
+    const lessonDoc = await import('../../../models/Lesson').then(m => 
+      m.Lesson.findById(id).lean()
+    );
+    
     await lessonsService.delete(id);
+    
+    // Пересчитываем прогресс после удаления урока
+    if (lessonDoc) {
+      const sectionDoc = await import('../../../models/Section').then(m => 
+        m.Section.findById(lessonDoc.section_id).lean()
+      );
+      if (sectionDoc) {
+        const progressService = await import('../../../services/progress.service');
+        await progressService.progressService.recalculateCourseProgress(sectionDoc.course_id.toString());
+      }
+    }
+    
     res.status(204).send();
   },
 

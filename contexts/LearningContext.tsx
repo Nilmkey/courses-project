@@ -107,10 +107,10 @@ export function LearningContextProvider({
     const loadProgress = async () => {
       try {
         setIsLoadingProgress(true);
-        
+
         // Загружаем полный прогресс курса
         const progressDetail = await progressApi.getFullCourseProgress(course._id);
-        
+
         // Инициализируем прогресс для всех уроков
         const progress: Record<string, LessonProgressData> = {};
 
@@ -123,23 +123,45 @@ export function LearningContextProvider({
 
             const isCompleted = lessonProgressData?.completed || false;
             const quizAnswers = lessonProgressData?.quizAnswers || [];
+            const totalBlocks = lesson.content_blocks.length;
+
+            // Сохраняем прогресс
+            let completedBlocks = 0;
+            let status: LessonStatus = "not-started";
+            let lessonIsCompleted = false;
+
+            if (isCompleted) {
+              // Урок завершен - все блоки пройдены
+              completedBlocks = totalBlocks;
+              status = "completed";
+              lessonIsCompleted = true;
+            } else if (lessonProgressData) {
+              // Урок в процессе - начинаем с 0, пользователь продолжит прохождение
+              completedBlocks = 0;
+              status = "in-progress";
+              lessonIsCompleted = false;
+            }
 
             progress[lesson._id] = {
               lessonId: lesson._id,
-              status: isCompleted ? "completed" : "not-started",
-              completedBlocks: isCompleted ? lesson.content_blocks.length : 0,
-              totalBlocks: lesson.content_blocks.length,
+              status,
+              completedBlocks,
+              totalBlocks,
               quizAnswers,
-              isCompleted,
+              isCompleted: lessonIsCompleted,
             };
           }
         }
 
         // Обновляем общий прогресс из сервера
+        const completedLessons = progressDetail.lessons.filter(l => l.completed).length;
+        const totalLessons = sections.reduce((acc, s) => acc + s.lessons.length, 0);
+        const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
         setOverallProgress({
-          totalLessons: progressDetail.lessons.length || Object.keys(progress).length,
-          completedLessons: progressDetail.lessons.filter(l => l.completed).length,
-          progress: progressDetail.overallProgress,
+          totalLessons,
+          completedLessons,
+          progress: progressPercent,
         });
 
         setLessonProgress(progress);
@@ -162,14 +184,19 @@ export function LearningContextProvider({
         }
 
         setLessonProgress(progress);
-        setOverallProgress(initialProgress);
+        const totalLessons = sections.reduce((acc, s) => acc + s.lessons.length, 0);
+        setOverallProgress({
+          totalLessons,
+          completedLessons: 0,
+          progress: 0,
+        });
       } finally {
         setIsLoadingProgress(false);
       }
     };
 
     loadProgress();
-  }, [course._id, sections, initialProgress]);
+  }, [course._id, sections]);
 
   // Навигация к блоку
   const navigateToBlock = useCallback(

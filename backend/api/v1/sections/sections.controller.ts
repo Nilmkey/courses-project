@@ -84,6 +84,10 @@ export const sectionsController = {
       course_id: courseId,
     });
 
+    // Пересчитываем прогресс всех пользователей при добавлении секции
+    const progressService = await import('../../../services/progress.service');
+    await progressService.progressService.recalculateCourseProgress(courseId);
+
     res.status(201).json(toSectionResponse(section as unknown as SectionData));
   },
 
@@ -109,6 +113,16 @@ export const sectionsController = {
     }
 
     const section = await sectionsService.update(id, updateData);
+    
+    // Получаем courseId и пересчитываем прогресс
+    const sectionDoc = await import('../../../models/Section').then(m => 
+      m.Section.findById(id).lean()
+    );
+    if (sectionDoc) {
+      const progressService = await import('../../../services/progress.service');
+      await progressService.progressService.recalculateCourseProgress(sectionDoc.course_id.toString());
+    }
+    
     res.json(toSectionResponse(section as unknown as SectionData));
   },
 
@@ -126,7 +140,19 @@ export const sectionsController = {
       throw ApiError.forbidden("Удалять секции могут только преподаватели");
     }
 
+    // Получаем courseId перед удалением
+    const sectionDoc = await import('../../../models/Section').then(m => 
+      m.Section.findById(id).lean()
+    );
+    
     await sectionsService.delete(id);
+    
+    // Пересчитываем прогресс после удаления секции
+    if (sectionDoc) {
+      const progressService = await import('../../../services/progress.service');
+      await progressService.progressService.recalculateCourseProgress(sectionDoc.course_id.toString());
+    }
+    
     res.status(204).send();
   },
 
