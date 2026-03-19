@@ -18,28 +18,28 @@ export function NavigationHeader() {
   const currentBlock = getCurrentBlock();
 
   return (
-    <header className="p-6 border-b bg-white dark:bg-gray-800 dark:border-gray-700 flex-shrink-0">
+    <header className="p-6 border-b bg-white dark:bg-slate-900 dark:border-slate-700 flex-shrink-0">
       <div className="flex items-center justify-between mb-4">
         {/* Навигация */}
         <div className="flex items-center gap-2">
           <button
             onClick={navigateToPreviousBlock}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             title="Предыдущий блок"
           >
-            <ChevronLeft size={20} className="text-gray-600 dark:text-gray-400" />
+            <ChevronLeft size={20} className="text-slate-600 dark:text-slate-400" />
           </button>
           <button
             onClick={navigateToNextBlock}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             title="Следующий блок"
           >
-            <ChevronRight size={20} className="text-gray-600 dark:text-gray-400" />
+            <ChevronRight size={20} className="text-slate-600 dark:text-slate-400" />
           </button>
         </div>
 
         {/* Название курса */}
-        <h1 className="text-lg font-bold text-gray-900 dark:text-white truncate max-w-md">
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate max-w-md">
           {course.title}
         </h1>
 
@@ -52,8 +52,8 @@ export function NavigationHeader() {
 
       {/* Информация о текущем блоке */}
       {currentBlock && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-          <span className="font-medium text-gray-900 dark:text-white">
+        <div className="mt-4 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+          <span className="font-medium text-slate-900 dark:text-white">
             {currentLesson?.title}
           </span>
           <span>/</span>

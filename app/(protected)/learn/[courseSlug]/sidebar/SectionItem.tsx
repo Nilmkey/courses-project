@@ -12,24 +12,24 @@ export function SectionItem({ section }: { section: ISection }) {
     <div>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
       >
         {isExpanded ? (
           <ChevronDown
             size={16}
-            className="text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300 transition-colors"
+            className="text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300 transition-colors"
           />
         ) : (
           <ChevronRight
             size={16}
-            className="text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300 transition-colors"
+            className="text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300 transition-colors"
           />
         )}
         <div className="flex-1 text-left">
-          <span className="font-semibold text-sm text-gray-900 dark:text-white">
+          <span className="font-semibold text-sm text-slate-900 dark:text-white">
             {section.title}
           </span>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             {section.lessons.length}{" "}
             {section.lessons.length === 1 ? "урок" : "уроков"}
           </p>
@@ -37,7 +37,7 @@ export function SectionItem({ section }: { section: ISection }) {
       </button>
 
       {isExpanded && (
-        <div className="bg-gray-50 dark:bg-gray-900">
+        <div className="bg-slate-50 dark:bg-slate-900">
           {section.lessons.map((lesson) => (
             <LessonItem
               key={lesson._id}
