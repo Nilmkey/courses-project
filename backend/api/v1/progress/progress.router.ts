@@ -8,6 +8,8 @@ import {
   updateLessonProgressSchema,
   getLessonProgressSchema,
   initializeProgressSchema,
+  markBlockCompleteSchema,
+  recalculateProgressSchema,
 } from "./progress.validation";
 import { authMiddleware } from "../../../middleware/auth.middleware";
 
@@ -29,7 +31,7 @@ router.get(
   progressController.getCourseProgress.bind(progressController),
 );
 
-// Получить прогресс по конкретному уроку (ответы на quiz)
+// Получить прогресс по конкретному уроку (ответы на quiz + блоки)
 router.get(
   "/lesson/:lessonId",
   authMiddleware,
@@ -43,6 +45,14 @@ router.post(
   authMiddleware,
   validateRequest(markLessonCompleteSchema),
   progressController.markComplete.bind(progressController),
+);
+
+// Отметить блок как завершенный
+router.post(
+  "/lesson/:lessonId/block/:blockId/complete",
+  authMiddleware,
+  validateRequest(markBlockCompleteSchema),
+  progressController.markBlockComplete.bind(progressController),
 );
 
 // Обновить прогресс урока (например, ответы на quiz)
@@ -67,6 +77,14 @@ router.post(
   authMiddleware,
   validateRequest(initializeProgressSchema),
   progressController.initializeProgress.bind(progressController),
+);
+
+// Пересчитать прогресс всех пользователей по курсу
+router.post(
+  "/course/:courseId/recalculate",
+  authMiddleware,
+  validateRequest(recalculateProgressSchema),
+  progressController.recalculateProgress.bind(progressController),
 );
 
 export default router;

@@ -12,16 +12,24 @@ import type {
   LessonProgressResponse,
   QuizAnswerResponse,
   CourseProgressDetailResponse,
+  MarkBlockCompleteRequest,
+  RecalculateProgressRequest,
+  BlockProgressResponse,
+  SectionProgressResponse,
 } from "./progress.types";
 import { ApiError } from "../../../utils/ApiError";
 import type { AuthenticatedUser } from "../../../middleware/auth.middleware";
-import type { IQuizAnswer, ILessonProgress } from "../../../models";
+import type { IQuizAnswer, ILessonProgress, IBlockProgress } from "../../../models";
 
 type AuthRequest = Request & { user?: AuthenticatedUser };
 
 interface CourseProgressData {
   totalLessons: number;
   completedLessons: number;
+  totalBlocks: number;
+  completedBlocks: number;
+  totalSections: number;
+  completedSections: number;
   progress: number;
 }
 
@@ -31,6 +39,15 @@ const toQuizAnswerResponse = (answer: IQuizAnswer): QuizAnswerResponse => ({
   isCorrect: answer.isCorrect,
 });
 
+const toBlockProgressResponse = (
+  progress: IBlockProgress,
+): BlockProgressResponse => ({
+  blockId: progress.blockId,
+  completed: progress.completed,
+  completedAt: progress.completedAt?.toISOString(),
+  quizAnswers: progress.quizAnswers?.map(toQuizAnswerResponse),
+});
+
 const toLessonProgressResponse = (
   progress: ILessonProgress,
 ): LessonProgressResponse => ({
@@ -38,6 +55,19 @@ const toLessonProgressResponse = (
   completed: progress.completed,
   completedAt: progress.completedAt?.toISOString(),
   quizAnswers: progress.quizAnswers?.map(toQuizAnswerResponse),
+  blocks: progress.blocks ? progress.blocks.map(toBlockProgressResponse) : [],
+  completedBlocksCount: progress.completedBlocksCount,
+  totalBlocksCount: progress.totalBlocksCount,
+});
+
+const toSectionProgressResponse = (
+  progress: any,
+): SectionProgressResponse => ({
+  section_id: progress.section_id.toString(),
+  completed: progress.completed,
+  completedAt: progress.completedAt?.toISOString(),
+  completedLessonsCount: progress.completedLessonsCount,
+  totalLessonsCount: progress.totalLessonsCount,
 });
 
 const toCourseProgressResponse = (
@@ -45,6 +75,10 @@ const toCourseProgressResponse = (
 ): CourseProgressResponse => ({
   totalLessons: data.totalLessons,
   completedLessons: data.completedLessons,
+  totalBlocks: data.totalBlocks,
+  completedBlocks: data.completedBlocks,
+  totalSections: data.totalSections,
+  completedSections: data.completedSections,
   progress: data.progress,
 });
 
@@ -111,7 +145,7 @@ export const progressController = {
       unknown,
       GetLessonProgressRequest["query"]
     >,
-    res: Response<QuizAnswerResponse[]>,
+    res: Response<{ quizAnswers: QuizAnswerResponse[]; blocks: BlockProgressResponse[] }>,
   ): Promise<void> {
     const { lessonId } = req.params;
     const { courseId } = req.query;
@@ -121,17 +155,20 @@ export const progressController = {
       throw ApiError.unauthorized("Требуется авторизация");
     }
 
-    const answers = await progressService.getLessonProgress(
+    const result = await progressService.getLessonProgress(
       authReq.user.id,
       lessonId,
       courseId,
     );
 
-    if (!answers) {
+    if (!result) {
       throw ApiError.notFound("Прогресс урока не найден");
     }
 
-    res.json(answers.map(toQuizAnswerResponse));
+    res.json({
+      quizAnswers: result.quizAnswers.map(toQuizAnswerResponse),
+      blocks: result.blocks.map(toBlockProgressResponse),
+    });
   },
 
   /**
@@ -256,6 +293,48 @@ export const progressController = {
   },
 
   /**
+   * Отметить блок как завершенный
+   */
+  async markBlockComplete(
+    req: Request<
+      MarkBlockCompleteRequest["params"],
+      unknown,
+      MarkBlockCompleteRequest["body"]
+    >,
+    res: Response<LessonProgressResponse>,
+  ): Promise<void> {
+    const { lessonId } = req.params;
+    const { courseId, blockId, quizAnswers } = req.body;
+
+    const authReq = req as AuthRequest;
+    if (!authReq.user) {
+      throw ApiError.unauthorized("Требуется авторизация");
+    }
+
+    const progress = await progressService.markBlockComplete(
+      authReq.user.id,
+      lessonId,
+      courseId,
+      blockId,
+      quizAnswers,
+    );
+
+    if (!progress) {
+      throw ApiError.internal("Не удалось отметить блок как завершенный");
+    }
+
+    const lessonProgress = progress.lessons?.find(
+      (l) => l.lesson_id.toString() === lessonId,
+    );
+
+    if (!lessonProgress) {
+      throw ApiError.internal("Прогресс урока не найден");
+    }
+
+    res.json(toLessonProgressResponse(lessonProgress));
+  },
+
+  /**
    * Инициализировать прогресс при записи на курс
    */
   async initializeProgress(
@@ -271,5 +350,25 @@ export const progressController = {
 
     await progressService.initializeProgress(authReq.user.id, courseId);
     res.status(204).send();
+  },
+
+  /**
+   * Пересчитать прогресс всех пользователей по курсу
+   * Вызывается при добавлении/изменении контента курса
+   */
+  async recalculateProgress(
+    req: Request<RecalculateProgressRequest["params"]>,
+    res: Response<{ message: string; updatedUsers: number }>,
+  ): Promise<void> {
+    const { courseId } = req.params;
+
+    const authReq = req as AuthRequest;
+    if (!authReq.user) {
+      throw ApiError.unauthorized("Требуется авторизация");
+    }
+
+    const result = await progressService.recalculateCourseProgress(courseId);
+
+    res.json(result);
   },
 };
