@@ -1,5 +1,6 @@
 "use client";
 
+import { Flame } from "lucide-react";
 import { useStreak } from "@/hooks/useStreak";
 
 interface StreakFireProps {
@@ -13,68 +14,33 @@ interface StreakFireProps {
 
 /**
  * Компонент отображения стрика (огонёк за ежедневное прохождение уроков)
- * 
- * Визуальные состояния:
- * - Активный стрик: яркий огонёк с количеством дней
- * - Потерянный стрик: тусклый огонёк (серый)
- * - Нет стрика: контур огонька (серый)
  */
-export function StreakFire({ 
-  showCount = true, 
-  size = "md",
-  className = "" 
+export function StreakFire({
+  showCount = true,
+  size = "sm",
+  className = ""
 }: StreakFireProps) {
-  const { count, isFire, status, isLoading, hoursSinceUpdate } = useStreak();
+  const { count, isFire, isLoading } = useStreak();
 
   // Размеры в зависимости от prop size
-  const sizeClasses = {
-    sm: "text-lg",
-    md: "text-2xl",
-    lg: "text-4xl",
+  const iconSizeClasses = {
+    sm: "w-5 h-5",
+    md: "w-6 h-6",
+    lg: "w-8 h-8",
   };
 
-  const countSizeClasses = {
-    sm: "text-xs",
-    md: "text-sm",
-    lg: "text-base",
+  const textClasses = {
+    sm: "text-sm",
+    md: "text-base",
+    lg: "text-lg",
   };
-
-  // Состояния для разных статусов
-  const statusConfig = {
-    active: {
-      emoji: isFire ? "🔥" : "🔥",
-      bgColor: "bg-orange-50 dark:bg-orange-900/20",
-      textColor: "text-orange-500",
-      animation: isFire ? "animate-pulse" : "",
-      tooltip: `${count} дн. подряд`,
-    },
-    lost: {
-      emoji: "🔥",
-      bgColor: "bg-gray-100 dark:bg-gray-800",
-      textColor: "text-gray-400 dark:text-gray-500",
-      animation: "",
-      tooltip: "Стрик сгорел. Пройдите урок сегодня!",
-    },
-    none: {
-      emoji: "🔥",
-      bgColor: "bg-gray-100 dark:bg-gray-800",
-      textColor: "text-gray-300 dark:text-gray-600",
-      animation: "",
-      tooltip: "Пройдите первый урок для активации стрика",
-    },
-  };
-
-  const config = statusConfig[status];
 
   if (isLoading) {
     return (
-      <div 
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full ${config.bgColor} ${className}`}
-        title="Загрузка..."
-      >
-        <span className={`${sizeClasses[size]} ${config.textColor} opacity-50`}>🔥</span>
+      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-full border border-orange-100 dark:border-orange-800/50 opacity-50">
+        <Flame className={`${iconSizeClasses[size]} text-orange-500`} />
         {showCount && (
-          <span className={`${countSizeClasses[size]} font-medium ${config.textColor} opacity-50`}>
+          <span className={`${textClasses[size]} font-black text-orange-600 dark:text-orange-400`}>
             ...
           </span>
         )}
@@ -83,21 +49,13 @@ export function StreakFire({
   }
 
   return (
-    <div 
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full ${config.bgColor} ${className}`}
-      title={config.tooltip}
-    >
-      <span className={`${sizeClasses[size]} ${config.textColor} ${config.animation}`}>
-        {config.emoji}
-      </span>
+    <div className={`flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-full border border-orange-100 dark:border-orange-800/50 group transition-all hover:scale-105 ${className}`}>
+      <Flame
+        className={`${iconSizeClasses[size]} ${isFire ? "text-orange-500 animate-pulse" : "text-gray-400 dark:text-gray-500"}`}
+      />
       {showCount && (
-        <span className={`${countSizeClasses[size]} font-semibold ${config.textColor}`}>
-          {count}
-        </span>
-      )}
-      {status === "lost" && hoursSinceUpdate >= 48 && (
-        <span className={`${countSizeClasses[size]} text-gray-400 dark:text-gray-500 ml-1`}>
-          ({Math.floor(hoursSinceUpdate / 24)} дн. назад)
+        <span className={`${textClasses[size]} font-black ${isFire ? "text-orange-600 dark:text-orange-400" : "text-gray-500 dark:text-gray-400"}`}>
+          {count || 0}
         </span>
       )}
     </div>

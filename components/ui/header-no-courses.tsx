@@ -5,13 +5,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { authClient } from "@/lib/auth-client";
-import { ExtendedUser } from "@/backend/auth";
 import { Button } from "@/components/ui/button";
+import { StreakFire } from "@/components/StreakFire";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
+
+interface SessionUser {
+  id: string;
+  email: string;
+  name: string;
+  image?: string | null;
+  role?: string;
+}
 import {
   Code,
-  Flame,
   Loader2,
   User,
   ShieldCheck,
@@ -29,7 +36,7 @@ export default function HeaderNoCourses() {
   const { data: session, isPending } = authClient.useSession();
   const toast = useToast();
 
-  const user = session?.user as unknown as ExtendedUser | undefined;
+  const user = session?.user as SessionUser | undefined;
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -91,14 +98,7 @@ export default function HeaderNoCourses() {
 
           <div className="flex items-center gap-2">
             {mounted && user && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-full border border-orange-100 dark:border-orange-800/50 group transition-all hover:scale-105">
-                <Flame
-                  className={`w-5 h-5 ${user.streak.count > 0 ? "text-orange-500 animate-pulse" : "text-orange-500"}`}
-                />
-                <span className="text-sm font-black text-orange-600 dark:text-orange-400">
-                  {user.streak.count || 0}
-                </span>
-              </div>
+              <StreakFire showCount={true} size="sm" />
             )}
 
             {mounted && (

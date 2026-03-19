@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState, useCallback, useMemo, useEffect } from "react";
+import { createContext, useState, useCallback, useEffect } from "react";
 import type {
   ICourse,
   ISection,
@@ -44,6 +44,9 @@ export interface LearningContextType {
   currentSectionId: string | null;
   currentLessonId: string | null;
   currentBlockId: string | null;
+
+  // Состояние загрузки
+  isCompletingBlock: boolean;
 
   // Методы навигации
   navigateToBlock: (
@@ -118,14 +121,12 @@ export function LearningContextProvider({
     completedSections: 0,
     progress: initialProgress.progress,
   });
-  const [isLoadingProgress, setIsLoadingProgress] = useState(true);
+  const [isCompletingBlock, setIsCompletingBlock] = useState(false);
 
   // Загрузка прогресса с сервера при монтировании
   useEffect(() => {
     const loadProgress = async () => {
       try {
-        setIsLoadingProgress(true);
-
         // Загружаем полный прогресс курса
         const progressDetail = await progressApi.getFullCourseProgress(course._id);
 
@@ -189,7 +190,6 @@ export function LearningContextProvider({
         setLessonProgress(progress);
       } catch (error) {
         console.error("Ошибка загрузки прогресса:", error);
-        // Инициализируем пустой прогресс при ошибке
         const progress: Record<string, LessonProgressData> = {};
 
         for (const section of sections) {
@@ -216,8 +216,6 @@ export function LearningContextProvider({
           completedSections: 0,
           progress: 0,
         });
-      } finally {
-        setIsLoadingProgress(false);
       }
     };
 
@@ -520,26 +518,24 @@ export function LearningContextProvider({
     async (lessonId: string, blockId: string, quizAnswers?: IQuizAnswer[]) => {
       const courseId = course._id;
 
-      try {
-        // Отправляем на сервер
-        const response = await progressApi.markBlockComplete(lessonId, courseId, {
-          courseId,
-          blockId,
-          quizAnswers,
-        });
+      // Сразу устанавливаем флаг загрузки для мгновенной реакции UI
+      setIsCompletingBlock(true);
 
-        // Обновляем локальное состояние из ответа сервера
-        setLessonProgress((prev) => {
-          const current = prev[lessonId];
-          if (!current) return prev;
+      // Обновляем локальное состояние СРАЗУ (без ожидания API)
+      setLessonProgress((prev) => {
+        const current = prev[lessonId];
+        if (!current) return prev;
 
-          // Получаем обновленные данные из ответа
-          const updatedBlocks = response.blocks?.map((b) => ({
-            blockId: b.blockId,
-            completed: b.completed,
-            completedAt: b.completedAt,
-            quizAnswers: b.quizAnswers,
-          })) || current.blocks || [];
+        // Проверяем, не был ли уже завершен этот блок
+        const blockAlreadyCompleted = current.blocks?.some(
+          (b) => b.blockId === blockId && b.completed
+        );
+
+        if (blockAlreadyCompleted) {
+          // Блок уже завершен, не увеличиваем счетчик
+          setTimeout(() => setIsCompletingBlock(false), 100);
+          return prev;
+        }
 
           const completedBlocksCount = response.completedBlocksCount || updatedBlocks.filter(b => b.completed).length;
           const totalBlocksCount = response.totalBlocksCount || current.totalBlocks;
@@ -578,12 +574,31 @@ export function LearningContextProvider({
               .catch(console.error);
           }
 
-          return updated;
+        return {
+          ...prev,
+          [lessonId]: {
+            ...current,
+            completedBlocks: newCompletedBlocks,
+            status: allBlocksCompleted ? "completed" : current.status,
+            blocks: updatedBlocks,
+          },
+        };
+      });
+
+      // Отправляем на сервер (без await, чтобы не блокировать UI)
+      progressApi.markBlockComplete(lessonId, courseId, {
+        courseId,
+        blockId,
+        quizAnswers,
+      })
+        .catch((error) => {
+          console.error("Ошибка при сохранении прогресса блока:", error);
+          // Не показываем ошибку пользователю - это фоновое сохранение
+        })
+        .finally(() => {
+          // Снимаем флаг загрузки после завершения запроса
+          setTimeout(() => setIsCompletingBlock(false), 100);
         });
-      } catch (error) {
-        console.error("Ошибка при сохранении прогресса блока:", error);
-        // Не показываем ошибку пользователю - это фоновое сохранение
-      }
     },
     [course._id]
   );
@@ -710,6 +725,7 @@ export function LearningContextProvider({
     currentSectionId,
     currentLessonId,
     currentBlockId,
+    isCompletingBlock,
     navigateToBlock,
     navigateToNextBlock,
     navigateToPreviousBlock,

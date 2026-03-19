@@ -21,10 +21,10 @@ export interface UseStreakResult {
 
 /**
  * Хук для получения и отображения стрика пользователя
- * 
+ *
  * Визуальная логика:
- * - active: стрик активен (последнее обновление < 48 часов назад)
- * - lost: стрик сгорел (прошло > 48 часов)
+ * - active: стрик активен (последнее обновление < 24 часов назад)
+ * - lost: стрик сгорел (прошло >= 24 часов) — возвращается count = 0 с бэкенда
  * - none: стрик ещё не начинался (count = 0)
  */
 export function useStreak(): UseStreakResult {
@@ -68,16 +68,13 @@ export function useStreak(): UseStreakResult {
     }
 
     const hoursSinceUpdate = streak.hoursSinceUpdate ?? 0;
-    
+
     // Определяем статус для отображения
-    let status: "active" | "lost" | "none";
-    if (streak.count === 0) {
-      status = "none";
-    } else if (hoursSinceUpdate >= 48) {
-      status = "lost";
-    } else {
-      status = "active";
-    }
+    // Бэкенд уже вернул count = 0, если стрик сгорел
+    const status: "active" | "lost" | "none" = 
+      streak.count === 0 && hoursSinceUpdate >= 24 ? "lost" :
+      streak.count === 0 ? "none" :
+      "active";
 
     return {
       count: streak.count,
