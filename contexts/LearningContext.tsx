@@ -522,53 +522,68 @@ export function LearningContextProvider({
 
       try {
         // Отправляем на сервер
-        await progressApi.markBlockComplete(lessonId, courseId, {
+        const response = await progressApi.markBlockComplete(lessonId, courseId, {
           courseId,
           blockId,
           quizAnswers,
+        });
+
+        // Обновляем локальное состояние из ответа сервера
+        setLessonProgress((prev) => {
+          const current = prev[lessonId];
+          if (!current) return prev;
+
+          // Получаем обновленные данные из ответа
+          const updatedBlocks = response.blocks?.map((b) => ({
+            blockId: b.blockId,
+            completed: b.completed,
+            completedAt: b.completedAt,
+            quizAnswers: b.quizAnswers,
+          })) || current.blocks || [];
+
+          const completedBlocksCount = response.completedBlocksCount || updatedBlocks.filter(b => b.completed).length;
+          const totalBlocksCount = response.totalBlocksCount || current.totalBlocks;
+          const allBlocksCompleted = completedBlocksCount >= totalBlocksCount;
+
+          const updated = {
+            ...prev,
+            [lessonId]: {
+              ...current,
+              completedBlocks: completedBlocksCount,
+              status: allBlocksCompleted || response.completed ? "completed" : current.status,
+              isCompleted: response.completed || allBlocksCompleted,
+              blocks: updatedBlocks,
+            },
+          };
+
+          // Если все блоки завершены, но урок еще не завершен - завершаем урок автоматически
+          if (allBlocksCompleted && !response.completed && !current.isCompleted) {
+            // Асинхронно завершаем урок на сервере
+            progressApi.markLessonComplete(lessonId, courseId)
+              .then(() => {
+                // Обновляем локальное состояние
+                setLessonProgress((prev2) => {
+                  const curr = prev2[lessonId];
+                  if (!curr) return prev2;
+                  return {
+                    ...prev2,
+                    [lessonId]: {
+                      ...curr,
+                      isCompleted: true,
+                      status: "completed" as LessonStatus,
+                    },
+                  };
+                });
+              })
+              .catch(console.error);
+          }
+
+          return updated;
         });
       } catch (error) {
         console.error("Ошибка при сохранении прогресса блока:", error);
         // Не показываем ошибку пользователю - это фоновое сохранение
       }
-
-      // Обновляем локальное состояние - увеличиваем количество пройденных блоков
-      setLessonProgress((prev) => {
-        const current = prev[lessonId];
-        if (!current) return prev;
-
-        // Проверяем, не был ли уже завершен этот блок
-        const blockAlreadyCompleted = current.blocks?.some(
-          (b) => b.blockId === blockId && b.completed
-        );
-
-        if (blockAlreadyCompleted) {
-          // Блок уже завершен, не увеличиваем счетчик
-          return prev;
-        }
-
-        const newCompletedBlocks = Math.min(current.completedBlocks + 1, current.totalBlocks);
-
-        // Проверяем, все ли блоки пройдены
-        const allBlocksCompleted = newCompletedBlocks >= current.totalBlocks;
-
-        // Обновляем информацию о блоках
-        const updatedBlocks = current.blocks?.map((b) =>
-          b.blockId === blockId
-            ? { ...b, completed: true, completedAt: new Date().toISOString() }
-            : b
-        );
-
-        return {
-          ...prev,
-          [lessonId]: {
-            ...current,
-            completedBlocks: newCompletedBlocks,
-            status: allBlocksCompleted ? "completed" : current.status,
-            blocks: updatedBlocks,
-          },
-        };
-      });
     },
     [course._id]
   );

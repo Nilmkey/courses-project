@@ -44,10 +44,18 @@ export function BlockItem({
 
   // Получаем прогресс урока для определения завершённости блока
   const lessonProgress = getLessonProgress(lessonId);
-  const isCompleted =
-    lessonProgress &&
-    lessonProgress.completedBlocks > blockIndex &&
-    lessonProgress.status === "completed";
+  
+  // Проверяем, завершен ли конкретный блок по ID
+  const isBlockCompleted = lessonProgress?.blocks?.some(
+    (b) => b.blockId === blockId && b.completed
+  );
+  
+  // Альтернативно проверяем по индексу (для обратной совместимости)
+  const isCompletedByIndex = lessonProgress &&
+    lessonProgress.completedBlocks > blockIndex;
+  
+  // Блок завершен, если он завершен по ID или по индексу
+  const isCompleted = isBlockCompleted || isCompletedByIndex;
 
   return (
     <button

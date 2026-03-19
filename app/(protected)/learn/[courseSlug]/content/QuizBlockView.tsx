@@ -6,7 +6,7 @@ import { CompletionButton } from "@/components/learning/CompletionButton";
 import { useLearning } from "@/hooks/useLearning";
 import type { IQuizBlock, IQuizAnswer } from "@/types/types";
 
-export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
+export function QuizBlockView({ content, blockId }: { content: IQuizBlock["content"]; blockId?: string }) {
   const { currentLessonId, updateQuizAnswers } = useLearning();
   const [answers, setAnswers] = useState<
     Record<string, number | number[] | string>
@@ -57,7 +57,7 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
   );
 
   // Проверка ответов
-  const checkAnswers = useCallback(() => {
+  const checkAnswers = useCallback(async () => {
     if (!currentLessonId) return;
 
     let correct = 0;
@@ -100,7 +100,10 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
     }
 
     setScore({ correct, total: content.questions.length });
-    updateQuizAnswers(currentLessonId, quizAnswers);
+    
+    // Сохраняем ответы (но не завершаем блок автоматически)
+    await updateQuizAnswers(currentLessonId, quizAnswers);
+    
     setSubmitted(true);
   }, [answers, content.questions, currentLessonId, updateQuizAnswers]);
 
