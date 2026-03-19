@@ -40,7 +40,8 @@ const ReadonlyEditor = ({ content }: ReadonlyEditorProps) => {
   );
 };
 
-export function TextBlockView({ content }: { content: ITextBlock["content"] }) {
+export function TextBlockView({ content, blockId }: { content: ITextBlock["content"]; blockId?: string }) {
+  // Убрали автоматическое завершение - теперь блок завершается только по кнопке
   return (
     <div>
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-8 mb-6 shadow-sm">

@@ -64,9 +64,12 @@ function VideoPreview({ embedUrl, isDirectVideo }: VideoPreviewProps) {
 
 export function VideoBlockView({
   content,
+  blockId,
 }: {
   content: IVideoBlock["content"];
+  blockId?: string;
 }) {
+  // Убрали автоматическое завершение - теперь блок завершается только по кнопке
   const embedUrl = getEmbedUrl(content.url || "");
   const isDirectVideo = !!(
     content.url &&
