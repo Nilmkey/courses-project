@@ -40,6 +40,8 @@ import {
 } from "@/lib/api/entities/api-lessons";
 import { useToast } from "@/hooks/useToast";
 import { Toaster } from "react-hot-toast";
+import { infoLesson } from "@/types/types";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 
 export default function Editor() {
   const params = useParams();
@@ -51,11 +53,42 @@ export default function Editor() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [initialData, setInitialData] = useState<{ blocks: typeof blocks; lessonInfo: infoLesson } | null>(null);
   const toast = useToast();
+
+  // Сохраняем начальное состояние при загрузке
+  useEffect(() => {
+    if (blocks.length > 0 && lessonInfo.title && !initialData) {
+      setInitialData({
+        blocks: JSON.parse(JSON.stringify(blocks)),
+        lessonInfo: { ...lessonInfo },
+      });
+    }
+  }, [blocks, lessonInfo, initialData]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Проверка наличия несохраненных изменений
+  const hasUnsavedChanges = useCallback(() => {
+    if (!initialData) return false;
+    
+    // Сравниваем текущее состояние с начальным
+    const currentBlocks = JSON.stringify(blocks);
+    const currentLessonInfo = JSON.stringify(lessonInfo);
+    const initialBlocks = JSON.stringify(initialData.blocks);
+    const initialLessonInfo = JSON.stringify(initialData.lessonInfo);
+    
+    return currentBlocks !== initialBlocks || currentLessonInfo !== initialLessonInfo;
+  }, [blocks, lessonInfo, initialData]);
+
+  // Подключение хука для отслеживания несохраненных изменений
+  const { resetChanges } = useUnsavedChanges({
+    hasUnsavedChanges,
+    message: "У вас есть несохраненные изменения в уроке. Вы уверены, что хотите уйти?",
+    enabled: true,
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -195,6 +228,13 @@ export default function Editor() {
         content_blocks: contentBlocks,
       });
 
+      // Обновляем начальное состояние после успешного сохранения
+      setInitialData({
+        blocks: JSON.parse(JSON.stringify(blocks)),
+        lessonInfo: { ...lessonInfo },
+      });
+      resetChanges();
+      
       toast.success("Урок успешно сохранён!");
     } catch (error) {
       console.error("Ошибка при сохранении урока:", error);
@@ -202,7 +242,7 @@ export default function Editor() {
     } finally {
       setIsSaving(false);
     }
-  }, [blocks, lessonId, lessonInfo.title, toast, validateBlocks]);
+  }, [blocks, lessonId, lessonInfo.title, toast, validateBlocks, resetChanges]);
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">

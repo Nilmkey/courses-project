@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { CheckCircle, Loader2, ArrowRight } from "lucide-react";
 import { useLearning } from "@/hooks/useLearning";
 
@@ -9,76 +10,114 @@ export function CompletionButton() {
     currentBlockId,
     markLessonComplete,
     completeBlock,
-    lessonProgress,
     getCurrentLesson,
     navigateToNextBlock,
-    isCompletingBlock
+    overallProgress,
   } = useLearning();
 
-  const currentLesson = getCurrentLesson();
-  const totalBlocks = currentLesson?.content_blocks.length || 0;
-  const currentProgress = lessonProgress[currentLessonId || ''];
-  const lessonProgress = getLessonProgress(currentLessonId || '');
+  const [isCompleted, setIsCompleted] = useState(false);
 
-  // Определяем индекс текущего блока
-  const currentBlockIndex = currentLesson?.content_blocks.findIndex(
-    b => (b.id || b._id) === currentBlockId
-  ) || 0;
+  // Сбрасываем состояние при переходе к новому блоку
+  useEffect(() => {
+    setIsCompleted(false);
+  }, [currentBlockId, currentLessonId]);
 
-  const isLastBlock = currentBlockIndex === totalBlocks - 1;
-  const isLoading = isCompletingBlock;
+  // Кэшируем вычисления с useMemo
+  const { isLastBlock, isCourseCompleted } = useMemo(() => {
+    const lesson = getCurrentLesson;
+    const totalBlocks = lesson?.content_blocks.length || 0;
 
-  const handleClick = async () => {
-    if (!currentLessonId || !currentBlockId || isLoading) return;
+    const currentBlockIndex = lesson?.content_blocks.findIndex(
+      (b) => (b.id || b._id) === currentBlockId
+    );
 
-    // Если это последний блок - просто завершаем урок
-    // (бэкенд автоматически отметит все блоки как пройденные)
+    // Курс завершен, если прогресс 100% после завершения этого урока
+    const willBeCourseCompleted = overallProgress.progress >= 100;
+
+    return {
+      isLastBlock: currentBlockIndex !== undefined && currentBlockIndex === totalBlocks - 1,
+      isCourseCompleted: willBeCourseCompleted,
+    };
+  }, [getCurrentLesson, currentBlockId, overallProgress.progress]);
+
+  // Обработчик с useCallback
+  const handleClick = useCallback(async () => {
+    if (!currentLessonId || !currentBlockId || isCompleted) return;
+
+    // Мгновенная визуальная обратная связь
+    setIsCompleted(true);
+
     if (isLastBlock) {
-      await markLessonComplete(currentLessonId);
+      // Для последнего блока вызываем только markLessonComplete
+      // completeBlock не нужен, чтобы избежать конфликта версий MongoDB
+      markLessonComplete(currentLessonId).catch((error) => {
+        console.error("Ошибка при завершении урока:", error);
+      });
+      
+      // Сбрасываем состояние через небольшую задержку
+      // Если курс завершен, навигации нет, поэтому нужен таймаут
+      if (isCourseCompleted) {
+        setTimeout(() => setIsCompleted(false), 1000);
+      }
     } else {
-      // Завершаем текущий блок (без await для мгновенной реакции UI)
-      // Бэкенд автоматически проверит, все ли блоки пройдены
+      // Для обычных блоков вызываем completeBlock + навигацию
       completeBlock(currentLessonId, currentBlockId);
-      // Переходим к следующему блоку
       navigateToNextBlock();
     }
-  // Находим последний незавершенный блок в уроке
-  const lastIncompleteBlockIndex = currentLesson?.content_blocks.reduceRight(
-    (acc, block, index) => {
-      if (acc !== -1) return acc; // Уже нашли
-      
-      const blockId = block.id || block._id || '';
-      const isBlockCompleted = lessonProgress?.blocks?.some(
-        (b) => b.blockId === blockId && b.completed
-      );
-      
-      return isBlockCompleted ? acc : index;
-    },
-    -1 as number
-  );
+  }, [
+    currentLessonId,
+    currentBlockId,
+    isCompleted,
+    isLastBlock,
+    isCourseCompleted,
+    markLessonComplete,
+    completeBlock,
+    navigateToNextBlock,
+  ]);
 
-  // Кнопка "Завершить блок и урок" показывается на последнем незавершенном блоке
-  const isLastIncompleteBlock = currentBlockIndex === lastIncompleteBlockIndex;
-
-  const handleClick = async () => {
-    if (!currentLessonId || !currentBlockId) return;
-
-    // Завершаем текущий блок
-    await completeBlock(currentLessonId, currentBlockId);
-
-    // Переходим к следующему блоку
-    navigateToNextBlock();
-  };
+  // Кэшируем текст кнопки
+  const buttonText = useMemo(() => {
+    if (isCompleted) {
+      if (isCourseCompleted) return "Поздравляем!";
+      return isLastBlock ? "Завершение..." : "Переход...";
+    }
+    return isCourseCompleted 
+      ? "🎉 Завершить курс" 
+      : isLastBlock 
+        ? "Завершить блок и урок" 
+        : "Завершить блок";
+  }, [isCompleted, isLastBlock, isCourseCompleted]);
 
   return (
     <button
       onClick={handleClick}
-      disabled={isLoading}
-      className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 dark:bg-green-600 dark:hover:bg-green-700"
+      disabled={isCompleted && !isCourseCompleted}
+      className={`flex items-center justify-center gap-2 px-4 md:px-6 py-3 md:py-3 bg-green-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-green-500/25 active:scale-95 disabled:active:scale-100 dark:bg-green-600 dark:hover:bg-green-700 w-full md:w-auto ${
+        isCompleted && !isCourseCompleted
+          ? "bg-green-700 cursor-wait"
+          : isCourseCompleted
+            ? "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 animate-pulse"
+            : "hover:bg-green-700"
+      }`}
     >
-      <CheckCircle size={20} />
-      {isLastIncompleteBlock ? "Завершить блок и урок" : "Завершить блок"}
-      <ArrowRight size={20} />
+      {isCompleted && !isCourseCompleted ? (
+        <>
+          <Loader2 className="md:hidden animate-spin" size={18} />
+          <Loader2 className="hidden md:block animate-spin" size={20} />
+        </>
+      ) : isCourseCompleted ? (
+        <>
+          <CheckCircle className="md:hidden" size={20} />
+          <CheckCircle className="hidden md:block text-white" size={24} />
+        </>
+      ) : (
+        <>
+          <CheckCircle className="md:hidden" size={18} />
+          <CheckCircle className="hidden md:block" size={20} />
+        </>
+      )}
+      <span className="text-sm md:text-base">{buttonText}</span>
+      {!isLastBlock && !isCompleted && !isCourseCompleted && <ArrowRight size={16} className="hidden md:block ml-1" />}
     </button>
   );
 }

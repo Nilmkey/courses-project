@@ -13,6 +13,7 @@ export function CourseEditorClient() {
   const { courseId } = useParams<{ courseId: string }>();
   const { setSections } = useSection();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [initialSections, setInitialSections] = useState<Section[] | null>(null);
   const toast = useToast();
   const hasLoadedRef = useRef(false);
 
@@ -37,6 +38,7 @@ export function CourseEditorClient() {
         }));
 
         setSections(loadedSections);
+        setInitialSections(loadedSections);
       } catch (error) {
         console.error("Ошибка при загрузке секций:", error);
         toast.error("Не удалось загрузить секции курса");
@@ -53,6 +55,8 @@ export function CourseEditorClient() {
   const handleSave = useCallback(
     async (updatedSections: Section[]) => {
       try {
+        // Обновляем начальное состояние после успешного сохранения
+        setInitialSections(updatedSections);
         toast.success("Все изменения сохранены!");
       } catch (err) {
         console.error("Error saving course:", err);
@@ -74,5 +78,11 @@ export function CourseEditorClient() {
     );
   }
 
-  return <CourseEditorCore courseId={courseId} onSave={handleSave} />;
+  return (
+    <CourseEditorCore 
+      courseId={courseId} 
+      onSave={handleSave}
+      initialSections={initialSections}
+    />
+  );
 }

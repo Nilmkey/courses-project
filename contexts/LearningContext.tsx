@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState, useCallback, useEffect } from "react";
+import { createContext, useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type {
   ICourse,
   ISection,
@@ -74,9 +74,9 @@ export interface LearningContextType {
   // Утилиты
   getLessonStatus: (lessonId: string) => LessonStatus;
   getLessonProgress: (lessonId: string) => LessonProgressData | undefined;
-  getCurrentBlock: () => IBlock | null;
-  getCurrentLesson: () => ILesson | null;
-  getCurrentSection: () => ISection | null;
+  getCurrentBlock: IBlock | null;
+  getCurrentLesson: ILesson | null;
+  getCurrentSection: ISection | null;
 }
 
 interface LearningContextProviderProps {
@@ -101,6 +101,9 @@ export function LearningContextProvider({
   children,
 }: LearningContextProviderProps) {
   const toast = useToast();
+  
+  // Ref для debounce таймеров quiz-ответов
+  const quizDebounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
 
   const [currentSectionId, setCurrentSectionId] = useState<string | null>(
     sections[0]?._id || null
@@ -122,6 +125,16 @@ export function LearningContextProvider({
     progress: initialProgress.progress,
   });
   const [isCompletingBlock, setIsCompletingBlock] = useState(false);
+
+  // Cleanup для debounce таймеров при размонтировании
+  useEffect(() => {
+    return () => {
+      // Очищаем все таймеры при размонтировании
+      Object.values(quizDebounceTimers.current).forEach((timer) => {
+        clearTimeout(timer);
+      });
+    };
+  }, []);
 
   // Загрузка прогресса с сервера при монтировании
   useEffect(() => {
@@ -247,9 +260,9 @@ export function LearningContextProvider({
     []
   );
 
-  // Поиск текущего блока в структуре
-  const findBlockLocation = useCallback(() => {
-    if (!currentLessonId || !currentBlockId) return null;
+  // Поиск текущего блока в структуре - оптимизировано с useMemo
+  const findBlockLocation = useMemo(() => {
+    if (!currentLessonId || !currentBlockId || !currentSectionId) return null;
 
     for (let sIdx = 0; sIdx < sections.length; sIdx++) {
       const section = sections[sIdx];
@@ -282,7 +295,7 @@ export function LearningContextProvider({
 
   // Переход к следующему блоку
   const navigateToNextBlock = useCallback(() => {
-    const location = findBlockLocation();
+    const location = findBlockLocation;
     if (!location) return;
 
     const { sectionIndex, lessonIndex, blockIndex, section, lesson } = location;
@@ -322,7 +335,7 @@ export function LearningContextProvider({
 
   // Переход к предыдущему блоку
   const navigateToPreviousBlock = useCallback(() => {
-    const location = findBlockLocation();
+    const location = findBlockLocation;
     if (!location) return;
 
     const { sectionIndex, lessonIndex, blockIndex, section, lesson } = location;
@@ -363,16 +376,13 @@ export function LearningContextProvider({
     }
   }, [findBlockLocation, navigateToBlock, sections]);
 
-  // Отметить урок как пройденный
+  // Отметить урок как пройденный (оптимистичное обновление)
   const markLessonComplete = useCallback(
     async (lessonId: string) => {
       try {
         const courseId = course._id;
 
-        // Отправляем на сервер
-        const response = await progressApi.markLessonComplete(lessonId, courseId);
-
-        // Обновляем локальное состояние
+        // Обновляем локальное состояние СРАЗУ (оптимистичное обновление)
         setLessonProgress((prev) => {
           const current = prev[lessonId];
           if (!current) return prev;
@@ -382,10 +392,6 @@ export function LearningContextProvider({
             status: "completed" as LessonStatus,
             isCompleted: true,
             completedBlocks: current.totalBlocks,
-            blocks: response.blocks?.map((b) => ({
-              ...b,
-              completed: true,
-            })),
           };
 
           // Подсчитываем завершенные уроки
@@ -411,10 +417,40 @@ export function LearningContextProvider({
 
         toast.success("Урок отмечен как пройденный!");
 
+        // Отправляем на сервер (без await, чтобы не блокировать UI)
+        progressApi.markLessonComplete(lessonId, courseId)
+          .then((response) => {
+            // Обновляем данные о блоках из ответа сервера
+            if (response.blocks && response.blocks.length > 0) {
+              setLessonProgress((prev) => {
+                const current = prev[lessonId];
+                if (!current) return prev;
+
+                return {
+                  ...prev,
+                  [lessonId]: {
+                    ...current,
+                    blocks: response.blocks?.map((b) => ({
+                      ...b,
+                      completed: true,
+                    })),
+                  },
+                };
+              });
+            }
+          })
+          .catch((error) => {
+            // Игнорируем ошибки оптимистической блокировки MongoDB
+            // Данные уже обновлены локально
+            if (error?.data?.code === 'VERSION_ERROR' || error?.message?.includes('version')) {
+              console.log("Конфликт версий MongoDB при завершении урока (ожидаемое поведение)");
+            } else {
+              console.error("Ошибка при сохранении урока:", error);
+            }
+          });
+
         // Автоматический переход к следующему блоку
-        setTimeout(() => {
-          navigateToNextBlock();
-        }, 500);
+        navigateToNextBlock();
       } catch (error) {
         console.error("Ошибка при отметке урока:", error);
         toast.error("Не удалось сохранить прогресс");
@@ -423,40 +459,47 @@ export function LearningContextProvider({
     [course._id, navigateToNextBlock, toast]
   );
 
-  // Обновить ответы на quiz
+  // Обновить ответы на quiz (с debounce для оптимизации)
   const updateQuizAnswers = useCallback(
     async (lessonId: string, answers: IQuizAnswer[]) => {
-      try {
-        const courseId = course._id;
-
-        // Отправляем на сервер
-        await progressApi.updateLessonProgress(lessonId, {
-          courseId,
-          completed: false,
-          quizAnswers: answers,
-        });
-
-        // Обновляем локальное состояние
-        setLessonProgress((prev) => {
-          const current = prev[lessonId];
-          if (!current) return prev;
-
-          return {
-            ...prev,
-            [lessonId]: {
-              ...current,
-              quizAnswers: answers,
-              status:
-                current.status === "not-started"
-                  ? "in-progress"
-                  : current.status,
-            },
-          };
-        });
-      } catch (error) {
-        console.error("Ошибка при сохранении ответов:", error);
-        // Не показываем ошибку пользователю - это фоновое сохранение
+      // Очищаем предыдущий таймер для этого урока
+      if (quizDebounceTimers.current[lessonId]) {
+        clearTimeout(quizDebounceTimers.current[lessonId]);
       }
+
+      // Обновляем локальное состояние СРАЗУ (оптимистичное обновление)
+      setLessonProgress((prev) => {
+        const current = prev[lessonId];
+        if (!current) return prev;
+
+        return {
+          ...prev,
+          [lessonId]: {
+            ...current,
+            quizAnswers: answers,
+            status:
+              current.status === "not-started"
+                ? "in-progress"
+                : current.status,
+          },
+        };
+      });
+
+      // Отправляем на сервер с задержкой (debounce 500мс)
+      quizDebounceTimers.current[lessonId] = setTimeout(async () => {
+        try {
+          const courseId = course._id;
+
+          await progressApi.updateLessonProgress(lessonId, {
+            courseId,
+            completed: false,
+            quizAnswers: answers,
+          });
+        } catch (error) {
+          console.error("Ошибка при сохранении ответов:", error);
+          // Не показываем ошибку пользователю - это фоновое сохранение
+        }
+      }, 500);
     },
     [course._id]
   );
@@ -513,13 +556,10 @@ export function LearningContextProvider({
     [course._id, toast]
   );
 
-  // Завершить блок
+  // Завершить блок (оптимистичное обновление UI)
   const completeBlock = useCallback(
     async (lessonId: string, blockId: string, quizAnswers?: IQuizAnswer[]) => {
       const courseId = course._id;
-
-      // Сразу устанавливаем флаг загрузки для мгновенной реакции UI
-      setIsCompletingBlock(true);
 
       // Обновляем локальное состояние СРАЗУ (без ожидания API)
       setLessonProgress((prev) => {
@@ -532,47 +572,21 @@ export function LearningContextProvider({
         );
 
         if (blockAlreadyCompleted) {
-          // Блок уже завершен, не увеличиваем счетчик
-          setTimeout(() => setIsCompletingBlock(false), 100);
+          // Блок уже завершен, не обновляем
           return prev;
         }
 
-          const completedBlocksCount = response.completedBlocksCount || updatedBlocks.filter(b => b.completed).length;
-          const totalBlocksCount = response.totalBlocksCount || current.totalBlocks;
-          const allBlocksCompleted = completedBlocksCount >= totalBlocksCount;
+        const newCompletedBlocks = Math.min(current.completedBlocks + 1, current.totalBlocks);
 
-          const updated = {
-            ...prev,
-            [lessonId]: {
-              ...current,
-              completedBlocks: completedBlocksCount,
-              status: allBlocksCompleted || response.completed ? "completed" : current.status,
-              isCompleted: response.completed || allBlocksCompleted,
-              blocks: updatedBlocks,
-            },
-          };
+        // Проверяем, все ли блоки пройдены
+        const allBlocksCompleted = newCompletedBlocks >= current.totalBlocks;
 
-          // Если все блоки завершены, но урок еще не завершен - завершаем урок автоматически
-          if (allBlocksCompleted && !response.completed && !current.isCompleted) {
-            // Асинхронно завершаем урок на сервере
-            progressApi.markLessonComplete(lessonId, courseId)
-              .then(() => {
-                // Обновляем локальное состояние
-                setLessonProgress((prev2) => {
-                  const curr = prev2[lessonId];
-                  if (!curr) return prev2;
-                  return {
-                    ...prev2,
-                    [lessonId]: {
-                      ...curr,
-                      isCompleted: true,
-                      status: "completed" as LessonStatus,
-                    },
-                  };
-                });
-              })
-              .catch(console.error);
-          }
+        // Обновляем информацию о блоках
+        const updatedBlocks = current.blocks?.map((b) =>
+          b.blockId === blockId
+            ? { ...b, completed: true, completedAt: new Date().toISOString() }
+            : b
+        );
 
         return {
           ...prev,
@@ -592,12 +606,13 @@ export function LearningContextProvider({
         quizAnswers,
       })
         .catch((error) => {
-          console.error("Ошибка при сохранении прогресса блока:", error);
-          // Не показываем ошибку пользователю - это фоновое сохранение
-        })
-        .finally(() => {
-          // Снимаем флаг загрузки после завершения запроса
-          setTimeout(() => setIsCompletingBlock(false), 100);
+          // Игнорируем ошибки оптимистической блокировки MongoDB
+          // Это фоновое сохранение, данные уже обновлены локально
+          if (error?.data?.code === 'VERSION_ERROR' || error?.message?.includes('version')) {
+            console.log("Конфликт версий MongoDB (ожидаемое поведение):", blockId);
+          } else {
+            console.error("Ошибка при сохранении прогресса блока:", error);
+          }
         });
     },
     [course._id]
@@ -692,14 +707,13 @@ export function LearningContextProvider({
     [lessonProgress]
   );
 
-  // Получить текущий блок
-  const getCurrentBlock = useCallback((): IBlock | null => {
-    const location = findBlockLocation();
-    return location?.block || null;
+  // Получить текущий блок (оптимизировано с useMemo)
+  const getCurrentBlock = useMemo((): IBlock | null => {
+    return findBlockLocation?.block || null;
   }, [findBlockLocation]);
 
-  // Получить текущий урок
-  const getCurrentLesson = useCallback((): ILesson | null => {
+  // Получить текущий урок (оптимизировано с useMemo)
+  const getCurrentLesson = useMemo((): ILesson | null => {
     if (!currentLessonId) return null;
 
     for (const section of sections) {
@@ -712,8 +726,8 @@ export function LearningContextProvider({
     return null;
   }, [sections, currentLessonId]);
 
-  // Получить текущую секцию
-  const getCurrentSection = useCallback((): ISection | null => {
+  // Получить текущую секцию (оптимизировано с useMemo)
+  const getCurrentSection = useMemo((): ISection | null => {
     return sections.find((s) => s._id === currentSectionId) || null;
   }, [sections, currentSectionId]);
 

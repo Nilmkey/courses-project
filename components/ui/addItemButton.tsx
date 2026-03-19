@@ -68,7 +68,7 @@ export function AddItemButton() {
       {isOpen && (
         <div
           ref={menuRef}
-          className="absolute top-full mt-4 z-50 w-50 bg-white dark:bg-slate-800 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-slate-700 p-2 animate-in fade-in zoom-in-95 duration-200 origin-top"
+          className="absolute bottom-full mb-4 z-50 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-slate-700 p-2 animate-in fade-in zoom-in-95 duration-200 origin-bottom"
         >
           <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Тип контента

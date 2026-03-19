@@ -69,8 +69,8 @@ export const QuizForm = ({ content, onUpdate }: BaseFormProps) => {
 
   return (
     <div className="space-y-8 px-6 py-6">
-      <div className="flex items-center justify-between pb-4">
-        <label className="text-sm font-black text-slate-900 uppercase tracking-tight">
+      <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
+        <label className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
           Конструктор теста ({questions.length})
         </label>
         <div className="flex gap-2">
@@ -78,7 +78,7 @@ export const QuizForm = ({ content, onUpdate }: BaseFormProps) => {
             onClick={() =>
               updateQuestions([...questions, createEmptyQuestion("single")])
             }
-            className="flex items-center gap-1.5 text-[10px] bg-slate-900 text-white px-3 py-2 rounded-lg hover:bg-slate-800 font-bold shadow-sm"
+            className="flex items-center gap-1.5 text-[10px] bg-slate-900 dark:bg-slate-700 text-white px-3 py-2 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-600 font-bold shadow-sm"
           >
             <Plus size={12} /> Одиночный
           </button>
@@ -102,13 +102,13 @@ export const QuizForm = ({ content, onUpdate }: BaseFormProps) => {
       </div>
 
       <div className="space-y-10">
-        {questions.map((q   ) => (
+        {questions.map((q) => (
           <div
             key={q.id}
-            className="p-6 rounded-2xl border-2 border-slate-100 bg-white shadow-sm space-y-5 relative group"
+            className="p-6 rounded-2xl border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm space-y-5 relative group"
           >
             {/* Badge типа вопроса */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-black text-slate-600 uppercase">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase">
               {q.type === "single" && <Circle size={10} />}
               {q.type === "multiple" && <CheckSquare size={10} />}
               {q.type === "text" && <Type size={10} />}
@@ -123,7 +123,7 @@ export const QuizForm = ({ content, onUpdate }: BaseFormProps) => {
               onClick={() =>
                 updateQuestions(questions.filter((item) => item.id !== q.id))
               }
-              className="absolute -top-3 -right-3 p-2 bg-white border-2 border-slate-100 text-slate-400 hover:text-red-600 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all"
+              className="absolute -top-3 -right-3 p-2 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 text-slate-400 hover:text-red-600 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all"
             >
               <Trash2 size={16} />
             </button>
@@ -131,7 +131,7 @@ export const QuizForm = ({ content, onUpdate }: BaseFormProps) => {
             {/* Текст вопроса */}
             <input
               type="text"
-              className="w-full bg-slate-50 border-2 border-transparent focus:border-slate-900 focus:bg-white rounded-xl px-4 py-3 outline-none font-bold text-slate-900 placeholder:text-slate-400 transition-all"
+              className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-[#3b5bdb] dark:focus:border-[#5c7cfa] focus:bg-white dark:focus:bg-slate-950 rounded-xl px-4 py-3 outline-none font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all"
               placeholder="Напишите текст вопроса..."
               value={q.questionText}
               onChange={(e) =>
@@ -142,12 +142,12 @@ export const QuizForm = ({ content, onUpdate }: BaseFormProps) => {
             <div className="space-y-3">
               {q.type === "text" ? (
                 <div className="space-y-2">
-                  <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest pl-1">
+                  <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest pl-1">
                     Правильный ответ (студент должен ввести это)
                   </span>
                   <input
                     type="text"
-                    className="w-full bg-emerald-50/50 border-2 border-emerald-100 focus:border-emerald-500 rounded-xl px-4 py-3 outline-none font-bold text-emerald-900 transition-all"
+                    className="w-full bg-emerald-50/50 dark:bg-emerald-900/20 border-2 border-emerald-100 dark:border-emerald-900/50 focus:border-emerald-500 rounded-xl px-4 py-3 outline-none font-bold text-emerald-900 dark:text-emerald-100 transition-all"
                     placeholder="Введите текст правильного ответа..."
                     value={q.correctAnswerText}
                     onChange={(e) =>
@@ -160,7 +160,7 @@ export const QuizForm = ({ content, onUpdate }: BaseFormProps) => {
                 </div>
               ) : (
                 <div className="grid gap-3">
-                  <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest pl-1">
+                  <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest pl-1">
                     Варианты ответов
                   </span>
                   {q.options.map((option, optIndex) => {
@@ -183,7 +183,7 @@ export const QuizForm = ({ content, onUpdate }: BaseFormProps) => {
                                 })
                               : toggleMultipleAnswer(q, optIndex)
                           }
-                          className={`shrink-0 transition-all ${isCorrect ? "text-green-600 scale-110" : "text-slate-200 hover:text-slate-400"}`}
+                          className={`shrink-0 transition-all ${isCorrect ? "text-green-600 dark:text-green-400 scale-110" : "text-slate-200 dark:text-slate-700 hover:text-slate-400"}`}
                         >
                           {isCorrect ? (
                             <CheckCircle2 size={24} strokeWidth={3} />
@@ -195,8 +195,8 @@ export const QuizForm = ({ content, onUpdate }: BaseFormProps) => {
                           type="text"
                           className={`flex-1 text-sm font-semibold p-3 rounded-xl border-2 transition-all ${
                             isCorrect
-                              ? "bg-green-50 border-green-500 text-green-900"
-                              : "bg-white border-slate-100 text-slate-900 focus:border-slate-900"
+                              ? "bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-600 text-green-900 dark:text-green-100"
+                              : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-700 text-slate-900 dark:text-white focus:border-[#3b5bdb] dark:focus:border-[#5c7cfa]"
                           }`}
                           value={option}
                           onChange={(e) => {
@@ -214,7 +214,7 @@ export const QuizForm = ({ content, onUpdate }: BaseFormProps) => {
                                 ),
                               })
                             }
-                            className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                            className="p-2 text-slate-300 dark:text-slate-600 hover:text-red-500 transition-colors"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -231,7 +231,7 @@ export const QuizForm = ({ content, onUpdate }: BaseFormProps) => {
                         ],
                       })
                     }
-                    className="inline-flex items-center text-xs text-slate-900 font-black hover:text-blue-600 mt-2 pl-9"
+                    className="inline-flex items-center text-xs text-slate-900 dark:text-slate-300 font-black hover:text-blue-600 dark:hover:text-blue-400 mt-2 pl-9"
                   >
                     <Plus size={14} className="mr-1" strokeWidth={3} /> Добавить
                     вариант
@@ -244,9 +244,9 @@ export const QuizForm = ({ content, onUpdate }: BaseFormProps) => {
       </div>
 
       {questions.length === 0 && (
-        <div className="text-center py-16 border-4 border-dashed border-slate-50 rounded-2rem bg-slate-50/20">
-          <HelpCircle size={48} className="mx-auto text-slate-200 mb-4" />
-          <p className="text-slate-900 font-bold text-lg">
+        <div className="text-center py-16 border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-2rem bg-slate-50/20 dark:bg-slate-900/20">
+          <HelpCircle size={48} className="mx-auto text-slate-200 dark:text-slate-700 mb-4" />
+          <p className="text-slate-900 dark:text-white font-bold text-lg">
             Создайте свой первый вопрос
           </p>
         </div>

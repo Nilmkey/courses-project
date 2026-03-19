@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import { CompletionButton } from "@/components/learning/CompletionButton";
 import type { IVideoBlock } from "@/types/types";
 
@@ -37,7 +38,8 @@ interface VideoPreviewProps {
   isDirectVideo: boolean;
 }
 
-function VideoPreview({ embedUrl, isDirectVideo }: VideoPreviewProps) {
+// Оптимизированный компонент с memo
+const VideoPreview = memo<VideoPreviewProps>(function VideoPreview({ embedUrl, isDirectVideo }) {
   if (isDirectVideo) {
     return (
       <video
@@ -60,39 +62,30 @@ function VideoPreview({ embedUrl, isDirectVideo }: VideoPreviewProps) {
       title="Video player"
     />
   );
-}
+});
 
-export function VideoBlockView({
-  content,
-  blockId,
-}: {
-  content: IVideoBlock["content"];
-  blockId?: string;
-}) {
-  // Убрали автоматическое завершение - теперь блок завершается только по кнопке
-  const embedUrl = getEmbedUrl(content.url || "");
-  const isDirectVideo = !!(
-    content.url &&
-    (content.url.endsWith(".mp4") ||
-      content.url.endsWith(".webm") ||
-      content.url.endsWith(".ogg"))
-  );
+export function VideoBlockView({ content }: { content: IVideoBlock["content"] }) {
+  // Кэшируем вычисления с useMemo
+  const { embedUrl, isDirectVideo, hasError } = useMemo(() => {
+    const url = content.url || "";
+    const embed = getEmbedUrl(url);
+    const isDirect = !!(
+      url && (url.endsWith(".mp4") || url.endsWith(".webm") || url.endsWith(".ogg"))
+    );
+    const error = !embed;
+    
+    return { embedUrl: embed || "", isDirectVideo: isDirect, hasError: error };
+  }, [content.url]);
 
   return (
     <div>
-      {/* Заголовок видео */}
       {content.titleVideo && (
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
           {content.titleVideo}
         </h2>
       )}
 
-      {/* Видео плеер */}
-      {embedUrl ? (
-        <div className="relative aspect-video bg-black rounded-xl overflow-hidden mb-6 shadow-lg">
-          <VideoPreview embedUrl={embedUrl} isDirectVideo={isDirectVideo} />
-        </div>
-      ) : (
+      {hasError ? (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-8 mb-6 text-center">
           <div className="text-red-600 dark:text-red-400 font-medium">
             Неподдерживаемый формат видео
@@ -102,9 +95,12 @@ export function VideoBlockView({
             на .mp4/.webm/.ogg файлы
           </p>
         </div>
+      ) : (
+        <div className="relative aspect-video bg-black rounded-xl overflow-hidden mb-6 shadow-lg">
+          <VideoPreview embedUrl={embedUrl} isDirectVideo={isDirectVideo} />
+        </div>
       )}
 
-      {/* Кнопка завершения */}
       <CompletionButton />
     </div>
   );
