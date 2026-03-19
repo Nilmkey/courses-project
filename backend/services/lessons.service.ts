@@ -1,7 +1,8 @@
-import { Lesson, Section } from "../models";
+import { Lesson, Section, Progress } from "../models";
 import { ApiError } from "../utils/ApiError";
 import type { ILesson } from "../models";
 import type { Types } from "mongoose";
+import { progressService } from "./progress.service";
 
 export interface LessonBlockInput {
   id: string;
@@ -47,6 +48,16 @@ export const lessonsService = {
       $push: { lessons: lesson._id },
     });
 
+    // Пересчитываем прогресс всех пользователей после добавления урока
+    try {
+      const section = await Section.findById(data.section_id);
+      if (section) {
+        await progressService.recalculateCourseProgress(section.course_id.toString());
+      }
+    } catch (error) {
+      console.error("[Lessons] Ошибка пересчета прогресса после создания урока:", error);
+    }
+
     return lesson;
   },
 
@@ -57,6 +68,22 @@ export const lessonsService = {
     if (!updated) {
       throw ApiError.notFound("Урок не найден");
     }
+
+    // Если обновляются блоки - пересчитываем прогресс
+    if (data.content_blocks) {
+      const lesson = await Lesson.findById(id);
+      if (lesson) {
+        const section = await Section.findById(lesson.section_id);
+        if (section) {
+          try {
+            await progressService.recalculateCourseProgress(section.course_id.toString());
+          } catch (error) {
+            console.error("[Lessons] Ошибка пересчета прогресса после обновления урока:", error);
+          }
+        }
+      }
+    }
+
     return updated;
   },
 
@@ -66,12 +93,25 @@ export const lessonsService = {
       throw ApiError.notFound("Урок не найден");
     }
 
+    const sectionId = lesson.section_id;
+    const section = await Section.findById(sectionId);
+    const courseId = section?.course_id.toString();
+
     // Удаляем ID урока из массива lessons секции
     await Section.findByIdAndUpdate(lesson.section_id, {
       $pull: { lessons: lesson._id },
     });
 
     await Lesson.findByIdAndDelete(id);
+
+    // Пересчитываем прогресс всех пользователей после удаления урока
+    if (courseId) {
+      try {
+        await progressService.recalculateCourseProgress(courseId);
+      } catch (error) {
+        console.error("[Lessons] Ошибка пересчета прогресса после удаления урока:", error);
+      }
+    }
   },
 
   async reorder(sectionId: string, lessonIds: string[]): Promise<void> {
@@ -93,5 +133,82 @@ export const lessonsService = {
       throw ApiError.notFound("Урок не найден");
     }
     return lesson;
+  },
+
+  /**
+   * Добавить блок контента к уроку
+   */
+  async addBlock(lessonId: string, block: LessonBlockInput): Promise<ILesson> {
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson) {
+      throw ApiError.notFound("Урок не найден");
+    }
+
+    const section = await Section.findById(lesson.section_id);
+    if (!section) {
+      throw ApiError.notFound("Секция не найдена");
+    }
+
+    const updated = await Lesson.findByIdAndUpdate(
+      lessonId,
+      {
+        $push: {
+          content_blocks: {
+            ...block,
+            order_index: block.order_index ?? lesson.content_blocks.length,
+          },
+        },
+      },
+      { returnDocument: "after" },
+    ).lean();
+
+    if (!updated) {
+      throw ApiError.notFound("Урок не найден");
+    }
+
+    // Пересчитываем прогресс всех пользователей после добавления блока
+    try {
+      await progressService.recalculateCourseProgress(section.course_id.toString());
+    } catch (error) {
+      console.error("[Lessons] Ошибка пересчета прогресса после добавления блока:", error);
+    }
+
+    return updated;
+  },
+
+  /**
+   * Удалить блок контента из урока
+   */
+  async removeBlock(lessonId: string, blockId: string): Promise<ILesson> {
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson) {
+      throw ApiError.notFound("Урок не найден");
+    }
+
+    const section = await Section.findById(lesson.section_id);
+    if (!section) {
+      throw ApiError.notFound("Секция не найдена");
+    }
+
+    const updated = await Lesson.findByIdAndUpdate(
+      lessonId,
+      {
+        $pull: { content_blocks: { id: blockId } },
+      },
+      { returnDocument: "after" },
+    ).lean();
+
+    if (!updated) {
+      throw ApiError.notFound("Урок не найден");
+    }
+
+    // Пересчитываем прогресс всех пользователей после удаления блока
+    try {
+      await progressService.recalculateCourseProgress(section.course_id.toString());
+    } catch (error) {
+      console.error("[Lessons] Ошибка пересчета прогресса после удаления блока:", error);
+    }
+
+    return updated;
   },
 };

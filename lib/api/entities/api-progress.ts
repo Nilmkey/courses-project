@@ -1,25 +1,71 @@
 import { api } from "@/lib/api/api-client";
 import type { IQuizAnswer } from "@/types/types";
 
-export interface CourseProgressResponse {
-  totalLessons: number;
-  completedLessons: number;
-  progress: number; // 0-100
-}
-
-export interface LessonProgressResponse {
-  lesson_id: string;
+/**
+ * Прогресс по блоку контента
+ */
+export interface BlockProgressResponse {
+  blockId: string;
   completed: boolean;
   completedAt?: string;
   quizAnswers?: IQuizAnswer[];
 }
 
+/**
+ * Прогресс по уроку с детализацией по блокам
+ */
+export interface LessonProgressResponse {
+  lesson_id: string;
+  completed: boolean;
+  completedAt?: string;
+  quizAnswers?: IQuizAnswer[];
+  blocks?: BlockProgressResponse[];
+  completedBlocksCount: number;
+  totalBlocksCount: number;
+}
+
+/**
+ * Прогресс по секции
+ */
+export interface SectionProgressResponse {
+  section_id: string;
+  completed: boolean;
+  completedAt?: string;
+  completedLessonsCount: number;
+  totalLessonsCount: number;
+}
+
+/**
+ * Сводный прогресс курса
+ */
+export interface CourseProgressResponse {
+  totalLessons: number;
+  completedLessons: number;
+  totalBlocks: number;
+  completedBlocks: number;
+  totalSections: number;
+  completedSections: number;
+  progress: number; // 0-100
+}
+
+/**
+ * Детальный прогресс курса
+ */
 export interface CourseProgressDetail {
   _id: string;
   user_id: string;
   course_id: string;
   lessons: LessonProgressResponse[];
+  sections: SectionProgressResponse[];
   overallProgress: number;
+  stats: {
+    totalBlocks: number;
+    completedBlocks: number;
+    totalLessons: number;
+    completedLessons: number;
+    totalSections: number;
+    completedSections: number;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -27,6 +73,12 @@ export interface CourseProgressDetail {
 export interface UpdateLessonProgressData {
   courseId: string;
   completed: boolean;
+  quizAnswers?: IQuizAnswer[];
+}
+
+export interface MarkBlockCompleteData {
+  courseId: string;
+  blockId: string;
   quizAnswers?: IQuizAnswer[];
 }
 
@@ -52,10 +104,10 @@ export const progressApi = {
     ),
 
   /**
-   * Получить прогресс по конкретному уроку (ответы на quiz)
+   * Получить прогресс по конкретному уроку (ответы на quiz + блоки)
    */
   getLessonProgress: (lessonId: string, courseId: string) =>
-    api.get<IQuizAnswer[]>(
+    api.get<{ quizAnswers: IQuizAnswer[]; blocks: BlockProgressResponse[] }>(
       `/v1/progress/lesson/${lessonId}?courseId=${courseId}`,
       undefined,
       true
@@ -68,6 +120,21 @@ export const progressApi = {
     api.post<LessonProgressResponse>(
       `/v1/progress/lesson/${lessonId}/complete`,
       { courseId },
+      undefined,
+      true
+    ),
+
+  /**
+   * Отметить блок как завершенный
+   */
+  markBlockComplete: (
+    lessonId: string,
+    courseId: string,
+    data: MarkBlockCompleteData
+  ) =>
+    api.post<LessonProgressResponse>(
+      `/v1/progress/lesson/${lessonId}/block/${data.blockId}/complete`,
+      { courseId, blockId: data.blockId, quizAnswers: data.quizAnswers },
       undefined,
       true
     ),
@@ -104,6 +171,18 @@ export const progressApi = {
     api.post<void>(
       `/v1/progress/initialize`,
       { courseId },
+      undefined,
+      true
+    ),
+
+  /**
+   * Пересчитать прогресс всех пользователей по курсу
+   * Вызывается при добавлении/изменении контента
+   */
+  recalculateProgress: (courseId: string) =>
+    api.post<{ message: string; updatedUsers: number }>(
+      `/v1/progress/course/${courseId}/recalculate`,
+      undefined,
       undefined,
       true
     ),

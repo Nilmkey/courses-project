@@ -187,6 +187,11 @@ export const coursesController = {
     };
 
     const course = await coursesService.update(id, dataForService);
+    
+    // Пересчитываем прогресс всех пользователей при изменении курса
+    const progressService = await import('../../../services/progress.service');
+    await progressService.progressService.recalculateCourseProgress(id);
+    
     res.json(toCourseResponse(course as unknown as CourseData));
   },
 

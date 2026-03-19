@@ -1,7 +1,8 @@
-import { Section, Lesson } from "../models";
+import { Section, Lesson, Progress } from "../models";
 import { ApiError } from "../utils/ApiError";
 import type { ISection } from "../models";
 import type { Types } from "mongoose";
+import { progressService } from "./progress.service";
 
 export interface SectionCreateInput {
   course_id: string | Types.ObjectId;
@@ -27,6 +28,14 @@ export const sectionsService = {
       isDraft: data.isDraft ?? false,
       lessons: data.lessons ?? [],
     });
+
+    // Пересчитываем прогресс всех пользователей после добавления секции
+    try {
+      await progressService.recalculateCourseProgress(data.course_id.toString());
+    } catch (error) {
+      console.error("[Sections] Ошибка пересчета прогресса после создания секции:", error);
+    }
+
     return section;
   },
 
@@ -41,8 +50,22 @@ export const sectionsService = {
   },
 
   async delete(id: string): Promise<void> {
+    const section = await Section.findById(id);
+    if (!section) {
+      throw ApiError.notFound("Секция не найдена");
+    }
+
+    const courseId = section.course_id.toString();
+
     await Lesson.deleteMany({ section_id: id });
     await Section.findByIdAndDelete(id);
+
+    // Пересчитываем прогресс всех пользователей после удаления секции
+    try {
+      await progressService.recalculateCourseProgress(courseId);
+    } catch (error) {
+      console.error("[Sections] Ошибка пересчета прогресса после удаления секции:", error);
+    }
   },
 
   async reorder(courseId: string, sectionIds: string[]): Promise<void> {

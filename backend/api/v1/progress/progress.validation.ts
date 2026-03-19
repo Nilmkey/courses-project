@@ -56,3 +56,20 @@ export const initializeProgressSchema = z.object({
     courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Неверный формат ID курса'),
   }),
 });
+
+export const markBlockCompleteSchema = z.object({
+  params: z.object({
+    lessonId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Неверный формат ID урока'),
+  }),
+  body: z.object({
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Неверный формат ID курса'),
+    blockId: z.string(),
+    quizAnswers: z.array(QuizAnswerSchema).optional(),
+  }),
+});
+
+export const recalculateProgressSchema = z.object({
+  params: z.object({
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Неверный формат ID курса'),
+  }),
+});
