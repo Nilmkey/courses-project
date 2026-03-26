@@ -16,15 +16,16 @@ export interface UseStreakResult {
   /** Произошла ли ошибка */
   error: Error | null;
   /** Статус стрика для отображения */
-  status: "active" | "lost" | "none";
+  status: "active" | "warning" | "lost" | "none";
 }
 
 /**
  * Хук для получения и отображения стрика пользователя
  *
  * Визуальная логика:
- * - active: стрик активен (последнее обновление < 24 часов назад)
- * - lost: стрик сгорел (прошло >= 24 часов) — возвращается count = 0 с бэкенда
+ * - active: стрик активен (последнее обновление < 24 часов назад) — огонёк горит
+ * - warning: стрик под угрозой (24-48 часов без активности) — огонёк погас, но стрик ещё жив
+ * - lost: стрик сгорел (прошло >= 48 часов) — возвращается count = 0 с бэкенда
  * - none: стрик ещё не начинался (count = 0)
  */
 export function useStreak(): UseStreakResult {
@@ -70,10 +71,11 @@ export function useStreak(): UseStreakResult {
     const hoursSinceUpdate = streak.hoursSinceUpdate ?? 0;
 
     // Определяем статус для отображения
-    // Бэкенд уже вернул count = 0, если стрик сгорел
-    const status: "active" | "lost" | "none" = 
-      streak.count === 0 && hoursSinceUpdate >= 24 ? "lost" :
+    // Бэкенд уже вернул count = 0, если прошло >= 48 часов
+    const status: "active" | "warning" | "lost" | "none" =
+      streak.count === 0 && hoursSinceUpdate >= 48 ? "lost" :
       streak.count === 0 ? "none" :
+      hoursSinceUpdate >= 24 ? "warning" :
       "active";
 
     return {
