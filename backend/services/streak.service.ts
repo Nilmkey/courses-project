@@ -7,6 +7,7 @@ import type { StreakObj } from "../types";
  */
 const MS_PER_HOUR = 60 * 60 * 1000;
 const TWENTY_FOUR_HOURS = 24 * MS_PER_HOUR;
+const FORTY_EIGHT_HOURS = 48 * MS_PER_HOUR;
 
 /**
  * Сервис для управления стриками (ежедневное прохождение уроков)
@@ -17,7 +18,8 @@ export const streakService = {
    *
    * Логика:
    * - Если прошло < 24 часов с последнего обновления — увеличиваем count на 1
-   * - Если прошло >= 24 часов — стрик сгорает, начинаем заново с count = 1
+   * - Если прошло от 24 до 48 часов — стрик ещё активен, увеличиваем count на 1 (огонёк разгорается снова)
+   * - Если прошло >= 48 часов — стрик сгорает, начинаем заново с count = 1
    *
    * @param userId - ID пользователя
    * @param headers - Headers из запроса для авторизации в better-auth
@@ -44,15 +46,15 @@ export const streakService = {
 
       let newStreak: StreakObj;
 
-      if (hoursSinceUpdate < 24) {
-        // Прошло < 24 часов — увеличиваем count на 1
+      if (hoursSinceUpdate < FORTY_EIGHT_HOURS / MS_PER_HOUR) {
+        // Прошло < 48 часов — увеличиваем count на 1 (стрик активен)
         newStreak = {
           count: currentStreak.count + 1,
           isFire: true,
           updatedAt: now,
         };
       } else {
-        // Прошло >= 24 часов — стрик сгорает, начинаем заново с count = 1
+        // Прошло >= 48 часов — стрик сгорает, начинаем заново с count = 1
         newStreak = {
           count: 1,
           isFire: true,
@@ -105,7 +107,8 @@ export const streakService = {
 
   /**
    * Получить текущий стрик пользователя
-   * Если прошло >= 24 часов — стрик автоматически сбрасывается
+   * - После 24 часов без активности — огонёк гаснет (isFire = false)
+   * - После 48 часов без активности — стрик сбрасывается (count = 0)
    *
    * @param userId - ID пользователя
    * @param headers - Headers из запроса для авторизации в better-auth
@@ -129,12 +132,11 @@ export const streakService = {
 
       const hoursSinceUpdate = (now.getTime() - lastUpdate.getTime()) / MS_PER_HOUR;
 
-      // Если прошло >= 24 часов — сбрасываем стрик (но не сохраняем, пока пользователь не пройдёт урок)
-      // Для отображения показываем isFire = false
+      // Огонёк горит только если прошло < 24 часов и count > 0
       const isFire = hoursSinceUpdate < 24 && streak.count > 0;
-      
-      // Если стрик сгорел, возвращаем count = 0 для отображения
-      if (hoursSinceUpdate >= 24 && streak.count > 0) {
+
+      // Если прошло >= 48 часов — стрик полностью сгорает
+      if (hoursSinceUpdate >= FORTY_EIGHT_HOURS / MS_PER_HOUR && streak.count > 0) {
         return {
           count: 0,
           isFire: false,
