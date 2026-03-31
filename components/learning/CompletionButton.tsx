@@ -1,10 +1,21 @@
 "use client";
 
 import { useCallback, useMemo, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle, Loader2, ArrowRight } from "lucide-react";
 import { useLearning } from "@/hooks/useLearning";
+import { authClient } from "@/lib/auth-client";
+
+interface SessionUser {
+  id: string;
+  email: string;
+  name: string;
+  image?: string | null;
+  role?: string;
+}
 
 export function CompletionButton() {
+  const router = useRouter();
   const {
     currentLessonId,
     currentBlockId,
@@ -13,6 +24,7 @@ export function CompletionButton() {
     getCurrentLesson,
     navigateToNextBlock,
     overallProgress,
+    course,
   } = useLearning();
 
   const [isCompleted, setIsCompleted] = useState(false);
@@ -53,10 +65,31 @@ export function CompletionButton() {
       markLessonComplete(currentLessonId).catch((error) => {
         console.error("Ошибка при завершении урока:", error);
       });
-      
-      // Сбрасываем состояние через небольшую задержку
-      // Если курс завершен, навигации нет, поэтому нужен таймаут
+
+      // Если курс завершен - перенаправляем на страницу сертификата
       if (isCourseCompleted) {
+        // Получаем данные пользователя из сессии
+        const session = await authClient.getSession();
+
+        // Отладка в консоли
+        console.log("Session data:", session);
+
+        // better-auth возвращает данные в формате { data: { user: ... }, error: null }
+        const user = session?.data?.user as SessionUser | null;
+
+        console.log("User data:", user);
+        console.log("User name:", user?.name);
+
+        // Формируем URL с параметрами
+        const queryParams = new URLSearchParams({
+          courseName: course?.title || "Курс",
+          userName: user?.name || user?.email?.split("@")[0] || "Пользователь",
+        });
+
+        // Перенаправляем на страницу сертификата
+        router.push(`/courses/certificate?${queryParams.toString()}`);
+      } else {
+        // Сбрасываем состояние через небольшую задержку
         setTimeout(() => setIsCompleted(false), 1000);
       }
     } else {
@@ -73,6 +106,8 @@ export function CompletionButton() {
     markLessonComplete,
     completeBlock,
     navigateToNextBlock,
+    router,
+    course,
   ]);
 
   // Кэшируем текст кнопки
