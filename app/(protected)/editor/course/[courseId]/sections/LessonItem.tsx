@@ -8,7 +8,6 @@ import {
   Video,
   Pencil,
   Trash2,
-  FileText,
   Loader2,
 } from "lucide-react";
 import { SectionLesson } from "@/types/types";

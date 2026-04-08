@@ -11,7 +11,6 @@ export default function CertificatePage() {
   const certificateRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Получаем данные из URL query параметров
   const userName = searchParams.get("userName") || "Пользователь";
   const courseName = searchParams.get("courseName") || "Курс";
   const date = new Date().toLocaleDateString("ru-RU", {
@@ -25,7 +24,6 @@ export default function CertificatePage() {
 
     setIsGenerating(true);
     try {
-      // Ждем загрузки шрифтов перед генерацией
       await document.fonts.ready;
 
       const loadScript = (src: string) =>

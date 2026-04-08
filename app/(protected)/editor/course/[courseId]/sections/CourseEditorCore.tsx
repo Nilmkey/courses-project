@@ -60,19 +60,15 @@ export function CourseEditorCore({ courseId, onSave, initialSections }: CourseEd
     setMounted(true);
   }, []);
 
-  // Проверка наличия несохраненных изменений
   const hasUnsavedChanges = useCallback(() => {
     if (!initialSections) return false;
 
-    // Сравниваем текущее состояние с начальным
     const current = JSON.stringify(sections);
     const initial = JSON.stringify(initialSections);
 
     return current !== initial;
   }, [sections, initialSections]);
 
-  // Отключаем отслеживание несохраненных изменений, т.к. все изменения
-  // автоматически сохраняются в БД при каждом действии
   useUnsavedChanges({
     hasUnsavedChanges,
     message: "У вас есть несохраненные изменения в секциях. Вы уверены, что хотите уйти?",

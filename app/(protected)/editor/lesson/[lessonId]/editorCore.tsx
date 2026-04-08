@@ -56,7 +56,6 @@ export default function Editor() {
   const [initialData, setInitialData] = useState<{ blocks: typeof blocks; lessonInfo: infoLesson } | null>(null);
   const toast = useToast();
 
-  // Сохраняем начальное состояние при загрузке
   useEffect(() => {
     if (blocks.length > 0 && lessonInfo.title && !initialData) {
       setInitialData({
@@ -70,11 +69,9 @@ export default function Editor() {
     setMounted(true);
   }, []);
 
-  // Проверка наличия несохраненных изменений
   const hasUnsavedChanges = useCallback(() => {
     if (!initialData) return false;
     
-    // Сравниваем текущее состояние с начальным
     const currentBlocks = JSON.stringify(blocks);
     const currentLessonInfo = JSON.stringify(lessonInfo);
     const initialBlocks = JSON.stringify(initialData.blocks);
@@ -83,7 +80,6 @@ export default function Editor() {
     return currentBlocks !== initialBlocks || currentLessonInfo !== initialLessonInfo;
   }, [blocks, lessonInfo, initialData]);
 
-  // Подключение хука для отслеживания несохраненных изменений
   const { resetChanges } = useUnsavedChanges({
     hasUnsavedChanges,
     message: "У вас есть несохраненные изменения в уроке. Вы уверены, что хотите уйти?",
@@ -144,22 +140,18 @@ export default function Editor() {
   const isTempId = useCallback((id: string) => id.startsWith("temp_"), []);
 
   const validateBlocks = useCallback((): string | null => {
-    // Проверка названия урока
     if (!lessonInfo.title.trim()) {
       return "Укажите название урока";
     }
 
-    // Проверка блоков
     for (let i = 0; i < blocks.length; i++) {
       const block = blocks[i];
       const blockNumber = i + 1;
 
-      // Проверка названия блока
       if (!block.title.trim()) {
         return `Блок #${blockNumber}: укажите название блока`;
       }
 
-      // Проверка содержимого блока в зависимости от типа
       if (block.type === "text") {
         if (!block.content.text?.trim()) {
           return `Блок #${blockNumber} (текст): добавьте текстовое содержимое`;
@@ -173,14 +165,12 @@ export default function Editor() {
           return `Блок #${blockNumber} (викторина): добавьте хотя бы один вопрос`;
         }
 
-        // Проверка каждого вопроса в викторине
         for (let j = 0; j < block.content.questions.length; j++) {
           const question = block.content.questions[j];
           if (!question.questionText.trim()) {
             return `Блок #${blockNumber} (викторина), вопрос #${j + 1}: укажите текст вопроса`;
           }
 
-          // Проверка вариантов ответов для single и multiple
           if (question.type === "single" || question.type === "multiple") {
             if (!question.options || question.options.length === 0) {
               return `Блок #${blockNumber} (викторина), вопрос #${j + 1}: добавьте варианты ответов`;
@@ -209,7 +199,6 @@ export default function Editor() {
       return;
     }
 
-    // Валидация данных перед сохранением
     const validationError = validateBlocks();
     if (validationError) {
       toast.error(validationError);
@@ -228,7 +217,6 @@ export default function Editor() {
         content_blocks: contentBlocks,
       });
 
-      // Обновляем начальное состояние после успешного сохранения
       setInitialData({
         blocks: JSON.parse(JSON.stringify(blocks)),
         lessonInfo: { ...lessonInfo },

@@ -24,10 +24,7 @@ interface UseCourseDataOptions {
   enabled?: boolean;
 }
 
-/**
- * Хук для загрузки данных курса и прогресса пользователя
- * Используется в Learning Mode для замены SSR на клиентскую загрузку
- */
+
 export function useCourseData({
   courseSlug,
   enabled = true,
@@ -49,25 +46,21 @@ export function useCourseData({
     setError(null);
 
     try {
-      // Сначала загружаем курс, чтобы получить его ID
       const courseData = await coursesApi.getBySlug(courseSlug);
       setCourse(courseData);
       setSections(courseData.sections);
 
-      // Затем загружаем прогресс, используя courseId (ObjectId), а не slug
       const progressData = await api.get<ProgressData>(
         `/v1/progress/course/${courseData._id}`,
         { credentials: "include" },
         true
       ).catch(() => {
-        // Если прогресса нет, возвращаем начальные значения
         return null;
       });
 
       if (progressData) {
         setProgress(progressData);
       } else {
-        // Вычисляем начальный прогресс из данных курса
         const totalLessons = courseData.sections.reduce(
           (acc, section) => acc + section.lessons.length,
           0

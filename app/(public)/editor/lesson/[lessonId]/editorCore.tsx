@@ -111,22 +111,18 @@ export default function Editor() {
   const isTempId = useCallback((id: string) => id.startsWith("temp_"), []);
 
   const validateBlocks = useCallback((): string | null => {
-    // Проверка названия урока
     if (!lessonInfo.title.trim()) {
       return "Укажите название урока";
     }
 
-    // Проверка блоков
     for (let i = 0; i < blocks.length; i++) {
       const block = blocks[i];
       const blockNumber = i + 1;
 
-      // Проверка названия блока
       if (!block.title.trim()) {
         return `Блок #${blockNumber}: укажите название блока`;
       }
 
-      // Проверка содержимого блока в зависимости от типа
       if (block.type === "text") {
         if (!block.content.text?.trim()) {
           return `Блок #${blockNumber} (текст): добавьте текстовое содержимое`;
@@ -140,14 +136,12 @@ export default function Editor() {
           return `Блок #${blockNumber} (викторина): добавьте хотя бы один вопрос`;
         }
 
-        // Проверка каждого вопроса в викторине
         for (let j = 0; j < block.content.questions.length; j++) {
           const question = block.content.questions[j];
           if (!question.questionText.trim()) {
             return `Блок #${blockNumber} (викторина), вопрос #${j + 1}: укажите текст вопроса`;
           }
 
-          // Проверка вариантов ответов для single и multiple
           if (question.type === "single" || question.type === "multiple") {
             if (!question.options || question.options.length === 0) {
               return `Блок #${blockNumber} (викторина), вопрос #${j + 1}: добавьте варианты ответов`;
@@ -176,7 +170,6 @@ export default function Editor() {
       return;
     }
 
-    // Валидация данных перед сохранением
     const validationError = validateBlocks();
     if (validationError) {
       toast.error(validationError);
