@@ -34,7 +34,7 @@ export default function Features() {
       icon: <Users className="w-8 h-8" />,
       title: "Доступность",
       description:
-        "Качественное IT-образование доступно абсолютно бесплатно после регистрации",
+        "Качественное IT-образование доступно после регистрации",
       color: "bg-sky-500",
     },
     {
