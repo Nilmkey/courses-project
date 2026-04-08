@@ -78,7 +78,7 @@ export function StreakFire({
       />
       {showCount && (
         <span className={`${textClasses[size]} font-black ${textClassesColor}`}>
-          {count || 0}
+          {Number(count || 0)}
         </span>
       )}
     </div>
