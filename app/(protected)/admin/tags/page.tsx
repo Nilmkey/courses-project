@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import {
@@ -26,6 +26,9 @@ import { slugify } from "@/lib/utils/slugify";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 
+// Эта страница рендерится только на клиенте
+export const dynamic = "force-dynamic";
+
 // Генерация случайного цвета для тега
 const generateColor = () => {
   const colors = [
@@ -43,8 +46,46 @@ const generateColor = () => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
-export default function AdminTagsPage() {
+function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
+
+  return (
+    <button
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      className="p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors"
+    >
+      {resolvedTheme === "dark" ? (
+        <Sun size={18} className="text-yellow-400" />
+      ) : (
+        <Moon size={18} className="text-slate-600" />
+      )}
+    </button>
+  );
+}
+
+function ThemeAwareToaster() {
+  const { resolvedTheme } = useTheme();
+
+  return (
+    <Toaster
+      position="top-center"
+      toastOptions={{
+        style: {
+          background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
+          color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+          border:
+            resolvedTheme === "dark"
+              ? "1px solid #1e293b"
+              : "1px solid #e2e8f0",
+          borderRadius: "0.75rem",
+          boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+        },
+      }}
+    />
+  );
+}
+
+export default function AdminTagsPage() {
   const [mounted, setMounted] = useState(false);
   const [tags, setTags] = useState<TagResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -161,21 +202,7 @@ export default function AdminTagsPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: {
-            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
-            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
-            border:
-              resolvedTheme === "dark"
-                ? "1px solid #1e293b"
-                : "1px solid #e2e8f0",
-            borderRadius: "0.75rem",
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-          },
-        }}
-      />
+      <ThemeAwareToaster />
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-indigo-100/50 dark:border-slate-800 shadow-sm">
@@ -199,16 +226,7 @@ export default function AdminTagsPage() {
             </span>
           </Link>
 
-          <button
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            className="p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors"
-          >
-            {resolvedTheme === "dark" ? (
-              <Sun size={18} className="text-yellow-400" />
-            ) : (
-              <Moon size={18} className="text-slate-600" />
-            )}
-          </button>
+          <ThemeToggle />
         </div>
       </header>
 
