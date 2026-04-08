@@ -20,9 +20,7 @@ export function CourseSidebar() {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Заголовок курса с кнопкой назад и переключателем темы */}
       <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-[#3b5bdb]/10 dark:to-[#5c7cfa]/10 dark:border-slate-700">
-        {/* Верхняя строка: кнопка назад и переключатель темы */}
         <div className="flex items-center justify-between mb-3">
           <button
             onClick={() => router.push("/courses")}
@@ -48,7 +46,6 @@ export function CourseSidebar() {
           )}
         </div>
 
-        {/* Название курса */}
         <div className="flex items-center gap-2 mb-2">
           <BookOpen className="w-5 h-5 text-[#3b5bdb]" />
           <span className="text-xs font-bold text-[#3b5bdb] uppercase tracking-wider">
@@ -60,7 +57,6 @@ export function CourseSidebar() {
         </h2>
       </div>
 
-      {/* Прогресс курса */}
       <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-b dark:border-slate-700">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
@@ -82,7 +78,6 @@ export function CourseSidebar() {
           </span>
         </div>
 
-        {/* Прогресс-бар */}
         <div className="relative h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
           <div
             className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ease-out ${
@@ -113,14 +108,12 @@ export function CourseSidebar() {
         </div>
       </div>
 
-      {/* Список секций */}
       <div className="flex-1 overflow-y-auto divide-y dark:divide-slate-700">
         {sections.map((section) => (
           <SectionItem key={section._id} section={section} />
         ))}
       </div>
 
-      {/* Статистика */}
       <div className="p-4 border-t bg-slate-50 dark:bg-slate-900 dark:border-slate-700">
         <div className="text-xs text-slate-500 dark:text-slate-400">
           <span className="font-semibold">{sections.length}</span> секций •{" "}

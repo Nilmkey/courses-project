@@ -4,9 +4,6 @@ import { memo, useMemo } from "react";
 import { CompletionButton } from "@/components/learning/CompletionButton";
 import type { IVideoBlock } from "@/types/types";
 
-/**
- * Определяет тип видео и возвращает embed URL
- */
 function getEmbedUrl(url: string): string | null {
   if (!url) return null;
 
@@ -38,7 +35,6 @@ interface VideoPreviewProps {
   isDirectVideo: boolean;
 }
 
-// Оптимизированный компонент с memo
 const VideoPreview = memo<VideoPreviewProps>(function VideoPreview({ embedUrl, isDirectVideo }) {
   if (isDirectVideo) {
     return (
@@ -65,7 +61,6 @@ const VideoPreview = memo<VideoPreviewProps>(function VideoPreview({ embedUrl, i
 });
 
 export function VideoBlockView({ content }: { content: IVideoBlock["content"] }) {
-  // Кэшируем вычисления с useMemo
   const { embedUrl, isDirectVideo, hasError } = useMemo(() => {
     const url = content.url || "";
     const embed = getEmbedUrl(url);

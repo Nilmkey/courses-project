@@ -6,7 +6,6 @@ import { CompletionButton } from "@/components/learning/CompletionButton";
 import { useLearning } from "@/hooks/useLearning";
 import type { IQuizBlock, IQuizAnswer } from "@/types/types";
 
-// Выносим константы для производительности
 const QUESTION_TYPE_BADGES = {
   single: { label: "Один ответ", color: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400" },
   multiple: {
@@ -22,13 +21,11 @@ const QUESTION_TYPE_BADGES = {
 export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
   const { currentLessonId, updateQuizAnswers } = useLearning();
 
-  // Используем initialState для избежания пересоздания объекта
   const [answers, setAnswers] = useState<Record<string, number | number[] | string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState<{ correct: number; total: number } | null>(null);
   const [isChecking, setIsChecking] = useState(false);
 
-  // Сброс состояния при изменении контента
   useEffect(() => {
     setAnswers({});
     setSubmitted(false);
@@ -36,13 +33,11 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
     setIsChecking(false);
   }, [content]);
 
-  // Обработка ответа для одиночного выбора
   const handleSingleAnswer = useCallback((questionId: string, answerIndex: number) => {
     if (submitted) return;
     setAnswers((prev) => ({ ...prev, [questionId]: answerIndex }));
   }, [submitted]);
 
-  // Обработка ответа для множественного выбора
   const handleMultipleAnswer = useCallback((questionId: string, answerIndex: number) => {
     if (submitted) return;
     setAnswers((prev) => {
@@ -54,13 +49,11 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
     });
   }, [submitted]);
 
-  // Обработка текстового ответа
   const handleTextAnswer = useCallback((questionId: string, answer: string) => {
     if (submitted) return;
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
   }, [submitted]);
 
-  // Проверка ответов — оптимистичная версия (без блокировки UI)
   const checkAnswers = useCallback(async () => {
     if (!currentLessonId || isChecking) return;
 
@@ -68,7 +61,6 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
     let correct = 0;
     const quizAnswers: IQuizAnswer[] = [];
 
-    // Мгновенная проверка ответов на клиенте
     for (const question of content.questions) {
       const userAnswer = answers[question.id];
       let isCorrect = false;
@@ -105,25 +97,21 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
       if (isCorrect) correct++;
     }
 
-    // Мгновенно обновляем UI
     setScore({ correct, total: content.questions.length });
     setSubmitted(true);
     setIsChecking(false);
 
-    // Сохраняем на сервере в фоне (без блокировки UI)
     updateQuizAnswers(currentLessonId, quizAnswers).catch((error) => {
       console.error("Ошибка при сохранении ответов:", error);
     });
   }, [answers, content.questions, currentLessonId, isChecking, updateQuizAnswers]);
 
-  // Сброс теста
   const resetQuiz = useCallback(() => {
     setAnswers({});
     setSubmitted(false);
     setScore(null);
   }, []);
 
-  // Вычисляем количество отвеченных вопросов для оптимизации
   const answeredCount = Object.keys(answers).length;
   const hasAnsweredAll = answeredCount === content.questions.length;
 
@@ -149,7 +137,6 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
         ))}
       </div>
 
-      {/* Кнопки действий */}
       <div className="mt-8 flex items-center gap-4">
         {!submitted ? (
           <button
@@ -182,7 +169,6 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
   );
 }
 
-// Оптимизированный QuestionCard с React.memo
 interface QuestionCardProps {
   question: IQuizBlock["content"]["questions"][0];
   index: number;
@@ -255,7 +241,6 @@ function QuestionTypeBadge({ type }: { type: string }) {
   );
 }
 
-// Оптимизированные компоненты с memo
 interface SingleChoiceOptionsProps {
   question: IQuizBlock["content"]["questions"][0];
   answer: number | undefined;
@@ -281,10 +266,8 @@ const SingleChoiceOptions = memo<SingleChoiceOptionsProps>(function SingleChoice
 
         if (submitted) {
           if (isCorrect) {
-            // Правильный ответ - зеленый
             buttonStyle = "bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-400";
           } else if (isSelected && !isCorrect) {
-            // Выбранный, но неправильный - красный
             buttonStyle = "bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-400";
           } else {
             buttonStyle = "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60";
@@ -346,10 +329,8 @@ const MultipleChoiceOptions = memo<MultipleChoiceOptionsProps>(function Multiple
 
         if (submitted) {
           if (isCorrect) {
-            // Правильный ответ - зеленый
             buttonStyle = "bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-400";
           } else if (isSelected && !isCorrect) {
-            // Выбранный, но неправильный - красный
             buttonStyle = "bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-400";
           } else {
             buttonStyle = "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60";

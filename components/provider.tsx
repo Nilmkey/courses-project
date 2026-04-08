@@ -16,23 +16,19 @@ export default function Provider({ children }: { children: React.ReactNode }) {
   });
   const [sections, setSections] = useState<Section[]>([]);
   
-  // Безопасное получение router — только на клиенте
   let router;
   try {
     router = useRouter();
   } catch {
-    // При SSR useRouter может быть недоступен
   }
 
   useEffect(() => {
-    // Глобальная обработка ошибок
     addErrorObserver((error) => {
       if (error.status === 401) router.push("/login");
       if (error.status >= 500) console.error(error);
     });
   }, [router]);
 
-  // ========== Optimistic UI методы ==========
 
   const addSectionOptimistic = useCallback((courseId: string): string => {
     const tempId = `temp_section_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -78,11 +74,9 @@ export default function Provider({ children }: { children: React.ReactNode }) {
   const confirmOperation = useCallback((tempId: string, realId: string) => {
     setSections((prev) =>
       prev.map((section) => {
-        // Если это секция с временным ID
         if (section.id === tempId) {
           return { ...section, id: realId };
         }
-        // Если это урок с временным ID внутри секции
         const lessonIndex = section.lessons.findIndex((l) => l.lesson_id === tempId);
         if (lessonIndex !== -1) {
           const newLessons = [...section.lessons];
@@ -96,13 +90,11 @@ export default function Provider({ children }: { children: React.ReactNode }) {
 
   const rollbackOperation = useCallback((tempId: string) => {
     setSections((prev) => {
-      // Проверяем, не секция ли это
       const sectionIndex = prev.findIndex((s) => s.id === tempId);
       if (sectionIndex !== -1) {
         return prev.filter((s) => s.id !== tempId);
       }
 
-      // Проверяем, не урок ли это внутри секции
       return prev.map((section) => ({
         ...section,
         lessons: section.lessons.filter((l) => l.lesson_id !== tempId),

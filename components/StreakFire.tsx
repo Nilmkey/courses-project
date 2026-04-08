@@ -4,22 +4,12 @@ import { Flame } from "lucide-react";
 import { useStreak } from "@/hooks/useStreak";
 
 interface StreakFireProps {
-  /** Показывать ли количество дней рядом с огоньком */
   showCount?: boolean;
-  /** Размер компонента */
   size?: "sm" | "md" | "lg";
-  /** Дополнительные CSS классы */
   className?: string;
 }
 
-/**
- * Компонент отображения стрика (огонёк за ежедневное прохождение уроков)
- * 
- * Визуальные состояния:
- * - active (isFire=true): огонёк горит оранжевым с анимацией pulse
- * - warning (24-48ч без активности): огонёк серый, стрик ещё жив
- * - lost/none: огонёк серый, count=0
- */
+
 export function StreakFire({
   showCount = true,
   size = "sm",
@@ -27,7 +17,6 @@ export function StreakFire({
 }: StreakFireProps) {
   const { count, isFire, isLoading, status } = useStreak();
 
-  // Размеры в зависимости от prop size
   const iconSizeClasses = {
     sm: "w-5 h-5",
     md: "w-6 h-6",
@@ -53,7 +42,6 @@ export function StreakFire({
     );
   }
 
-  // Визуальные стили в зависимости от статуса
   const isWarning = status === "warning";
   const containerClasses = isWarning
     ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-100 dark:border-yellow-800/50"

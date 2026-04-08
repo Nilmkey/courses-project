@@ -13,7 +13,6 @@ import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 import {
   enrollmentApi,
-  EnrollmentResponse,
   EnrollmentWithProgress,
 } from "@/lib/api/entities/api-enrollment";
 import { useStreak } from "@/hooks/useStreak";
@@ -102,12 +101,11 @@ export default function ProfilePage() {
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [_isUploading, setIsUploading] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
-  const [hasLoadedCourses, setHasLoadedCourses] = useState(false); // Флаг загрузки
+  const [hasLoadedCourses, setHasLoadedCourses] = useState(false);
   const toast = useToast();
 
   const user = session?.user as unknown as ExtendedUser | undefined;
 
-  // Инициализируем currentAvatar при загрузке сессии
   useEffect(() => {
     if (session?.user) {
       const extendedUser = session.user as unknown as ExtendedUser;
@@ -128,7 +126,6 @@ export default function ProfilePage() {
       return;
     }
 
-    // Загружаем курсы только один раз при наличии сессии
     if (session?.user && !loadingCourses && !hasLoadedCourses) {
       loadEnrolledCourses();
     }
@@ -140,11 +137,11 @@ export default function ProfilePage() {
       const enrollments = await enrollmentApi.getMyCoursesWithProgress();
       console.log("=== Enrolled Courses Debug ===", enrollments);
       setEnrolledCourses(enrollments || []);
-      setHasLoadedCourses(true); // Помечаем, что курсы загружены
+      setHasLoadedCourses(true);
     } catch (error) {
       console.error("Ошибка загрузки курсов:", error);
       setEnrolledCourses([]);
-      setHasLoadedCourses(true); // Помечаем, что курсы загружены (даже если ошибка)
+      setHasLoadedCourses(true);
     } finally {
       setLoadingCourses(false);
     }
@@ -204,19 +201,16 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Проверка типа файла
     if (!file.type.startsWith("image/")) {
       toast.error("Пожалуйста, выберите изображение");
       return;
     }
 
-    // Проверка размера (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Размер файла не должен превышать 5MB");
       return;
     }
 
-    // Сразу загружаем аватар
     handleUploadAvatar(file);
   };
 
@@ -242,7 +236,6 @@ export default function ProfilePage() {
 
       const data = await response.json();
 
-      // Сразу обновляем аватар в UI
       setCurrentAvatar(data.avatar);
       if (fileInputRef.current) fileInputRef.current.value = "";
 
@@ -275,7 +268,6 @@ export default function ProfilePage() {
             throw new ApiError(errorData.message, response.status, errorData);
           }
 
-          // Сразу удаляем аватар из UI
           setCurrentAvatar(null);
 
           toast.success("Аватар успешно удалён");
@@ -388,7 +380,6 @@ export default function ProfilePage() {
                       <User size={44} className="text-[#3b5bdb]" />
                     )}
 
-                    {/* Оверлей для загрузки при наведении */}
                     <div
                       onClick={() => fileInputRef.current?.click()}
                       className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
@@ -398,7 +389,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Скрытый input для файла */}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -407,7 +397,6 @@ export default function ProfilePage() {
                   className="hidden"
                 />
 
-                {/* Кнопка удаления аватара */}
                 {currentAvatar && (
                   <button
                     onClick={handleDeleteAvatar}
@@ -517,13 +506,11 @@ export default function ProfilePage() {
                   const course = enrollment.course;
                   if (!course) return null;
 
-                  // Пытаемся найти информацию о курсе по slug или используем дефолтную
                   const courseId = course.slug || course._id;
                   const info = coursesInfo[courseId] || coursesInfo.html;
                   const isCompleted = enrollment.status === "completed";
                   const progress = enrollment.progress?.progress || 0;
 
-                  // Получаем количество секций из курса (если есть sections)
                   const totalSections = (course as any).sections?.length || 0;
                   const completedSections = isCompleted
                     ? totalSections
@@ -557,7 +544,6 @@ export default function ProfilePage() {
                           </span>
                         </div>
 
-                        {/* Прогресс-бар */}
                         <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                           <div
                             className={`absolute h-full bg-gradient-to-r ${isCompleted ? "from-emerald-500 to-teal-500" : info.gradient} transition-all duration-1000`}
@@ -565,7 +551,6 @@ export default function ProfilePage() {
                           />
                         </div>
 
-                        {/* Детали прогресса: уроки и секции */}
                         <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
                           <span className="flex items-center gap-1">
                             <BookOpen size={12} />

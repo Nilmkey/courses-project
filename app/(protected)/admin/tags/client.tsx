@@ -26,7 +26,6 @@ import { slugify } from "@/lib/utils/slugify";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 
-// Генерация случайного цвета для тега
 const generateColor = () => {
   const colors = [
     "#3b5bdb", // indigo
@@ -177,7 +176,6 @@ export default function AdminTagsPage() {
         }}
       />
 
-      {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-indigo-100/50 dark:border-slate-800 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link
@@ -212,9 +210,7 @@ export default function AdminTagsPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-8 space-y-8 grow">
-        {/* Page Title */}
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#3b5bdb] to-[#5c7cfa] flex items-center justify-center shadow-lg shadow-blue-500/20 text-white">
             <Tags size={24} />
@@ -229,7 +225,6 @@ export default function AdminTagsPage() {
           </div>
         </div>
 
-        {/* Create/Edit Form */}
         <Card className="border-indigo-100 dark:border-slate-800 shadow-lg shadow-indigo-500/5">
           <CardContent className="p-6 space-y-4">
             <div className="flex items-center gap-2 mb-4">
@@ -251,7 +246,6 @@ export default function AdminTagsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Name */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                   Название *
@@ -271,7 +265,6 @@ export default function AdminTagsPage() {
                 />
               </div>
 
-              {/* Slug */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                   Slug *
@@ -286,7 +279,6 @@ export default function AdminTagsPage() {
                 />
               </div>
 
-              {/* Color */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                   Цвет
@@ -323,7 +315,6 @@ export default function AdminTagsPage() {
               </div>
             </div>
 
-            {/* Preview */}
             {formData.name && (
               <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <span>Предпросмотр:</span>
@@ -336,7 +327,6 @@ export default function AdminTagsPage() {
               </div>
             )}
 
-            {/* Actions */}
             <div className="flex gap-2 pt-2">
               {editingId ? (
                 <>
@@ -379,7 +369,6 @@ export default function AdminTagsPage() {
           </CardContent>
         </Card>
 
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <Input
@@ -390,7 +379,6 @@ export default function AdminTagsPage() {
           />
         </div>
 
-        {/* Tags List */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 size={40} className="animate-spin text-[#3b5bdb]" />
@@ -473,7 +461,6 @@ export default function AdminTagsPage() {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-8 mt-auto">
         <div className="container mx-auto px-4 flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
           <div className="flex items-center gap-2">

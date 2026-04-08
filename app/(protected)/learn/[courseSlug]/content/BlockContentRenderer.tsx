@@ -16,7 +16,6 @@ export function BlockContentRenderer() {
   const lesson = getCurrentLesson;
   const section = getCurrentSection;
 
-  // Оптимизируем проверку завершенности с useMemo
   const isBlockCompleted = useMemo(() => {
     if (!block || !lesson?._id) return false;
     
@@ -36,7 +35,6 @@ export function BlockContentRenderer() {
 
   return (
     <div>
-      {/* Хлебные крошки с индикатором завершенности */}
       <div className="mb-6 flex items-center gap-3">
         <div className="text-sm text-slate-500 dark:text-slate-400">
           <span>{section?.title}</span>
