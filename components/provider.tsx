@@ -15,7 +15,14 @@ export default function Provider({ children }: { children: React.ReactNode }) {
     sectionId: "",
   });
   const [sections, setSections] = useState<Section[]>([]);
-  const router = useRouter();
+  
+  // Безопасное получение router — только на клиенте
+  let router;
+  try {
+    router = useRouter();
+  } catch {
+    // При SSR useRouter может быть недоступен
+  }
 
   useEffect(() => {
     // Глобальная обработка ошибок

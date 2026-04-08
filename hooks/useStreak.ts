@@ -39,6 +39,8 @@ export function useStreak(): UseStreakResult {
       try {
         setIsLoading(true);
         const data = await streakApi.getStreak();
+        console.log("[useStreak] Fetched streak data:", data);
+        console.log("[useStreak] count type:", typeof data.count, "value:", data.count);
         setStreak(data);
         setError(null);
       } catch (err) {

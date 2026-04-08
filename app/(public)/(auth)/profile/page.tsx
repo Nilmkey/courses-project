@@ -700,7 +700,7 @@ function StreakStatCard() {
         <Flame size={22} className="text-orange-500" />
       </div>
       <div className="text-3xl font-extrabold text-slate-800 dark:text-white">
-        {isLoading ? "..." : count}
+        {isLoading ? "..." : Number(count || 0)}
       </div>
       <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
         дней подряд
