@@ -27,6 +27,7 @@ import { ArrowLeft, Loader2, BookOpen, Layers, Sun, Moon } from "lucide-react";
 import { sectionsApi, lessonsApi } from "@/lib/api/entities/api-sections";
 import { useToast } from "@/hooks/useToast";
 import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import { Toaster } from "react-hot-toast";
 
 interface CourseEditorCoreProps {
   courseId: string;

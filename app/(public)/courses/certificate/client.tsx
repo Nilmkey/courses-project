@@ -108,7 +108,7 @@ export default function CertificatePage() {
             </h2>
 
             <p className="text-lg text-slate-600 mb-6 italic">
-              Настоящим подтверждается, что
+              Подтверждает, что
             </p>
 
             <div className="mb-6 pb-2 border-b-2 border-slate-300 w-full max-w-2xl px-12">
