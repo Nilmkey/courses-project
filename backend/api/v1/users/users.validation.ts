@@ -16,3 +16,55 @@ export const getUserByIdSchema = z.object({
     id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
   }),
 });
+
+export const getUsersListSchema = z.object({
+  query: z.object({
+    page: z.coerce.number().int().min(1).optional().default(1),
+    limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+    search: z.string().optional(),
+  }),
+});
+
+export const updateUserRoleSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+  }),
+  body: z.object({
+    role: z.enum(["admin", "student"]),
+  }),
+});
+
+export const getUserEnrollmentsSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+  }),
+});
+
+export const deleteUserEnrollmentSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат courseId"),
+  }),
+});
+
+export const resetUserProgressSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат courseId"),
+  }),
+});
+
+export const enrollUserSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+  }),
+  body: z.object({
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат courseId"),
+  }),
+});
+
+export const deleteUserSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+  }),
+});

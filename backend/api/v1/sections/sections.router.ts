@@ -15,6 +15,7 @@ const router = Router();
 
 router.get(
   "/course/:courseId",
+  authMiddleware,
   validateRequest(getSectionsByCourseSchema),
   sectionsController.getByCourse.bind(sectionsController),
 );
