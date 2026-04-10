@@ -16,8 +16,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CodeLearn",
-  description: "Интерактивная платформа для обучения IT",
+  title: {
+    default: "CodeLearn — Интерактивная платформа для обучения IT",
+    template: "%s | CodeLearn",
+  },
+  description: "Изучайте программирование с нуля до профессионального уровня. Практические курсы по HTML, CSS, JavaScript, Python, C++ и C#. Учитесь в своём темпе с сертификатом по окончании.",
 };
 
 export default function RootLayout({

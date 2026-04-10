@@ -1,56 +1,45 @@
-export const dynamic = 'force-dynamic';
+"use client";
 
-import type { Metadata } from "next";
-import AdminTagsClient from "./client";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useTheme } from "next-themes";
+import {
+  Code,
+  Plus,
+  Trash2,
+  Edit,
+  Tags,
+  Sun,
+  Moon,
+  Loader2,
+  ArrowLeft,
+  Search,
+  X,
+  Check,
+  Palette,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { tagsApi, type TagResponse, type CreateTagData, type UpdateTagData } from "@/lib/api/entities/api-tags";
+import { slugify } from "@/lib/utils/slugify";
+import { Toaster } from "react-hot-toast";
+import { useToast } from "@/hooks/useToast";
 
-export const metadata: Metadata = {
-  title: "Управление тегами — CodeLearn Admin",
-  description: "Создание и редактирование тегов для категоризации курсов на платформе CodeLearn.",
-};
-
-// Нормализация цвета: преобразует названия цветов в hex
-const normalizeColor = (color: string): string => {
-  // Если уже hex
-  if (/^#[0-9a-fA-F]{6}$/.test(color) || /^#[0-9a-fA-F]{3}$/.test(color)) {
-    return color;
-  }
-
-  // Маппинг названий цветов в hex
-  const colorMap: Record<string, string> = {
-    red: "#ff0000",
-    green: "#008000",
-    blue: "#0000ff",
-    yellow: "#ffff00",
-    orange: "#ffa500",
-    purple: "#800080",
-    pink: "#ffc0cb",
-    cyan: "#00ffff",
-    magenta: "#ff00ff",
-    white: "#ffffff",
-    black: "#000000",
-    gray: "#808080",
-    grey: "#808080",
-    brown: "#a52a2a",
-    navy: "#000080",
-    teal: "#008080",
-    olive: "#808000",
-    maroon: "#800000",
-    lime: "#00ff00",
-    aqua: "#00ffff",
-    silver: "#c0c0c0",
-    gold: "#ffd700",
-    coral: "#ff7f50",
-    salmon: "#fa8072",
-    tomato: "#ff6347",
-    violet: "#ee82ee",
-    indigo: "#4b0082",
-    crimson: "#dc143c",
-    emerald: "#50c878",
-    turquoise: "#40e0d0",
-  };
-
-  const lowerColor = color.toLowerCase().trim();
-  return colorMap[lowerColor] || color;
+const generateColor = () => {
+  const colors = [
+    "#3b5bdb", // indigo
+    "#0ca678", // emerald
+    "#e67700", // orange
+    "#c2255c", // pink
+    "#845ef7", // violet
+    "#1098ad", // cyan
+    "#f08c00", // amber
+    "#2b8a3e", // green
+    "#5c7cfa", // blue
+    "#d63384", // fuchsia
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
 };
 
 export default function AdminTagsPage() {
@@ -95,8 +84,7 @@ export default function AdminTagsPage() {
 
     try {
       setIsCreating(true);
-      const normalizedColor = normalizeColor(formData.color);
-      await tagsApi.create({ ...formData, color: normalizedColor });
+      await tagsApi.create(formData);
       toast.success("Тег успешно создан");
       setFormData({ name: "", slug: "", color: generateColor() });
       await loadTags();
@@ -112,11 +100,10 @@ export default function AdminTagsPage() {
     const tag = tags.find((t) => t._id === id);
     if (!tag) return;
 
-    const normalizedColor = formData.color ? normalizeColor(formData.color) : undefined;
     const updateData: UpdateTagData = {
       name: formData.name || tag.name,
       slug: formData.slug || tag.slug,
-      color: normalizedColor || tag.color,
+      color: formData.color || tag.color,
     };
 
     try {
@@ -189,7 +176,6 @@ export default function AdminTagsPage() {
         }}
       />
 
-      {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-indigo-100/50 dark:border-slate-800 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link
@@ -224,9 +210,7 @@ export default function AdminTagsPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-8 space-y-8 grow">
-        {/* Page Title */}
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#3b5bdb] to-[#5c7cfa] flex items-center justify-center shadow-lg shadow-blue-500/20 text-white">
             <Tags size={24} />
@@ -241,7 +225,6 @@ export default function AdminTagsPage() {
           </div>
         </div>
 
-        {/* Create/Edit Form */}
         <Card className="border-indigo-100 dark:border-slate-800 shadow-lg shadow-indigo-500/5">
           <CardContent className="p-6 space-y-4">
             <div className="flex items-center gap-2 mb-4">
@@ -263,7 +246,6 @@ export default function AdminTagsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Name */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                   Название *
@@ -283,7 +265,6 @@ export default function AdminTagsPage() {
                 />
               </div>
 
-              {/* Slug */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                   Slug *
@@ -298,15 +279,18 @@ export default function AdminTagsPage() {
                 />
               </div>
 
-              {/* Color */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                   Цвет
                 </label>
                 <div className="flex gap-2">
-                  <div
-                    className="w-16 h-10 p-1 border border-slate-200 dark:border-slate-700 rounded cursor-pointer transition-colors"
-                    style={{ backgroundColor: normalizeColor(formData.color) }}
+                  <Input
+                    type="color"
+                    value={formData.color}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, color: e.target.value }))
+                    }
+                    className="w-16 h-10 p-1 border-slate-200 dark:border-slate-700 cursor-pointer"
                   />
                   <Input
                     type="text"
@@ -314,7 +298,7 @@ export default function AdminTagsPage() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, color: e.target.value }))
                     }
-                    placeholder="pink или #3b5bdb"
+                    placeholder="#3b5bdb"
                     className="flex-1 border-slate-200 dark:border-slate-700"
                   />
                   <Button
@@ -331,20 +315,18 @@ export default function AdminTagsPage() {
               </div>
             </div>
 
-            {/* Preview */}
             {formData.name && (
               <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <span>Предпросмотр:</span>
                 <span
                   className="px-3 py-1 rounded-full text-white font-medium text-xs"
-                  style={{ backgroundColor: normalizeColor(formData.color) }}
+                  style={{ backgroundColor: formData.color }}
                 >
                   {formData.name}
                 </span>
               </div>
             )}
 
-            {/* Actions */}
             <div className="flex gap-2 pt-2">
               {editingId ? (
                 <>
@@ -387,7 +369,6 @@ export default function AdminTagsPage() {
           </CardContent>
         </Card>
 
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <Input
@@ -398,7 +379,6 @@ export default function AdminTagsPage() {
           />
         </div>
 
-        {/* Tags List */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 size={40} className="animate-spin text-[#3b5bdb]" />
@@ -431,7 +411,7 @@ export default function AdminTagsPage() {
                   <div className="flex items-start justify-between mb-3">
                     <span
                       className="px-3 py-1 rounded-full text-white font-medium text-sm"
-                      style={{ backgroundColor: normalizeColor(tag.color) }}
+                      style={{ backgroundColor: tag.color }}
                     >
                       {tag.name}
                     </span>
@@ -466,7 +446,7 @@ export default function AdminTagsPage() {
                       <div className="flex items-center gap-1">
                         <div
                           className="w-4 h-4 rounded"
-                          style={{ backgroundColor: normalizeColor(tag.color) }}
+                          style={{ backgroundColor: tag.color }}
                         />
                         <code className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
                           {tag.color}
@@ -481,7 +461,6 @@ export default function AdminTagsPage() {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-8 mt-auto">
         <div className="container mx-auto px-4 flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
           <div className="flex items-center gap-2">

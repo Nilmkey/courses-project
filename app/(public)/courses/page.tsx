@@ -73,10 +73,8 @@ const CoursesPage = () => {
 
   if (!mounted) return null;
 
-  // Создаем маппинг ID тега → название
   const tagIdToName = new Map(tags.map((t) => [t._id, t.name]));
 
-  // Собираем все уникальные теги из курсов и маппим их в названия
   const allTags = Array.from(
     new Set(courses.flatMap((c) => c.tags || []))
   )
@@ -90,7 +88,6 @@ const CoursesPage = () => {
           c.tags?.some((tagId) => tagIdToName.get(tagId) === selectedTag)
         );
 
-  // Фильтруем только опубликованные курсы для публичной страницы
   const publishedCourses = filteredCourses.filter((c) => c.isPublished);
 
   return (

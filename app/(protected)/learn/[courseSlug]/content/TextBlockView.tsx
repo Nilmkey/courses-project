@@ -8,7 +8,6 @@ import type { ITextBlock } from "@/types/types";
 
 import "@milkdown/crepe/theme/common/style.css";
 
-// Кастомные стили для темной/светлой темы
 const milkdownThemeStyles = `
   /* Светлая тема (по умолчанию) */
   .milkdown {
@@ -210,7 +209,6 @@ interface ReadonlyEditorProps {
   content: string;
 }
 
-// Оптимизированный редактор с memo
 const ReadonlyEditor = memo<ReadonlyEditorProps>(function ReadonlyEditor({ content }) {
   const hasInitialized = useRef(false);
 
@@ -241,7 +239,6 @@ const ReadonlyEditor = memo<ReadonlyEditorProps>(function ReadonlyEditor({ conte
 export function TextBlockView({ content }: { content: ITextBlock["content"] }) {
   return (
     <div>
-      {/* Инъекция кастомных стилей темы */}
       <style dangerouslySetInnerHTML={{ __html: milkdownThemeStyles }} />
       
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-6 md:p-8 mb-6 shadow-sm">

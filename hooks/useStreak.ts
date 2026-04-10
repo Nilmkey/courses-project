@@ -3,31 +3,16 @@ import { streakApi, type StreakResponse } from "@/lib/api/entities/api-streak";
 import { useToast } from "@/hooks/useToast";
 
 export interface UseStreakResult {
-  /** Текущий стрик (количество дней) */
   count: number;
-  /** Активен ли огонёк (визуальное состояние) */
   isFire: boolean;
-  /** Дата последнего обновления */
   updatedAt: Date | null;
-  /** Часов с последнего обновления */
   hoursSinceUpdate: number;
-  /** Загружается ли данные */
   isLoading: boolean;
-  /** Произошла ли ошибка */
   error: Error | null;
-  /** Статус стрика для отображения */
   status: "active" | "warning" | "lost" | "none";
 }
 
-/**
- * Хук для получения и отображения стрика пользователя
- *
- * Визуальная логика:
- * - active: стрик активен (последнее обновление < 24 часов назад) — огонёк горит
- * - warning: стрик под угрозой (24-48 часов без активности) — огонёк погас, но стрик ещё жив
- * - lost: стрик сгорел (прошло >= 48 часов) — возвращается count = 0 с бэкенда
- * - none: стрик ещё не начинался (count = 0)
- */
+
 export function useStreak(): UseStreakResult {
   const toast = useToast();
   const [streak, setStreak] = useState<StreakResponse | null>(null);
@@ -39,22 +24,21 @@ export function useStreak(): UseStreakResult {
       try {
         setIsLoading(true);
         const data = await streakApi.getStreak();
+        console.log("[useStreak] Fetched streak data:", data);
+        console.log("[useStreak] count type:", typeof data.count, "value:", data.count);
         setStreak(data);
         setError(null);
       } catch (err) {
         console.error("[useStreak] Failed to fetch streak:", err);
         setError(err instanceof Error ? err : new Error("Не удалось загрузить стрик"));
-        // Не используем toast.error здесь, чтобы избежать цикла
       } finally {
         setIsLoading(false);
       }
     }
 
     fetchStreak();
-    // Пустой массив зависимостей — загружаем только при монтировании
   }, []);
 
-  // Вычисляем визуальное состояние с помощью useMemo
   const result = useMemo((): UseStreakResult => {
     if (!streak) {
       return {
@@ -70,8 +54,6 @@ export function useStreak(): UseStreakResult {
 
     const hoursSinceUpdate = streak.hoursSinceUpdate ?? 0;
 
-    // Определяем статус для отображения
-    // Бэкенд уже вернул count = 0, если прошло >= 48 часов
     const status: "active" | "warning" | "lost" | "none" =
       streak.count === 0 && hoursSinceUpdate >= 48 ? "lost" :
       streak.count === 0 ? "none" :

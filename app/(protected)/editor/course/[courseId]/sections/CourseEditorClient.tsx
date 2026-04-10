@@ -55,7 +55,6 @@ export function CourseEditorClient() {
   const handleSave = useCallback(
     async (updatedSections: Section[]) => {
       try {
-        // Обновляем начальное состояние после успешного сохранения
         setInitialSections(updatedSections);
         toast.success("Все изменения сохранены!");
       } catch (err) {

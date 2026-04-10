@@ -16,7 +16,6 @@ interface LearningModeClientProps {
 function LoadingSkeleton() {
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 animate-pulse">
-      {/* Sidebar скелетон */}
       <aside className="hidden md:block w-80 border-r bg-white dark:bg-slate-900 dark:border-slate-700 flex-shrink-0">
         <div className="p-4 space-y-4">
           <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
@@ -28,7 +27,6 @@ function LoadingSkeleton() {
         </div>
       </aside>
 
-      {/* Контент скелетон */}
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="h-16 border-b bg-white dark:bg-slate-900 dark:border-slate-700" />
         <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4">
@@ -87,24 +85,20 @@ export default function LearningModeClient({ courseSlug }: LearningModeClientPro
       initialProgress={progress}
     >
       <div className="flex h-screen bg-slate-50 dark:bg-slate-950">
-        {/* Левая колонка — навигация (скрыта на мобильных) */}
         <aside className="hidden md:block w-80 border-r bg-white dark:bg-slate-900 dark:border-slate-700 overflow-y-auto flex-shrink-0">
           <CourseSidebar />
         </aside>
 
-        {/* Мобильная боковая панель (выезжающая) */}
         <MobileSidebar
           isOpen={isMobileSidebarOpen}
           onClose={() => setIsMobileSidebarOpen(false)}
         />
 
-        {/* Правая часть — контент */}
         <main className="flex-1 flex flex-col overflow-hidden">
           <NavigationHeader
             onMenuClick={() => setIsMobileSidebarOpen(true)}
           />
 
-          {/* Контент блока */}
           <div className="flex-1 overflow-y-auto p-4 md:p-8">
             <BlockContentRenderer />
           </div>
