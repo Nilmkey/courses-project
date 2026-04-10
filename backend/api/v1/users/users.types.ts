@@ -63,3 +63,14 @@ export interface UploadAvatarResponse {
   avatar: string;
   message: string;
 }
+
+export interface EnrollUserRequest {
+  params: { id: string };
+  body: {
+    courseId: string;
+  };
+}
+
+export interface DeleteUserRequest {
+  params: { id: string };
+}

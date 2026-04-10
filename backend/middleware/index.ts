@@ -17,5 +17,6 @@ export {
 export { adminMiddleware } from './admin.middleware';
 export { teacherMiddleware } from './teacher.middleware';
 export { studentMiddleware } from './student.middleware';
+export { requireEnrollment, requireEnrollmentFromBody } from './enrollmentCheck.middleware';
 
 export { validate, validateQuery, validateParams } from './validate.middleware';

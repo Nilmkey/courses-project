@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { X, Loader2, Trash2, RotateCcw, UserCog, BookOpen, AlertTriangle } from "lucide-react";
+import { X, Loader2, Trash2, RotateCcw, UserCog, BookOpen, AlertTriangle, UserPlus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 import { usersApi, type User, type UserEnrollment } from "@/lib/api/entities/api-users";
+import { coursesApi } from "@/lib/api/entities/api-courses";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -31,6 +32,11 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
   const [enrollments, setEnrollments] = useState<UserEnrollment[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
   const [selectedRole, setSelectedRole] = useState<User["role"]>(user.role);
+  const [availableCourses, setAvailableCourses] = useState<any[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [loadingCourses, setLoadingCourses] = useState(false);
+  const [courseSearch, setCourseSearch] = useState("");
+  const [showCourseDropdown, setShowCourseDropdown] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -42,9 +48,25 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
   useEffect(() => {
     if (isOpen && user) {
       setSelectedRole(user.role);
+      setSelectedCourseId("");
+      setCourseSearch("");
+      setShowCourseDropdown(false);
       loadEnrollments();
+      loadAvailableCourses();
     }
   }, [isOpen, user]);
+
+  const loadAvailableCourses = async () => {
+    try {
+      setLoadingCourses(true);
+      const response = await coursesApi.getAll();
+      setAvailableCourses(response.courses || []);
+    } catch (err) {
+      console.error("Ошибка загрузки курсов:", err);
+    } finally {
+      setLoadingCourses(false);
+    }
+  };
 
   const loadEnrollments = async () => {
     try {
@@ -115,6 +137,62 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
       },
     });
   };
+
+  const handleEnrollUser = async () => {
+    if (!selectedCourseId) {
+      toast.error("Выберите курс");
+      return;
+    }
+
+    const course = availableCourses.find((c) => c._id === selectedCourseId);
+    setConfirmDialog({
+      isOpen: true,
+      title: "Записать на курс",
+      description: `Записать пользователя "${user.name}" на курс "${course?.title}"?`,
+      variant: "default",
+      onConfirm: async () => {
+        try {
+          await usersApi.enrollUser(user.id, selectedCourseId);
+          setSelectedCourseId("");
+          setCourseSearch("");
+          setShowCourseDropdown(false);
+          loadEnrollments();
+          toast.success("Пользователь записан на курс");
+        } catch (err: any) {
+          console.error("Ошибка записи на курс:", err);
+          toast.error(err?.message || "Не удалось записать на курс");
+        }
+      },
+    });
+  };
+
+  const handleDeleteUser = async () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Удалить аккаунт",
+      description: `Вы уверены, что хотите удалить аккаунт "${user.name}"? Все записи и прогресс будут удалены. Это действие нельзя отменить.`,
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await usersApi.deleteUser(user.id);
+          toast.success("Аккаунт пользователя удалён");
+          onClose();
+          onUpdateUserRole?.();
+        } catch (err: any) {
+          console.error("Ошибка удаления аккаунта:", err);
+          toast.error(err?.message || "Не удалось удалить аккаунт");
+        }
+      },
+    });
+  };
+
+  // Фильтруем курсы: исключаем уже записанные + поиск по названию
+  const enrolledCourseIds = new Set(enrollments.map((e) => e.course_id));
+  const filteredCourses = availableCourses.filter(
+    (c) =>
+      !enrolledCourseIds.has(c._id) &&
+      (!courseSearch || c.title.toLowerCase().includes(courseSearch.toLowerCase()))
+  );
 
   if (!isOpen) return null;
 
@@ -227,6 +305,116 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
                           Сохранить роль
                         </Button>
                       )}
+                    </div>
+
+                    {/* Запись на курс */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                        <UserPlus className="w-4 h-4" />
+                        Записать на курс
+                      </label>
+
+                      {/* Поиск курсов */}
+                      <div className="relative">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <input
+                            type="text"
+                            placeholder="Найти курс..."
+                            value={courseSearch}
+                            onChange={(e) => {
+                              setCourseSearch(e.target.value);
+                              setShowCourseDropdown(true);
+                            }}
+                            onFocus={() => setShowCourseDropdown(true)}
+                            onBlur={() => {
+                              // Задержка чтобы кликнуть по варианту
+                              setTimeout(() => setShowCourseDropdown(false), 200);
+                            }}
+                            className="w-full pl-10 pr-3 py-2 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            disabled={loadingCourses}
+                          />
+                        </div>
+
+                        {/* Выпадающий список курсов */}
+                        {showCourseDropdown && (
+                          <div className="absolute z-50 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {loadingCourses ? (
+                              <div className="flex items-center justify-center py-4">
+                                <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                              </div>
+                            ) : filteredCourses.length === 0 ? (
+                              <div className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">
+                                {availableCourses.length === enrollments.length
+                                  ? "Все курсы уже добавлены"
+                                  : "Курсы не найдены"}
+                              </div>
+                            ) : (
+                              filteredCourses.map((course) => (
+                                <button
+                                  key={course._id}
+                                  onMouseDown={() => {
+                                    setSelectedCourseId(course._id);
+                                    setCourseSearch(course.title);
+                                    setShowCourseDropdown(false);
+                                  }}
+                                  className="w-full px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-3"
+                                >
+                                  {course.thumbnail ? (
+                                    <img
+                                      src={course.thumbnail}
+                                      alt={course.title}
+                                      className="w-10 h-10 rounded object-cover flex-shrink-0"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                                      <BookOpen className="w-5 h-5 text-white/80" />
+                                    </div>
+                                  )}
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                      {course.title}
+                                    </p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                      {course.level === "beginner"
+                                        ? "Начальный"
+                                        : course.level === "intermediate"
+                                        ? "Средний"
+                                        : "Продвинутый"}
+                                    </p>
+                                  </div>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Кнопка записи */}
+                      {selectedCourseId && (
+                        <Button
+                          onClick={handleEnrollUser}
+                          disabled={loadingCourses}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white font-bold w-full"
+                        >
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Записать на: {availableCourses.find((c) => c._id === selectedCourseId)?.title}
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Удалить аккаунт */}
+                    <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                      <Button
+                        onClick={handleDeleteUser}
+                        variant="outline"
+                        size="sm"
+                        className="text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:border-rose-600 font-bold"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Удалить аккаунт
+                      </Button>
                     </div>
                   </div>
                 </div>

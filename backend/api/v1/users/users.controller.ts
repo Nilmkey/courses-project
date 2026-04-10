@@ -371,6 +371,84 @@ export const usersController = {
     });
   },
 
+  async enrollUser(
+    req: Request<EnrollUserRequest["params"], any, EnrollUserRequest["body"]>,
+    res: Response<{ success: boolean; message: string }>,
+  ): Promise<void> {
+    const authReq = req as AuthRequest;
+    if (!authReq.user) {
+      throw ApiError.unauthorized("Требуется авторизация");
+    }
+
+    const { id } = req.params;
+    const { courseId } = req.body;
+
+    // Проверяем существование пользователя
+    const userDoc = await db.collection("user").findOne({ _id: new Types.ObjectId(id) });
+
+    if (!userDoc) {
+      throw ApiError.notFound("Пользователь не найден");
+    }
+
+    // Проверяем существование курса
+    const course = await Course.findById(courseId);
+    if (!course) {
+      throw ApiError.notFound("Курс не найден");
+    }
+
+    // Проверяем, записан ли уже пользователь
+    const alreadyEnrolled = await enrollmentService.isEnrolled(id, courseId);
+    if (alreadyEnrolled) {
+      throw ApiError.conflict("Пользователь уже записан на этот курс");
+    }
+
+    // Записываем пользователя
+    await enrollmentService.enroll(id, courseId);
+
+    res.json({
+      success: true,
+      message: "Пользователь записан на курс",
+    });
+  },
+
+  async deleteUser(
+    req: Request<DeleteUserRequest["params"]>,
+    res: Response<{ success: boolean; message: string }>,
+  ): Promise<void> {
+    const authReq = req as AuthRequest;
+    if (!authReq.user) {
+      throw ApiError.unauthorized("Требуется авторизация");
+    }
+
+    const { id } = req.params;
+
+    // Не даём удалить себя
+    if (authReq.user.id === id) {
+      throw ApiError.badRequest("Нельзя удалить свой собственный аккаунт");
+    }
+
+    // Проверяем существование пользователя
+    const userDoc = await db.collection("user").findOne({ _id: new Types.ObjectId(id) });
+
+    if (!userDoc) {
+      throw ApiError.notFound("Пользователь не найден");
+    }
+
+    // Удаляем все записи пользователя
+    await Enrollment.deleteMany({ user_id: new Types.ObjectId(id) });
+
+    // Удаляем весь прогресс пользователя
+    await Progress.deleteMany({ user_id: new Types.ObjectId(id) });
+
+    // Удаляем пользователя из MongoDB
+    await db.collection("user").deleteOne({ _id: new Types.ObjectId(id) });
+
+    res.json({
+      success: true,
+      message: "Аккаунт пользователя удалён",
+    });
+  },
+
   async uploadAvatar(
     req: Request,
     res: Response<UploadAvatarResponse>,

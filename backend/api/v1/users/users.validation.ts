@@ -53,3 +53,18 @@ export const resetUserProgressSchema = z.object({
     courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат courseId"),
   }),
 });
+
+export const enrollUserSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+  }),
+  body: z.object({
+    courseId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат courseId"),
+  }),
+});
+
+export const deleteUserSchema = z.object({
+  params: z.object({
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Неверный формат ID"),
+  }),
+});

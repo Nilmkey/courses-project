@@ -86,4 +86,19 @@ export const usersApi = {
       undefined,
       true,
     ),
+
+  enrollUser: (userId: string, courseId: string) =>
+    api.post<{ success: boolean; message: string }>(
+      `/v1/users/${userId}/enroll`,
+      { courseId },
+      undefined,
+      true,
+    ),
+
+  deleteUser: (userId: string) =>
+    api.delete<{ success: boolean; message: string }>(
+      `/v1/users/${userId}`,
+      undefined,
+      true,
+    ),
 };

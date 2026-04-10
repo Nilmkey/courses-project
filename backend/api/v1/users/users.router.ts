@@ -10,6 +10,8 @@ import {
   getUserEnrollmentsSchema,
   deleteUserEnrollmentSchema,
   resetUserProgressSchema,
+  enrollUserSchema,
+  deleteUserSchema,
 } from "./users.validation";
 import { authMiddleware } from "../../../middleware/auth.middleware";
 import { adminMiddleware } from "../../../middleware/admin.middleware";
@@ -90,6 +92,22 @@ router.post(
   adminMiddleware,
   validateRequest(resetUserProgressSchema),
   usersController.resetUserProgress.bind(usersController),
+);
+
+router.post(
+  "/:id/enroll",
+  authMiddleware,
+  adminMiddleware,
+  validateRequest(enrollUserSchema),
+  usersController.enrollUser.bind(usersController),
+);
+
+router.delete(
+  "/:id",
+  authMiddleware,
+  adminMiddleware,
+  validateRequest(deleteUserSchema),
+  usersController.deleteUser.bind(usersController),
 );
 
 export default router;
