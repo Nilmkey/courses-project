@@ -47,11 +47,13 @@ export function AlertDialogHeader({
 
 export function AlertDialogFooter({
   children,
+  className = "",
 }: {
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="flex items-center justify-end gap-2 p-6 pt-0">{children}</div>
+    <div className={`flex items-center justify-end gap-2 p-6 pt-0 ${className}`}>{children}</div>
   );
 }
 

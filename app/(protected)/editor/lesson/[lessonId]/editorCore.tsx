@@ -12,6 +12,9 @@ import {
   HelpCircle,
   Sun,
   Moon,
+  Save,
+  Layers,
+  Sparkles
 } from "lucide-react";
 import {
   DndContext,
@@ -233,227 +236,229 @@ export default function Editor() {
   }, [blocks, lessonId, lessonInfo.title, toast, validateBlocks, resetChanges]);
 
   return (
-    <div className="max-w-3xl mx-auto py-10 px-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300 relative overflow-hidden">
       <Toaster
         position="top-center"
         toastOptions={{
           style: {
-            background: resolvedTheme === "dark" ? "#0a0a0a" : "#ffffff",
+            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
             color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
             border:
               resolvedTheme === "dark"
                 ? "1px solid #1e293b"
                 : "1px solid #e2e8f0",
-            borderRadius: "0.75rem",
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+            borderRadius: "1rem",
+            boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
+            padding: "16px 20px",
+            fontWeight: "600",
           },
         }}
       />
-      <div className="flex items-center justify-between mb-10">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleGoBack}
-            className="
-              flex items-center gap-2 px-4 py-2.5
-              text-slate-500 dark:text-slate-400 hover:text-[#3b5bdb] dark:hover:text-indigo-400
-              hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl
-              transition-all duration-200 font-semibold text-sm
-            "
-          >
-            <ArrowLeft size={18} />
-            <span>Назад к секциям</span>
-          </button>
 
-          {mounted && (
-            <button
-              onClick={() =>
-                setTheme(resolvedTheme === "dark" ? "light" : "dark")
-              }
-              className="p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors"
-            >
-              {resolvedTheme === "dark" ? (
-                <Sun size={18} className="text-yellow-400" />
-              ) : (
-                <Moon size={18} className="text-slate-600" />
+       {/* Glow Effects */}
+       <div className="absolute top-[20%] right-[-10%] w-[35rem] h-[35rem] bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-[140px] mix-blend-multiply dark:mix-blend-screen pointer-events-none z-0" />
+       
+       <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm transition-colors">
+          <div className="max-w-4xl mx-auto px-4 h-20 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleGoBack}
+                className="group flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all"
+              >
+                <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+                <span>К секциям</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+               {mounted && (
+                <button
+                  onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all shadow-inner border border-slate-200/50 dark:border-slate-700/50"
+                  title={resolvedTheme === "dark" ? "Светлая тема" : "Темная тема"}
+                >
+                  {resolvedTheme === "dark" ? (
+                    <Sun size={18} className="text-yellow-400" />
+                  ) : (
+                    <Moon size={18} className="text-slate-600" />
+                  )}
+                </button>
               )}
-            </button>
-          )}
+               <button
+                onClick={handleSave}
+                disabled={isSaving || !hasUnsavedChanges()}
+                className={`
+                  flex items-center gap-2 h-12 px-6 rounded-xl font-bold
+                  transition-all duration-300 ease-out
+                  ${
+                    isSaving || !hasUnsavedChanges()
+                      ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border-transparent"
+                      : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 active:scale-95"
+                  }
+                `}
+              >
+                {isSaving ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Save size={18} />
+                )}
+                <span className="hidden sm:inline">{isSaving ? "Сохранение..." : "Сохранить урок"}</span>
+              </button>
+            </div>
+          </div>
+       </header>
+
+      <main className="max-w-4xl mx-auto py-12 px-4 relative z-10 w-full mb-20">
+        <div className="mb-10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 shadow-sm relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+          
+          <div className="flex items-start gap-5 relative z-10">
+             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white flex-shrink-0">
+               <BookOpen size={28} />
+             </div>
+             <div className="w-full">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1 block">
+                  Название урока
+                </label>
+                <input
+                  type="text"
+                  placeholder="Введите название урока..."
+                  value={lessonInfo.title}
+                  onChange={(e) => handleLessonChange(e.target.value)}
+                  className="
+                    w-full bg-transparent
+                    text-3xl font-black text-slate-900 dark:text-white
+                    placeholder:text-slate-300 dark:placeholder:text-slate-600
+                    outline-none border-none
+                    border-b-2 border-transparent focus:border-indigo-500/30
+                    pb-2 transition-colors duration-200 mt-1
+                  "
+                />
+             </div>
+          </div>
         </div>
 
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className={`
-            px-6 py-2.5 text-white rounded-xl font-bold text-sm
-            transition-all duration-200
-            ${
-              isSaving
-                ? "bg-slate-300 dark:bg-slate-700 cursor-not-allowed text-slate-500 dark:text-slate-400"
-                : "bg-gradient-to-r from-[#3b5bdb] to-[#5c7cfa] hover:shadow-lg hover:shadow-indigo-500/25 hover:-translate-y-0.5"
-            }
-          `}
+        <div className="flex items-center gap-2 mb-6">
+           <Sparkles className="w-5 h-5 text-indigo-500" />
+           <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
+             Перетаскивайте блоки для изменения их порядка отображения
+           </p>
+        </div>
+
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
         >
-          {isSaving ? (
-            <span className="flex items-center gap-2">
-              <Loader2 size={16} className="animate-spin" />
-              Сохранение...
-            </span>
-          ) : (
-            "Сохранить"
-          )}
-        </button>
-      </div>
+          <SortableContext items={blocks} strategy={verticalListSortingStrategy}>
+            <div className="space-y-4">
+              {blocks.map((block) => (
+                <div key={block.id} className="relative group/block">
+                   <DragItem
+                      block={block}
+                      onEdit={setEditingId}
+                      onDelete={(id) =>
+                        setBlocks((prev) => prev.filter((b) => b.id !== id))
+                      }
+                    />
+                </div>
+              ))}
+            </div>
+          </SortableContext>
 
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#3b5bdb] to-[#5c7cfa] flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
-            <BookOpen size={20} />
-          </div>
-          <h1 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">
-            Редактор урока
-          </h1>
+          <DragOverlay
+            dropAnimation={{
+              sideEffects: defaultDropAnimationSideEffects({
+                styles: { active: { opacity: "0.5" } },
+              }),
+            }}
+          >
+            {activeId && activeBlock ? (
+              <div className="cursor-grabbing scale-[1.02] shadow-2xl rounded-2xl rotate-2">
+                <DragItem
+                  block={activeBlock}
+                  onEdit={handleEdit}
+                  onDelete={() => {}}
+                  isOverlay
+                />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+
+        <div className="mt-8">
+          <AddItemButton />
         </div>
 
-        <input
-          type="text"
-          placeholder="Название урока..."
-          value={lessonInfo.title}
-          onChange={(e) => handleLessonChange(e.target.value)}
-          className="
-            w-full bg-transparent
-            text-xl font-bold text-slate-800 dark:text-white
-            placeholder:text-slate-300 dark:placeholder:text-slate-600
-            outline-none border-none
-            border-b-2 border-transparent focus:border-indigo-200 dark:focus:border-indigo-500/30
-            pb-2 transition-colors duration-200
-          "
-        />
-      </div>
-
-      <p className="text-sm font-medium text-slate-400 dark:text-slate-500 mb-8">
-        Перетаскивайте блоки для изменения порядка
-      </p>
-
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext items={blocks} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2">
-            {blocks.map((block) => (
-              <DragItem
-                key={block.id}
-                block={block}
-                onEdit={setEditingId}
-                onDelete={(id) =>
-                  setBlocks((prev) => prev.filter((b) => b.id !== id))
-                }
-              />
-            ))}
-          </div>
-        </SortableContext>
-
-        <DragOverlay
-          dropAnimation={{
-            sideEffects: defaultDropAnimationSideEffects({
-              styles: { active: { opacity: "0.5" } },
-            }),
-          }}
-        >
-          {activeId && activeBlock ? (
-            <div className="cursor-grabbing">
-              <DragItem
-                block={activeBlock}
-                onEdit={handleEdit}
-                onDelete={() => {}}
-                isOverlay
-              />
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-
-      <AddItemButton />
-
-      <div className="mt-8 p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-        <div className="flex items-center gap-5 flex-wrap">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
-              <BookOpen
-                size={16}
-                className="text-[#3b5bdb] dark:text-indigo-400"
-              />
-            </div>
-            <div>
-              <div className="text-xl font-extrabold text-slate-800 dark:text-white">
-                {blocks.length}
+        {/* Stats footer */}
+        <div className="mt-12 p-6 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-[2rem] border border-slate-200/50 dark:border-slate-800/50 shadow-sm overflow-x-auto custom-scrollbar">
+          <div className="flex items-center gap-6 md:gap-10 justify-center min-w-max px-4">
+            <div className="flex items-center gap-4 group">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center shadow-inner group-hover:bg-indigo-100 transition-colors">
+                <Layers size={20} className="text-indigo-600 dark:text-indigo-400" />
               </div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                блоков
+              <div>
+                <div className="text-2xl font-black text-slate-800 dark:text-white leading-none">
+                  {blocks.length}
+                </div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                  всего блоков
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="w-px h-10 bg-slate-100 dark:bg-slate-800" />
+            <div className="w-px h-12 bg-slate-200/50 dark:bg-slate-800/50" />
 
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-              <FileText
-                size={16}
-                className="text-emerald-600 dark:text-emerald-400"
-              />
-            </div>
-            <div>
-              <div className="text-xl font-extrabold text-slate-800 dark:text-white">
-                {blocks.filter((b) => b.type === "text").length}
+            <div className="flex items-center gap-4 group">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center shadow-inner group-hover:bg-emerald-100 transition-colors">
+                <FileText size={20} className="text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                текстовых
+              <div>
+                <div className="text-2xl font-black text-slate-800 dark:text-white leading-none">
+                  {blocks.filter((b) => b.type === "text").length}
+                </div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                  тексты
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="w-px h-10 bg-slate-100 dark:bg-slate-800" />
+            <div className="w-px h-12 bg-slate-200/50 dark:bg-slate-800/50" />
 
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center">
-              <Video
-                size={16}
-                className="text-violet-600 dark:text-violet-400"
-              />
-            </div>
-            <div>
-              <div className="text-xl font-extrabold text-slate-800 dark:text-white">
-                {blocks.filter((b) => b.type === "video").length}
+            <div className="flex items-center gap-4 group">
+              <div className="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-500/10 border border-violet-100 dark:border-violet-500/20 flex items-center justify-center shadow-inner group-hover:bg-violet-100 transition-colors">
+                <Video size={20} className="text-violet-600 dark:text-violet-400" />
               </div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                видео
+              <div>
+                <div className="text-2xl font-black text-slate-800 dark:text-white leading-none">
+                  {blocks.filter((b) => b.type === "video").length}
+                </div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                  видео
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="w-px h-10 bg-slate-100 dark:bg-slate-800" />
+            <div className="w-px h-12 bg-slate-200/50 dark:bg-slate-800/50" />
 
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
-              <HelpCircle
-                size={16}
-                className="text-amber-600 dark:text-amber-400"
-              />
-            </div>
-            <div>
-              <div className="text-xl font-extrabold text-slate-800 dark:text-white">
-                {blocks.filter((b) => b.type === "quiz").length}
+            <div className="flex items-center gap-4 group">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 flex items-center justify-center shadow-inner group-hover:bg-amber-100 transition-colors">
+                 <HelpCircle size={20} className="text-amber-600 dark:text-amber-400" />
               </div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                викторин
+              <div>
+                <div className="text-2xl font-black text-slate-800 dark:text-white leading-none">
+                  {blocks.filter((b) => b.type === "quiz").length}
+                </div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                  тесты
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+
+      </main>
 
       {editingId && (
         <EditorWindow
