@@ -14,6 +14,7 @@ import {
   Moon,
   Loader2,
   Tags,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -120,6 +121,14 @@ export default function AdminDashboard() {
                 <Moon className="text-slate-600" size={20} />
               )}
             </Button>
+            <Link href="/admin/users">
+              <Button
+                variant="outline"
+                className="font-bold border-[#3b5bdb] text-[#3b5bdb] hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+              >
+                <Users className="w-4 h-4 mr-2" /> Пользователи
+              </Button>
+            </Link>
             <Link href="/admin/tags">
               <Button
                 variant="outline"

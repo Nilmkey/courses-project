@@ -9,6 +9,7 @@ import {
   updateEnrollmentStatusSchema,
 } from './enrollment.validation';
 import { authMiddleware } from '../../../middleware/auth.middleware';
+import { adminMiddleware } from '../../../middleware/admin.middleware';
 
 const router = Router();
 
@@ -39,9 +40,11 @@ router.get(
   enrollmentController.isEnrolled.bind(enrollmentController)
 );
 
+// Только админ может ставить статус "completed"
 router.patch(
   '/:courseId/status',
   authMiddleware,
+  adminMiddleware,
   validateRequest(updateEnrollmentStatusSchema),
   enrollmentController.updateStatus.bind(enrollmentController)
 );
