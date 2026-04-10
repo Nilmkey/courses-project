@@ -186,7 +186,6 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
     });
   };
 
-  // Фильтруем курсы: исключаем уже записанные + поиск по названию
   const enrolledCourseIds = new Set(enrollments.map((e) => e.course_id));
   const filteredCourses = availableCourses.filter(
     (c) =>
@@ -213,63 +212,67 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
 
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-6 transition-all duration-500 will-change-transform"
         onClick={onClose}
       >
         {/* Modal */}
         <div
-          className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+          className="bg-white/90 dark:bg-slate-950/90 backdrop-blur-3xl rounded-[2.5rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-white/50 dark:border-slate-800/50 flex flex-col relative"
           onClick={(e) => e.stopPropagation()}
         >
+           <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-indigo-500/10 dark:bg-indigo-500/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+
           {/* Header */}
-          <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
-            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              Профиль пользователя
+          <div className="sticky top-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-800/50 px-8 py-5 flex items-center justify-between z-10 shrink-0">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
+              Профиль ученика
             </h2>
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="rounded-xl w-10 h-10 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-rose-500 transition-colors"
             >
               <X className="w-5 h-5" />
             </Button>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar relative z-10">
             {/* Информация о пользователе */}
-            <Card className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700">
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row gap-6">
+            <div className="bg-slate-50/50 dark:bg-slate-900/30 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-[2rem] p-8 shadow-sm">
+                <div className="flex flex-col md:flex-row gap-8">
                   {/* Аватар */}
                   <div className="flex-shrink-0">
-                    {user.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt={user.name}
-                        className="w-24 h-24 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-4xl font-bold">
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full scale-125" />
+                      {user.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="w-32 h-32 rounded-3xl object-cover relative z-10 shadow-lg border-2 border-white dark:border-slate-800"
+                        />
+                      ) : (
+                        <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-5xl font-black relative z-10 shadow-xl shadow-indigo-500/30">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Детали */}
-                  <div className="flex-1 space-y-4">
+                  <div className="flex-1 space-y-6">
                     <div>
-                      <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                      <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
                         {user.name}
                       </h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                      <p className="text-base font-medium text-slate-500 dark:text-slate-400 font-mono">
                         {user.email}
                       </p>
                     </div>
 
                     {/* Изменение роли */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <div className="space-y-3">
+                      <label className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-2">
                         <UserCog className="w-4 h-4" />
                         Роль пользователя
                       </label>
@@ -278,49 +281,46 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
                           <button
                             key={role}
                             onClick={() => setSelectedRole(role)}
-                            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
                               selectedRole === role
                                 ? role === "admin"
-                                  ? "bg-rose-600 text-white"
-                                  : "bg-slate-600 text-white"
-                                : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600"
+                                  ? "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/30"
+                                  : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/30"
+                                : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-300"
                             }`}
                           >
-                            {role === "admin"
-                              ? "Администратор"
-                              : "Студент"}
+                            {role === "admin" ? "Администратор" : "Студент"}
                           </button>
                         ))}
                       </div>
                       {selectedRole !== user.role && (
-                        <Button
-                          onClick={handleUpdateRole}
-                          disabled={loading}
-                          size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
-                        >
-                          {loading ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : null}
-                          Сохранить роль
-                        </Button>
+                        <div className="pt-2">
+                           <Button
+                            onClick={handleUpdateRole}
+                            disabled={loading}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl"
+                          >
+                            {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                            Сохранить роль
+                          </Button>
+                        </div>
                       )}
                     </div>
 
                     {/* Запись на курс */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <div className="space-y-3 pt-4 border-t border-slate-200/50 dark:border-slate-800">
+                      <label className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-2">
                         <UserPlus className="w-4 h-4" />
                         Записать на курс
                       </label>
 
                       {/* Поиск курсов */}
                       <div className="relative">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <div className="relative group">
+                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                           <input
                             type="text"
-                            placeholder="Найти курс..."
+                            placeholder="Найти курс для записи..."
                             value={courseSearch}
                             onChange={(e) => {
                               setCourseSearch(e.target.value);
@@ -328,63 +328,52 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
                             }}
                             onFocus={() => setShowCourseDropdown(true)}
                             onBlur={() => {
-                              // Задержка чтобы кликнуть по варианту
                               setTimeout(() => setShowCourseDropdown(false), 200);
                             }}
-                            className="w-full pl-10 pr-3 py-2 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full pl-11 pr-4 py-3 h-12 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-inner"
                             disabled={loadingCourses}
                           />
                         </div>
 
                         {/* Выпадающий список курсов */}
                         {showCourseDropdown && (
-                          <div className="absolute z-50 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          <div className="absolute z-50 mt-2 w-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
                             {loadingCourses ? (
-                              <div className="flex items-center justify-center py-4">
-                                <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                              <div className="flex items-center justify-center py-6">
+                                <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
                               </div>
                             ) : filteredCourses.length === 0 ? (
-                              <div className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">
+                              <div className="py-6 text-center text-sm font-bold text-slate-500 dark:text-slate-400">
                                 {availableCourses.length === enrollments.length
-                                  ? "Все курсы уже добавлены"
-                                  : "Курсы не найдены"}
+                                  ? "Все курсы уже изучены!"
+                                  : "Ничего не найдено"}
                               </div>
                             ) : (
-                              filteredCourses.map((course) => (
-                                <button
-                                  key={course._id}
-                                  onMouseDown={() => {
-                                    setSelectedCourseId(course._id);
-                                    setCourseSearch(course.title);
-                                    setShowCourseDropdown(false);
-                                  }}
-                                  className="w-full px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-3"
-                                >
-                                  {course.thumbnail ? (
-                                    <img
-                                      src={course.thumbnail}
-                                      alt={course.title}
-                                      className="w-10 h-10 rounded object-cover flex-shrink-0"
-                                    />
-                                  ) : (
-                                    <div className="w-10 h-10 rounded bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                                      <BookOpen className="w-5 h-5 text-white/80" />
+                              <div className="p-2 space-y-1">
+                                {filteredCourses.map((course) => (
+                                  <button
+                                    key={course._id}
+                                    onMouseDown={() => {
+                                      setSelectedCourseId(course._id);
+                                      setCourseSearch(course.title);
+                                      setShowCourseDropdown(false);
+                                    }}
+                                    className="w-full p-2 text-left hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-3"
+                                  >
+                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-indigo-500/20">
+                                      <BookOpen className="w-5 h-5 text-white/90" />
                                     </div>
-                                  )}
-                                  <div className="min-w-0">
-                                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                                      {course.title}
-                                    </p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                                      {course.level === "beginner"
-                                        ? "Начальный"
-                                        : course.level === "intermediate"
-                                        ? "Средний"
-                                        : "Продвинутый"}
-                                    </p>
-                                  </div>
-                                </button>
-                              ))
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                        {course.title}
+                                      </p>
+                                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                                        Уровень: {course.level}
+                                      </p>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
                             )}
                           </div>
                         )}
@@ -395,173 +384,151 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
                         <Button
                           onClick={handleEnrollUser}
                           disabled={loadingCourses}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white font-bold w-full"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold w-full h-12 rounded-xl shadow-lg shadow-emerald-500/30"
                         >
-                          <UserPlus className="w-4 h-4 mr-2" />
-                          Записать на: {availableCourses.find((c) => c._id === selectedCourseId)?.title}
+                          <UserPlus className="w-5 h-5 mr-2" />
+                          Подтвердить запись
                         </Button>
                       )}
                     </div>
 
                     {/* Удалить аккаунт */}
-                    <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <div className="pt-4 border-t border-slate-200/50 dark:border-slate-800">
                       <Button
                         onClick={handleDeleteUser}
                         variant="outline"
-                        size="sm"
-                        className="text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:border-rose-600 font-bold"
+                        className="text-rose-600 border-rose-200 bg-rose-50 hover:bg-rose-600 dark:bg-rose-900/10 dark:border-rose-900 hover:text-white font-bold rounded-xl h-12 w-full transition-all shadow-inner"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Удалить аккаунт
+                        Удалить аккаунт навсегда
                       </Button>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
 
             {/* Курсы */}
             <div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-4 flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-blue-600" />
-                Курсы пользователя
-                <span className="text-sm font-normal text-slate-500 dark:text-slate-400 normal-case tracking-normal">
-                  ({enrollments.length})
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-6 flex items-center gap-3">
+                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl shadow-inner">
+                  <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                Прогресс по курсам
+                <span className="text-sm font-bold py-1 px-3 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 ml-2">
+                  {enrollments.length}
                 </span>
               </h3>
 
               {loadingEnrollments ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-4">
-                  <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
                 </div>
               ) : enrollments.length === 0 ? (
-                <Card className="border-dashed border-2 py-12 text-center">
-                  <CardContent>
-                    <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                    <p className="text-slate-500 font-bold text-sm">
+                <div className="bg-white/50 dark:bg-slate-900/50 border-dashed border-2 border-slate-200 dark:border-slate-800 py-16 rounded-[2rem] text-center">
+                    <BookOpen className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+                    <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">
                       Пользователь не записан ни на один курс
                     </p>
-                  </CardContent>
-                </Card>
+                </div>
               ) : (
-                <div className="space-y-3">
+                <div className="grid gap-4">
                   {enrollments.map((enrollment) => (
-                    <Card
+                    <div
                       key={enrollment._id}
-                      className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow"
+                      className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200/50 dark:border-slate-800/50 hover:shadow-lg transition-all group"
                     >
-                      <CardContent className="p-4">
-                        <div className="flex flex-col lg:flex-row gap-4">
+                        <div className="flex flex-col md:flex-row gap-6 items-center">
                           {/* Информация о курсе */}
-                          <div className="flex-1">
-                            <div className="flex items-start gap-3">
-                              {enrollment.course.thumbnail ? (
-                                <img
-                                  src={enrollment.course.thumbnail}
-                                  alt={enrollment.course.title}
-                                  className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                                />
-                              ) : (
-                                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                                  <BookOpen className="w-8 h-8 text-white/80" />
-                                </div>
-                              )}
+                          <div className="flex-1 flex gap-4 w-full">
+                              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-500/20">
+                                <BookOpen className="w-8 h-8 text-white/90" />
+                              </div>
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-black text-slate-900 dark:text-white truncate">
+                                <h4 className="font-black text-xl text-slate-900 dark:text-white truncate">
                                   {enrollment.course.title}
                                 </h4>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                  Записан:{" "}
-                                  {new Date(enrollment.enrolledAt).toLocaleDateString("ru-RU")}
-                                </p>
-                                <div className="flex items-center gap-2 mt-2">
+                                <div className="flex flex-wrap items-center gap-3 mt-2">
+                                  <span className="text-xs font-bold text-slate-500 font-mono">
+                                    Дата: {new Date(enrollment.enrolledAt).toLocaleDateString("ru-RU")}
+                                  </span>
                                   <span
-                                    className={`text-xs font-bold px-2 py-1 rounded-full ${
+                                    className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
                                       enrollment.status === "active"
-                                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                        ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 ring-1 ring-inset ring-emerald-200/50"
                                         : enrollment.status === "completed"
-                                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                                        : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
+                                        ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 ring-1 ring-inset ring-blue-200/50"
+                                        : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                                     }`}
                                   >
                                     {enrollment.status === "active"
-                                      ? "Активен"
+                                      ? "В процессе"
                                       : enrollment.status === "completed"
-                                      ? "Завершён"
+                                      ? "Изучен"
                                       : "Отменён"}
                                   </span>
                                 </div>
                               </div>
-                            </div>
+                          </div>
 
-                            {/* Прогресс */}
+                           {/* Прогресс */}
+                           <div className="w-full md:w-64 shrink-0">
                             {enrollment.progress && (
-                              <div className="mt-3">
-                                <div className="flex items-center justify-between text-xs mb-1">
-                                  <span className="font-bold text-slate-600 dark:text-slate-400">
-                                    Прогресс
+                              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl shadow-inner">
+                                <div className="flex items-center justify-between text-xs mb-2">
+                                  <span className="font-black text-slate-500 uppercase tracking-widest">
+                                    Выполнено
                                   </span>
-                                  <span className="font-black text-blue-600 dark:text-blue-400">
+                                  <span className="font-black text-indigo-600 dark:text-indigo-400 text-sm">
                                     {Math.round(enrollment.progress.overallProgress)}%
                                   </span>
                                 </div>
-                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mb-2">
                                   <div
-                                    className="bg-blue-600 h-2 rounded-full transition-all"
+                                    className="bg-indigo-600 h-2 rounded-full transition-all shadow-[0_0_8px_rgba(79,70,229,0.5)]"
                                     style={{
                                       width: `${enrollment.progress.overallProgress}%`,
                                     }}
                                   />
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-slate-600 dark:text-slate-400">
-                                  <span>
-                                    Уроков: {enrollment.progress.stats.completedLessons}/
-                                    {enrollment.progress.stats.totalLessons}
-                                  </span>
-                                  <span>
-                                    Блоков: {enrollment.progress.stats.completedBlocks}/
-                                    {enrollment.progress.stats.totalBlocks}
-                                  </span>
+                                <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                  <span>{enrollment.progress.stats.completedLessons}/{enrollment.progress.stats.totalLessons} Урок</span>
+                                  <span>{enrollment.progress.stats.completedBlocks}/{enrollment.progress.stats.totalBlocks} Блок</span>
                                 </div>
                               </div>
                             )}
                           </div>
 
                           {/* Действия */}
-                          <div className="flex lg:flex-col gap-2 flex-shrink-0">
+                          <div className="flex flex-row md:flex-col gap-2 shrink-0 w-full md:w-auto mt-4 md:mt-0">
                             <Button
                               variant="outline"
-                              size="sm"
                               onClick={() =>
                                 handleResetProgress(
                                   enrollment.course_id,
                                   enrollment.course.title
                                 )
                               }
-                              className="text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:border-amber-600 font-bold"
+                              className="flex-1 border-amber-200 text-amber-600 hover:bg-amber-50 dark:border-amber-900 dark:hover:bg-amber-900/20 font-bold rounded-xl h-10"
                             >
-                              <RotateCcw className="w-4 h-4 mr-1" />
-                              Сбросить прогресс
+                              <RotateCcw className="w-4 h-4 md:mr-0 mr-2" />
+                              <span className="md:hidden">Сбросить</span>
                             </Button>
                             <Button
                               variant="outline"
-                              size="sm"
                               onClick={() =>
                                 handleUnenroll(
                                   enrollment.course_id,
                                   enrollment.course.title
                                 )
                               }
-                              className="text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:border-rose-600 font-bold"
+                              className="flex-1 border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900 dark:hover:bg-rose-900/20 font-bold rounded-xl h-10"
                             >
-                              <Trash2 className="w-4 h-4 mr-1" />
-                              Отписать
+                              <Trash2 className="w-4 h-4 md:mr-0 mr-2" />
+                               <span className="md:hidden">Удалить</span>
                             </Button>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                    </div>
                   ))}
                 </div>
               )}
@@ -575,24 +542,24 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
         open={confirmDialog.isOpen}
         onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, isOpen: open }))}
       >
-        <AlertDialogContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <AlertDialogContent className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-6 sm:p-8">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-slate-900 dark:text-white flex items-center gap-2">
-              <AlertTriangle
-                className={`w-5 h-5 ${
-                  confirmDialog.variant === "destructive"
-                    ? "text-rose-600"
-                    : "text-amber-600"
-                }`}
-              />
+            <AlertDialogTitle className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3 tracking-tight">
+              <div className={`p-3 rounded-2xl shadow-inner ${
+                   confirmDialog.variant === "destructive"
+                   ? "bg-rose-100 dark:bg-rose-500/20 text-rose-600"
+                   : "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600"
+              }`}>
+                 <AlertTriangle className="w-6 h-6" />
+              </div>
               {confirmDialog.title}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-600 dark:text-slate-400">
+            <AlertDialogDescription className="text-base font-medium text-slate-600 dark:text-slate-400 mt-2">
               {confirmDialog.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold">
+          <AlertDialogFooter className="mt-6 flex gap-3">
+            <AlertDialogCancel className="rounded-xl font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-transparent h-12 px-6">
               Отмена
             </AlertDialogCancel>
             <AlertDialogAction
@@ -600,11 +567,11 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
                 await confirmDialog.onConfirm();
                 setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
               }}
-              className={`${
+              className={`rounded-xl font-bold h-12 px-8 shadow-lg ${
                 confirmDialog.variant === "destructive"
-                  ? "bg-rose-600 hover:bg-rose-700"
-                  : "bg-blue-600 hover:bg-blue-700"
-              } text-white font-bold`}
+                  ? "bg-rose-600 hover:bg-rose-700 shadow-rose-500/30"
+                  : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/30"
+              } text-white transition-all active:scale-95`}
             >
               Подтвердить
             </AlertDialogAction>

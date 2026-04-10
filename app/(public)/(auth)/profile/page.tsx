@@ -149,10 +149,15 @@ export default function ProfilePage() {
 
   if (!mounted || isPending) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f0f5ff] dark:bg-slate-950">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 animate-spin text-[#3b5bdb]" />
-          <p className="text-sm font-medium text-slate-400 tracking-[0.2em] uppercase animate-pulse">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-20 animate-pulse" />
+            <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl flex items-center justify-center relative z-10 border border-slate-100 dark:border-slate-800">
+               <Loader2 className="w-8 h-8 animate-spin text-indigo-600 dark:text-indigo-400" />
+            </div>
+          </div>
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400 tracking-[0.2em] uppercase animate-pulse">
             Загрузка профиля
           </p>
         </div>
@@ -287,108 +292,95 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f5ff] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 font-sans transition-colors duration-300 flex flex-col selection:bg-indigo-500/30">
       <Toaster
         position="top-center"
         toastOptions={{
           duration: 3000,
           style: {
             background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
-            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
-            border:
-              resolvedTheme === "dark"
-                ? "1px solid #1e293b"
-                : "1px solid #e2e8f0",
-            borderRadius: "0.75rem",
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+            color: resolvedTheme === "dark" ? "#f8fafc" : "#0f172a",
+            border: resolvedTheme === "dark" ? "1px solid #1e293b" : "1px solid #e2e8f0",
+            borderRadius: "1rem",
+            boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
+            padding: "16px 20px",
+            fontWeight: "600",
           },
         }}
       />
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-indigo-100/50 dark:border-slate-800 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-950/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-slate-800/50 transition-colors duration-300">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Link
             href="/courses"
-            className="group flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-[#3b5bdb] transition-colors"
+            className="group flex items-center gap-3 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
           >
-            <div className="p-1.5 rounded-lg group-hover:bg-indigo-50 dark:group-hover:bg-slate-800 transition-colors">
+            <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/20 transition-colors">
               <ArrowLeft
-                size={16}
+                size={18}
                 className="transition-transform group-hover:-translate-x-1"
               />
             </div>
-            <span className="hidden sm:inline">К курсам</span>
+            <span className="hidden sm:inline tracking-wide">К курсам</span>
           </Link>
 
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="relative flex items-center justify-center w-9 h-9 bg-[#3b5bdb] rounded-xl shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="relative flex items-center justify-center w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl shadow-lg shadow-indigo-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 ring-2 ring-indigo-100 dark:ring-indigo-900">
               <Code size={20} className="text-white" />
             </div>
-            <span className="text-xl font-black tracking-tight uppercase dark:text-white">
+            <span className="text-2xl font-black tracking-tight dark:text-white text-slate-900 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
               CodeLearn
             </span>
           </Link>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
-              onClick={() =>
-                setTheme(resolvedTheme === "dark" ? "light" : "dark")
-              }
-              className="p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors"
+              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300"
             >
-              {resolvedTheme === "dark" ? (
-                <Sun size={18} className="text-yellow-400" />
-              ) : (
-                <Moon size={18} className="text-slate-600" />
-              )}
+              {resolvedTheme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-rose-500 bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 rounded-full hover:bg-rose-100 transition-all active:scale-95"
+              className="flex items-center justify-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-bold text-rose-600 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-500/20 hover:text-rose-700 dark:hover:text-rose-300 transition-all duration-300 shadow-sm hover:shadow-rose-500/10"
             >
-              <LogOut size={14} />
-              <span className="hidden sm:inline">Выйти</span>
+              <LogOut size={18} />
+              <span className="hidden sm:inline tracking-wide">Выйти</span>
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 mt-8 space-y-8 grow pb-20">
-        <div className="bg-white dark:bg-slate-900 rounded-2rem shadow-xl shadow-indigo-900/5 border border-white dark:border-slate-800 overflow-hidden">
-          <div className="h-32 bg-linear-to-br from-[#3b5bdb] via-[#5c7cfa] to-[#74c0fc] relative">
-            <div
-              className="absolute inset-0 opacity-[0.15]"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`,
-              }}
-            />
+      <main className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 md:py-12 flex flex-col gap-8 md:gap-10 grow pb-24">
+        {/* The Profile Header Block */}
+        <div className="relative rounded-[2.5rem] bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden group/header">
+          {/* Banner Header */}
+          <div className="h-48 md:h-64 w-full relative overflow-hidden bg-indigo-600">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 mix-blend-multiply dark:mix-blend-normal opacity-90" />
+            <div className="absolute -top-32 -left-32 w-[30rem] h-[30rem] bg-blue-400/50 rounded-full blur-[100px] mix-blend-screen animate-pulse duration-[8000ms]" />
+            <div className="absolute bottom-0 right-0 w-[20rem] h-[20rem] bg-pink-400/50 rounded-full blur-[80px] mix-blend-screen block" />
+            <div className="absolute inset-0 opacity-[0.15]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")` }} />
           </div>
 
-          <div className="px-6 pb-6 sm:px-10">
-            <div className="flex flex-col items-center sm:flex-row sm:items-end -mt-12 gap-4">
-              <div className="relative">
-                <div className="p-1.5 rounded-full bg-white dark:bg-slate-900 shadow-xl shadow-indigo-900/10">
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-indigo-100 dark:border-slate-700 overflow-hidden relative group">
-                    {currentAvatar ? (
-                      <Image
-                        src={currentAvatar}
-                        alt="User"
-                        width={112}
-                        height={112}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <User size={44} className="text-[#3b5bdb]" />
-                    )}
-
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                    >
-                      <Camera className="text-white" size={32} />
-                    </div>
+          {/* Content Below Banner */}
+          <div className="px-6 pb-8 sm:px-10 sm:pb-10 relative">
+            <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-end -mt-16 sm:-mt-20">
+              {/* Avatar Container */}
+              <div className="relative shrink-0 transition-transform duration-500 group-hover/header:translate-y-[-4px]">
+                <div className="p-2 bg-white dark:bg-slate-900 rounded-[2rem] shadow-xl shadow-indigo-500/10 dark:shadow-[0_0_40px_rgba(79,70,229,0.15)] ring-1 ring-slate-100 dark:ring-slate-800">
+                  <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-[1.5rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative group">
+                     {currentAvatar ? (
+                        <Image src={currentAvatar} alt="User" width={160} height={160} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                     ) : (
+                        <User size={64} className="text-slate-400" />
+                     )}
+                     <div onClick={() => fileInputRef.current?.click()} className="absolute inset-0 bg-indigo-900/40 dark:bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center cursor-pointer backdrop-blur-sm">
+                        <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white backdrop-blur-md shadow-lg transition-transform hover:scale-110">
+                           <Camera size={24} />
+                        </div>
+                     </div>
                   </div>
                 </div>
-
+                
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -398,111 +390,124 @@ export default function ProfilePage() {
                 />
 
                 {currentAvatar && (
-                  <button
-                    onClick={handleDeleteAvatar}
-                    className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-colors shadow-lg border-2 border-white dark:border-slate-900 z-10"
-                    title="Удалить аватар"
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                    <button
+                      onClick={handleDeleteAvatar}
+                      className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-transform hover:scale-110 shadow-lg shadow-red-500/30 ring-4 ring-white dark:ring-slate-900 z-10"
+                      title="Удалить аватар"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                 )}
               </div>
 
-              <div className="flex-1 text-center sm:text-left mb-2 min-w-0 w-full">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight break-words">
-                    {session.user.name}
-                  </h1>
-
-                  {userRole === "admin" ? (
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-linear-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-orange-500/20 shrink-0">
-                      <ShieldCheck size={12} /> Admin
+              {/* User Info */}
+              <div className="flex-1 w-full mb-2 sm:mb-4">
+                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                       <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-2 drop-shadow-sm">
+                         {session.user.name}
+                       </h1>
+                       <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">
+                         {session.user.email}
+                       </p>
                     </div>
-                  ) : (
-                    <div className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-[#3b5bdb] text-[10px] font-bold uppercase tracking-widest rounded-lg border border-indigo-100/50 dark:border-indigo-500/20 shrink-0">
-                      <Sparkles size={12} /> Student
-                    </div>
-                  )}
-                </div>
-                <p className="text-slate-500 dark:text-slate-400 font-medium break-all">
-                  {session.user.email}
-                </p>
+                    
+                    {userRole === "admin" ? (
+                      <div className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-400 hover:from-amber-500 to-orange-500 hover:to-orange-600 text-white text-sm font-bold uppercase tracking-widest rounded-2xl shadow-lg shadow-orange-500/30 shrink-0 transition-colors">
+                        <ShieldCheck size={20} /> Administrator
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-sm font-bold uppercase tracking-widest rounded-2xl ring-1 ring-indigo-200 dark:ring-indigo-500/30 shrink-0 transition-colors shadow-sm">
+                        <Sparkles size={20} /> Student Target
+                      </div>
+                    )}
+                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StreakStatCard />
-          <StatCard
-            icon={<Target size={22} className="text-[#3b5bdb]" />}
-            bg="bg-indigo-50 dark:bg-indigo-500/10"
-            border="border-indigo-100 dark:border-indigo-500/20"
-            value={startedCourses}
-            label="Активные курсы"
-          />
-          <StatCard
-            icon={<Trophy size={22} className="text-emerald-500" />}
-            bg="bg-emerald-50 dark:bg-emerald-500/10"
-            border="border-emerald-100 dark:border-emerald-500/20"
-            value={completedCourses}
-            label="Завершено"
-          />
-          <StatCard
-            icon={<Code size={22} className="text-violet-500" />}
-            bg="bg-violet-50 dark:bg-violet-500/10"
-            border="border-violet-100 dark:border-violet-500/20"
-            value={`${totalPercentage}%`}
-            label="Прогресс"
-          />
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-white dark:border-slate-800 shadow-xl shadow-indigo-900/5 overflow-hidden">
-          <div className="px-6 py-6 sm:px-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#3b5bdb] to-[#5c7cfa] flex items-center justify-center shadow-lg shadow-blue-500/20 text-white">
-                <BookOpen size={20} />
+        {/* Bento Grid layout */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 xl:gap-10">
+          <div className="xl:col-span-4 flex flex-col gap-8">
+            <div className="grid grid-cols-2 gap-4 sm:gap-5">
+              <div className="col-span-2">
+                <StreakStatCard />
               </div>
-              <h2 className="text-xl font-bold dark:text-white">
-                Моё обучение
-              </h2>
+              <StatCard
+                icon={<Target size={24} className="text-indigo-600 dark:text-indigo-400 drop-shadow-sm" />}
+                bg="bg-indigo-100 dark:bg-indigo-500/20"
+                value={startedCourses}
+                label="Активные"
+              />
+              <StatCard
+                icon={<Trophy size={24} className="text-emerald-600 dark:text-emerald-400 drop-shadow-sm" />}
+                bg="bg-emerald-100 dark:bg-emerald-500/20"
+                value={completedCourses}
+                label="Пройдено"
+              />
+              <div className="col-span-2">
+                 <StatCard
+                   icon={<Code size={24} className="text-violet-600 dark:text-violet-400 drop-shadow-sm" />}
+                   bg="bg-violet-100 dark:bg-violet-500/20"
+                   value={totalPercentage}
+                   suffix="%"
+                   label="Общий прогресс"
+                 />
+              </div>
             </div>
-            {startedCourses > 0 && (
-              <Link
-                href="/courses"
-                className="text-sm font-semibold text-[#3b5bdb] hover:underline decoration-2 underline-offset-4"
-              >
-                Каталог
-              </Link>
-            )}
           </div>
 
-          <div className="p-6 sm:p-8 bg-slate-50/30 dark:bg-slate-900/30 min-h-[300px]">
-            {loadingCourses ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="w-10 h-10 animate-spin text-[#3b5bdb]" />
-                <p className="text-sm font-medium text-slate-400 mt-4">
-                  Загрузка курсов...
-                </p>
-              </div>
-            ) : startedCourses === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm mb-6 border border-slate-100 dark:border-slate-700">
-                  <BookOpen size={32} className="text-slate-300" />
+          <div className="xl:col-span-8 flex flex-col">
+            <div className="flex items-center justify-between mb-6 sm:mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white ring-4 ring-indigo-50 dark:ring-indigo-500/10">
+                  <BookOpen size={24} />
                 </div>
-                <h3 className="text-lg font-bold mb-2 dark:text-white">
-                  Курсы не найдены
-                </h3>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                  Моё обучение
+                </h2>
+              </div>
+              {startedCourses > 0 && (
                 <Link
                   href="/courses"
-                  className="px-8 py-3.5 text-sm font-bold text-white bg-[#3b5bdb] rounded-xl hover:bg-[#2f4bbf] transition-all"
+                  className="group flex flex-col items-end"
                 >
-                  Начать обучение
+                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors flex items-center gap-1">
+                    Каталог <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                  </span>
                 </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {enrolledCourses.map((enrollment) => {
+              )}
+            </div>
+
+            <div className="flex flex-col gap-4 sm:gap-5">
+              {loadingCourses ? (
+                <div className="flex flex-col items-center justify-center py-16 bg-white/50 dark:bg-slate-900/50 rounded-[2rem] ring-1 ring-slate-200/50 dark:ring-slate-800/50 backdrop-blur-sm">
+                  <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-6 animate-pulse">
+                    Подготовка...
+                  </p>
+                </div>
+              ) : startedCourses === 0 ? (
+                <div className="flex flex-col items-center justify-center p-12 text-center bg-white dark:bg-slate-900 rounded-[2.5rem] ring-1 ring-slate-200 dark:ring-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-none min-h-[400px]">
+                  <div className="w-24 h-24 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center shadow-inner mb-6 ring-1 ring-slate-200 dark:ring-slate-700">
+                    <BookOpen size={40} className="text-slate-400" />
+                  </div>
+                  <h3 className="text-2xl font-black mb-3 dark:text-white text-slate-900 tracking-tight">
+                    Нет активных курсов
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400 font-bold mb-8 max-w-xs text-center">
+                    Вы еще не начали свое обучение. Выберите подходящий курс в нашем каталоге.
+                  </p>
+                  <Link
+                    href="/courses"
+                    className="px-8 py-4 text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-2xl transition-all shadow-xl shadow-indigo-600/30 hover:-translate-y-1 hover:shadow-2xl hover:shadow-indigo-600/40 active:scale-95"
+                  >
+                    Перейти в каталог
+                  </Link>
+                </div>
+              ) : (
+                enrolledCourses.map((enrollment) => {
                   const course = enrollment.course;
                   if (!course) return null;
 
@@ -519,106 +524,93 @@ export default function ProfilePage() {
                   return (
                     <div
                       key={enrollment._id}
-                      className="group relative flex flex-col sm:flex-row sm:items-center gap-5 p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-indigo-200 shadow-sm transition-all duration-300"
+                      className="group relative p-5 sm:p-6 bg-white dark:bg-slate-900 rounded-[2rem] ring-1 ring-slate-200 dark:ring-slate-800 hover:ring-indigo-500/50 dark:hover:ring-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 flex flex-col sm:flex-row items-start sm:items-center gap-6 overflow-hidden"
                     >
-                      <div
-                        className={`w-14 h-14 shrink-0 rounded-xl bg-gradient-to-br ${info.gradient} p-[1px] ${info.shadow}`}
-                      >
-                        <div className="w-full h-full bg-white dark:bg-slate-900 rounded-[11px] flex items-center justify-center text-2xl relative overflow-hidden">
-                          <div
-                            className={`absolute inset-0 bg-gradient-to-br ${info.gradient} opacity-10`}
-                          />
-                          {info.icon}
-                        </div>
-                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                      <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6 w-full">
+                         <div className={`w-16 h-16 shrink-0 rounded-[1.5rem] bg-gradient-to-br ${info.gradient} p-[2px] shadow-lg ${info.shadow} group-hover:scale-105 transition-transform duration-300`}>
+                            <div className="w-full h-full bg-white dark:bg-slate-900 rounded-[1.4rem] flex items-center justify-center text-3xl relative overflow-hidden">
+                                <div className={`absolute inset-0 bg-gradient-to-br ${info.gradient} opacity-20`} />
+                                {info.icon}
+                            </div>
+                         </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-bold text-lg leading-tight group-hover:text-[#3b5bdb] transition-colors dark:text-white">
-                            {course.title}
-                          </h4>
-                          <span
-                            className={`font-bold ${isCompleted ? "text-emerald-600" : info.text}`}
-                          >
-                            {isCompleted ? "Завершён" : `${progress}%`}
-                          </span>
-                        </div>
+                         <div className="flex-1 w-full min-w-0 flex flex-col gap-3">
+                            <div className="flex items-start justify-between gap-4">
+                                <div>
+                                   <h4 className="font-extrabold text-xl text-slate-900 dark:text-white leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate max-w-full">
+                                     {course.title}
+                                   </h4>
+                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-1.5 text-sm font-bold text-slate-500 dark:text-slate-400">
+                                       <span className="flex items-center gap-1.5">
+                                          <BookOpen size={16} className="text-slate-400 dark:text-slate-500" />
+                                          <span>{enrollment.progress?.completedLessons || 0} / {enrollment.progress?.totalLessons || 0} уроков</span>
+                                       </span>
+                                       {totalSections > 0 && (
+                                         <>
+                                           <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 hidden sm:block" />
+                                           <span className="flex items-center gap-1.5">
+                                              <Target size={16} className="text-slate-400 dark:text-slate-500" />
+                                              <span>{completedSections} / {totalSections} секций</span>
+                                           </span>
+                                         </>
+                                       )}
+                                   </div>
+                                </div>
+                                
+                                <div className={`shrink-0 px-3 py-1.5 rounded-xl font-bold text-sm shadow-sm ring-1 ring-inset ${isCompleted ? "bg-emerald-50 text-emerald-600 ring-emerald-200 dark:bg-emerald-500/10 dark:ring-emerald-500/20" : "bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white ring-slate-200 dark:ring-slate-700"}`}>
+                                    {isCompleted ? "Завершён" : `${progress}%`}
+                                </div>
+                            </div>
 
-                        <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                          <div
-                            className={`absolute h-full bg-gradient-to-r ${isCompleted ? "from-emerald-500 to-teal-500" : info.gradient} transition-all duration-1000`}
-                            style={{ width: `${progress}%` }}
-                          />
-                        </div>
+                            <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden self-end inset-shadow-sm">
+                               <div
+                                  className={`absolute h-full bg-gradient-to-r ${isCompleted ? "from-emerald-400 to-emerald-500" : info.gradient} transition-all duration-1000 ease-out`}
+                                  style={{ width: `${progress}%` }}
+                               />
+                            </div>
+                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                          <span className="flex items-center gap-1">
-                            <BookOpen size={12} />
-                            <span>
-                              <span className="font-bold text-slate-700 dark:text-slate-300">
-                                {enrollment.progress?.completedLessons || 0}
-                              </span>{" "}
-                              из{" "}
-                              <span className="font-bold text-slate-700 dark:text-slate-300">
-                                {enrollment.progress?.totalLessons || 0}
-                              </span>{" "}
-                              уроков
-                            </span>
-                          </span>
-
-                          {totalSections > 0 && (
-                            <>
-                              <span className="w-px h-3 bg-slate-300 dark:bg-slate-600" />
-                              <span className="flex items-center gap-1">
-                                <Target size={12} />
-                                <span>
-                                  <span className="font-bold text-slate-700 dark:text-slate-300">
-                                    {completedSections}
-                                  </span>{" "}
-                                  из{" "}
-                                  <span className="font-bold text-slate-700 dark:text-slate-300">
-                                    {totalSections}
-                                  </span>{" "}
-                                  секций
-                                </span>
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <Link
-                          href={`/learn/${course.slug}`}
-                          className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-[#3b5bdb] bg-indigo-50 dark:bg-indigo-500/10 rounded-xl hover:bg-[#3b5bdb] hover:text-white transition-all"
-                        >
-                          {isCompleted ? "Повторить" : "Продолжить"}{" "}
-                          <ChevronRight size={16} />
-                        </Link>
+                         <div className="w-full sm:w-auto shrink-0 pt-2 sm:pt-0">
+                             <Link
+                                href={`/learn/${course.slug || course._id}`}
+                                className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 font-bold text-sm uppercase tracking-wide rounded-2xl transition-all duration-300 active:scale-95 ${
+                                    isCompleted 
+                                    ? "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white" 
+                                    : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/40"
+                                }`}
+                             >
+                                {isCompleted ? "Повторить" : "Продолжить"}
+                                <ChevronRight size={18} className={isCompleted ? "" : "text-indigo-200"} />
+                             </Link>
+                         </div>
                       </div>
                     </div>
                   );
-                })}
-              </div>
-            )}
+                })
+              )}
+            </div>
           </div>
         </div>
       </main>
 
-      <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8 text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-          <div className="flex items-center gap-2">
-            <Code className="w-5 h-5 text-blue-600" />
-            <span className="text-lg font-black text-slate-800 dark:text-white tracking-tight">
+      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-12 mt-auto z-10 relative">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-6 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+          <div className="flex items-center gap-3 hover:scale-105 transition-transform cursor-pointer">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+              <Code size={16} />
+            </div>
+            <span className="text-base font-black text-slate-900 dark:text-white tracking-tight">
               CodeLearn
             </span>
           </div>
-          <p>© {new Date().getFullYear()} CodeLearn. Все права защищены.</p>
-          <div className="flex gap-6 text-slate-400 font-bold text-sm">
-            <a href="#" className="hover:text-blue-600 transition-colors">
+          <p className="text-center sm:text-left">© {new Date().getFullYear()} CodeLearn. Все права защищены.</p>
+          <div className="flex gap-6 text-slate-400 font-bold text-xs">
+            <a href="#" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               Политика
             </a>
-            <a href="#" className="hover:text-blue-600 transition-colors">
+            <a href="#" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               Условия
             </a>
           </div>
@@ -631,7 +623,6 @@ export default function ProfilePage() {
 interface StatCardProps {
   icon: React.ReactNode;
   bg: string;
-  border: string;
   value?: string | number;
   label: string;
   suffix?: string;
@@ -641,32 +632,30 @@ interface StatCardProps {
 function StatCard({
   icon,
   bg,
-  border,
   value,
   label,
   suffix,
   customContent
 }: StatCardProps) {
   return (
-    <div
-      className={`flex flex-col items-center justify-center p-5 rounded-2xl bg-white dark:bg-slate-900 border ${border} shadow-sm transition-all duration-300 hover:-translate-y-1 group`}
-    >
-      <div
-        className={`w-12 h-12 rounded-xl ${bg} flex items-center justify-center mb-3`}
-      >
+    <div className="relative overflow-hidden flex flex-col p-6 rounded-[2rem] bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-none group hover:-translate-y-1 hover:ring-indigo-500/50 dark:hover:ring-indigo-500/50 transition-all duration-300 cursor-default">
+      <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-indigo-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      
+      <div className={`w-14 h-14 rounded-2xl ${bg} flex items-center justify-center mb-6 ring-4 ring-white dark:ring-slate-900 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300`}>
         {icon}
       </div>
+      
       {customContent ? (
         customContent
       ) : (
-        <>
-          <div className="text-2xl font-extrabold text-slate-800 dark:text-white flex items-center gap-1">
-            {value} {suffix && <span className="text-lg">{suffix}</span>}
+        <div className="mt-auto">
+          <div className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white flex items-baseline gap-1">
+            {value} {suffix && <span className="text-xl font-bold text-slate-500 dark:text-slate-400">{suffix}</span>}
           </div>
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+          <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1.5">
             {label}
           </div>
-        </>
+        </div>
       )}
     </div>
   );
@@ -677,18 +666,21 @@ function StreakStatCard() {
 
   return (
     <div
-      className={`flex flex-col items-center justify-center p-5 rounded-2xl bg-white dark:bg-slate-900 border border-orange-100 dark:border-orange-500/20 shadow-sm transition-all duration-300 hover:-translate-y-1 group`}
+      className={`relative overflow-hidden flex flex-col p-6 rounded-[2rem] bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-none group hover:-translate-y-1 hover:ring-orange-500/50 dark:hover:ring-orange-500/50 transition-all duration-300 cursor-default`}
     >
-      <div
-        className={`w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center mb-3`}
-      >
-        <Flame size={22} className="text-orange-500" />
+      <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-orange-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      
+      <div className={`w-14 h-14 rounded-2xl bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center mb-6 ring-4 ring-white dark:ring-slate-900 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
+        <Flame size={28} className="text-orange-500 dark:text-orange-400 drop-shadow-sm" />
       </div>
-      <div className="text-3xl font-extrabold text-slate-800 dark:text-white">
-        {isLoading ? "..." : Number(count || 0)}
-      </div>
-      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
-        дней подряд
+
+      <div className="mt-auto">
+        <div className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white flex items-baseline gap-1">
+          {isLoading ? "..." : Number(count || 0)}
+        </div>
+        <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1.5">
+          дней подряд
+        </div>
       </div>
     </div>
   );
