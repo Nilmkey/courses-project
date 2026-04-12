@@ -311,12 +311,25 @@ export const progressController = {
       throw ApiError.unauthorized("Требуется авторизация");
     }
 
+    // Получаем headers для обновления стрика
+    const headers = new Headers();
+    for (const [key, value] of Object.entries(req.headers)) {
+      if (value) {
+        if (Array.isArray(value)) {
+          value.forEach(v => headers.append(key, v));
+        } else {
+          headers.append(key, value);
+        }
+      }
+    }
+
     const progress = await progressService.markBlockComplete(
       authReq.user.id,
       lessonId,
       courseId,
       blockId,
       quizAnswers,
+      headers,
     );
 
     if (!progress) {

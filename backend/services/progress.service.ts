@@ -962,6 +962,7 @@ export const progressService = {
     courseId: string,
     blockId: string,
     quizAnswers?: QuizAnswerInput[],
+    headers?: Headers,
   ): Promise<IProgress | null> {
     await validateLessonBelongsToCourse(lessonId, courseId);
 
@@ -1017,6 +1018,14 @@ export const progressService = {
 
           await progress.save();
 
+          // Продлеваем стрик пользователя после успешного сохранения прогресса
+          try {
+            await streakService.extendStreak(studentId, headers);
+          } catch (error) {
+            // Логгируем ошибку, но не прерываем основной поток
+            console.error("[Progress] Не удалось обновить стрик:", error);
+          }
+
           // Пересчитываем общую статистику асинхронно
           recalculateUserProgress(studentId, courseId).catch(console.error);
 
@@ -1071,6 +1080,15 @@ export const progressService = {
           }
 
           await updatedProgress.save();
+
+          // Продлеваем стрик пользователя после успешного сохранения прогресса
+          try {
+            await streakService.extendStreak(studentId, headers);
+          } catch (error) {
+            // Логгируем ошибку, но не прерываем основной поток
+            console.error("[Progress] Не удалось обновить стрик:", error);
+          }
+
           await recalculateUserProgress(studentId, courseId);
 
           return updatedProgress;

@@ -31,8 +31,8 @@ export const auth = betterAuth({
   },
   secret: process.env.BETTER_AUTH_SECRET,
   cookie: {
-    domain: "localhost",
-    secure: false,
+    domain: process.env.COOKIE_DOMAIN,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: "lax",
     path: "/",
   },

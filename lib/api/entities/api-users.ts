@@ -1,3 +1,39 @@
+import { apiRequest, ApiError } from "../api-client";
+
+export interface UploadAvatarResponse {
+  avatar: string;
+}
+
+/**
+ * Загрузить аватар пользователя
+ */
+export async function uploadAvatar(file: File): Promise<UploadAvatarResponse> {
+  const formData = new FormData();
+  formData.append("avatar", file);
+
+  return apiRequest<UploadAvatarResponse>(
+    "/v1/users/avatar",
+    {
+      method: "POST",
+      body: formData,
+      headers: {}, // пустые headers — уберёт Content-Type, браузер поставит multipart/form-data
+    },
+    true,
+  );
+}
+
+/**
+ * Удалить аватар пользователя
+ */
+export async function deleteAvatar(): Promise<void> {
+  await apiRequest<void>("/v1/users/avatar", { method: "DELETE" }, true);
+}
+
+// export const usersApi = {
+//   uploadAvatar,
+//   deleteAvatar,
+// };
+
 import { api } from "@/lib/api/api-client";
 
 export interface User {
@@ -54,7 +90,7 @@ export const usersApi = {
     if (filters?.page) params.set("page", String(filters.page));
     if (filters?.limit) params.set("limit", String(filters.limit));
     if (filters?.search) params.set("search", filters.search);
-    
+
     const queryString = params.toString();
     return api.get<UsersListResponse>(
       `/v1/users${queryString ? `?${queryString}` : ""}`,
@@ -63,8 +99,7 @@ export const usersApi = {
     );
   },
 
-  getById: (id: string) =>
-    api.get<User>(`/v1/users/${id}`, undefined, true),
+  getById: (id: string) => api.get<User>(`/v1/users/${id}`, undefined, true),
 
   updateRole: (id: string, role: "admin" | "student") =>
     api.patch<User>(`/v1/users/${id}/role`, { role }, undefined, true),

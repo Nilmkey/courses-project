@@ -1,5 +1,51 @@
 export const dynamic = 'force-dynamic';
 
+<<<<<<< HEAD
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useTheme } from "next-themes";
+import {
+  Code,
+  Plus,
+  Trash2,
+  Edit,
+  Tags,
+  Sun,
+  Moon,
+  Loader2,
+  ArrowLeft,
+  Search,
+  X,
+  Check,
+  Palette,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { tagsApi, type TagResponse, type CreateTagData, type UpdateTagData } from "@/lib/api/entities/api-tags";
+import { slugify } from "@/lib/utils/slugify";
+import { Toaster } from "react-hot-toast";
+import { useToast } from "@/hooks/useToast";
+
+// Эта страница рендерится только на клиенте
+export const dynamic = "force-dynamic";
+
+// Генерация случайного цвета для тега
+const generateColor = () => {
+  const colors = [
+    "#3b5bdb", // indigo
+    "#0ca678", // emerald
+    "#e67700", // orange
+    "#c2255c", // pink
+    "#845ef7", // violet
+    "#1098ad", // cyan
+    "#f08c00", // amber
+    "#2b8a3e", // green
+    "#5c7cfa", // blue
+    "#d63384", // fuchsia
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+=======
 import type { Metadata } from "next";
 import AdminTagsClient from "./client";
 
@@ -51,10 +97,49 @@ const normalizeColor = (color: string): string => {
 
   const lowerColor = color.toLowerCase().trim();
   return colorMap[lowerColor] || color;
+>>>>>>> 761e16e7f650bc093d7f7dd1f9e44b6cb70157ef
 };
 
-export default function AdminTagsPage() {
+function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
+
+  return (
+    <button
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      className="p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors"
+    >
+      {resolvedTheme === "dark" ? (
+        <Sun size={18} className="text-yellow-400" />
+      ) : (
+        <Moon size={18} className="text-slate-600" />
+      )}
+    </button>
+  );
+}
+
+function ThemeAwareToaster() {
+  const { resolvedTheme } = useTheme();
+
+  return (
+    <Toaster
+      position="top-center"
+      toastOptions={{
+        style: {
+          background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
+          color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
+          border:
+            resolvedTheme === "dark"
+              ? "1px solid #1e293b"
+              : "1px solid #e2e8f0",
+          borderRadius: "0.75rem",
+          boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+        },
+      }}
+    />
+  );
+}
+
+export default function AdminTagsPage() {
   const [mounted, setMounted] = useState(false);
   const [tags, setTags] = useState<TagResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -173,21 +258,7 @@ export default function AdminTagsPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: {
-            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
-            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
-            border:
-              resolvedTheme === "dark"
-                ? "1px solid #1e293b"
-                : "1px solid #e2e8f0",
-            borderRadius: "0.75rem",
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-          },
-        }}
-      />
+      <ThemeAwareToaster />
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-indigo-100/50 dark:border-slate-800 shadow-sm">
@@ -211,16 +282,7 @@ export default function AdminTagsPage() {
             </span>
           </Link>
 
-          <button
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            className="p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors"
-          >
-            {resolvedTheme === "dark" ? (
-              <Sun size={18} className="text-yellow-400" />
-            ) : (
-              <Moon size={18} className="text-slate-600" />
-            )}
-          </button>
+          <ThemeToggle />
         </div>
       </header>
 
