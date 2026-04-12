@@ -16,7 +16,12 @@ interface EditorProps {
 
 // Загрузка изображения на сервер
 async function uploadImageFile(file: File): Promise<string> {
-  console.log("[ImageUpload] Начинаю загрузку файла:", file.name, file.type, file.size);
+  console.log(
+    "[ImageUpload] Начинаю загрузку файла:",
+    file.name,
+    file.type,
+    file.size,
+  );
 
   const formData = new FormData();
   formData.append("file", file);
@@ -45,11 +50,14 @@ async function uploadImageFile(file: File): Promise<string> {
 // Простая конвертация Markdown в HTML
 function markdownToHtml(md: string): string {
   if (!md) return "";
-  
+
   let html = md;
 
   // Блоки кода
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+  html = html.replace(
+    /```(\w*)\n([\s\S]*?)```/g,
+    '<pre><code class="language-$1">$2</code></pre>',
+  );
 
   // Заголовки
   html = html.replace(/^###### (.+)$/gm, "<h6>$1</h6>");
@@ -90,7 +98,14 @@ function markdownToHtml(md: string): string {
     .map((block) => {
       block = block.trim();
       if (!block) return "";
-      if (block.startsWith("<h") || block.startsWith("<ul") || block.startsWith("<pre") || block.startsWith("<blockquote") || block.startsWith("<hr") || block.startsWith("<img")) {
+      if (
+        block.startsWith("<h") ||
+        block.startsWith("<ul") ||
+        block.startsWith("<pre") ||
+        block.startsWith("<blockquote") ||
+        block.startsWith("<hr") ||
+        block.startsWith("<img")
+      ) {
         return block;
       }
       // Заменяем одиночные переносы на <br>
@@ -127,11 +142,20 @@ function htmlToMarkdown(html: string): string {
   md = md.replace(/<code[^>]*>(.*?)<\/code>/gi, "`$1`");
 
   // Блоки кода
-  md = md.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, "```\n$1\n```\n\n");
+  md = md.replace(
+    /<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi,
+    "```\n$1\n```\n\n",
+  );
 
   // Изображения
-  md = md.replace(/<img[^>]+src="([^"]+)"[^>]*alt="([^"]*)"[^>]*\/?>/gi, "![$2]($1)\n\n");
-  md = md.replace(/<img[^>]*alt="([^"]*)"[^>]+src="([^"]+)"[^>]*\/?>/gi, "![$1]($2)\n\n");
+  md = md.replace(
+    /<img[^>]+src="([^"]+)"[^>]*alt="([^"]*)"[^>]*\/?>/gi,
+    "![$2]($1)\n\n",
+  );
+  md = md.replace(
+    /<img[^>]*alt="([^"]*)"[^>]+src="([^"]+)"[^>]*\/?>/gi,
+    "![$1]($2)\n\n",
+  );
   md = md.replace(/<img[^>]+src="([^"]+)"[^>]*\/?>/gi, "![]($1)\n\n");
 
   // Ссылки
@@ -195,7 +219,7 @@ export const TipTapEditor: React.FC<EditorProps> = ({ content, onUpdate }) => {
 
         const items = Array.from(clipboardData.items);
         const imageItems = items.filter(
-          (item) => item.type.indexOf("image") !== -1
+          (item) => item.type.indexOf("image") !== -1,
         );
 
         if (imageItems.length === 0) {
@@ -210,11 +234,18 @@ export const TipTapEditor: React.FC<EditorProps> = ({ content, onUpdate }) => {
 
           try {
             setIsUploading(true);
-            console.log("[ImageUpload] Загружаю изображение из paste:", file.name);
+            console.log(
+              "[ImageUpload] Загружаю изображение из paste:",
+              file.name,
+            );
             const url = await uploadImageFile(file);
             console.log("[ImageUpload] URL получен:", url);
 
-            editor?.chain().focus().setImage({ src: url, alt: file.name }).run();
+            editor
+              ?.chain()
+              .focus()
+              .setImage({ src: url, alt: file.name })
+              .run();
           } catch (error) {
             console.error("[ImageUpload] Ошибка при загрузке:", error);
           } finally {
@@ -229,7 +260,7 @@ export const TipTapEditor: React.FC<EditorProps> = ({ content, onUpdate }) => {
         if (!files) return false;
 
         const imageFiles = Array.from(files).filter(
-          (file) => file.type.indexOf("image") !== -1
+          (file) => file.type.indexOf("image") !== -1,
         );
 
         if (imageFiles.length === 0) {
@@ -241,11 +272,18 @@ export const TipTapEditor: React.FC<EditorProps> = ({ content, onUpdate }) => {
         imageFiles.forEach(async (file) => {
           try {
             setIsUploading(true);
-            console.log("[ImageUpload] Загружаю изображение из drop:", file.name);
+            console.log(
+              "[ImageUpload] Загружаю изображение из drop:",
+              file.name,
+            );
             const url = await uploadImageFile(file);
             console.log("[ImageUpload] URL получен:", url);
 
-            editor?.chain().focus().setImage({ src: url, alt: file.name }).run();
+            editor
+              ?.chain()
+              .focus()
+              .setImage({ src: url, alt: file.name })
+              .run();
           } catch (error) {
             console.error("[ImageUpload] Ошибка при загрузке:", error);
           } finally {
@@ -281,6 +319,6 @@ export const TipTapEditor: React.FC<EditorProps> = ({ content, onUpdate }) => {
   );
 };
 
-export const MilkdownEditorWrapper: React.FC<EditorProps> = (props) => {
+export const TipTapWrapper: React.FC<EditorProps> = (props) => {
   return <TipTapEditor {...props} />;
 };

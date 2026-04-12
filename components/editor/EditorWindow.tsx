@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { X } from "lucide-react";
 import { useConstructor } from "@/hooks/useConstructor";
 import { BlockContent } from "@/types/types";
-import { MilkdownEditorWrapper } from "./forms/TextForm";
+import { TipTapWrapper } from "./forms/TextForm";
 import { VideoForm } from "./forms/VideoForm";
 import { QuizForm } from "./forms/QuizForm";
 
@@ -19,7 +19,7 @@ type FormComponentType = React.FC<{
 }>;
 
 const FORM_COMPONENTS: Record<string, FormComponentType> = {
-  text: MilkdownEditorWrapper as FormComponentType,
+  text: TipTapWrapper as FormComponentType,
   video: VideoForm,
   quiz: QuizForm,
 };
@@ -104,8 +104,7 @@ export function EditorWindow({ isOpen, onClose, id }: ModalProps) {
         </div>
 
         <div className="shrink-0 p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-          <div className="flex justify-end">
-          </div>
+          <div className="flex justify-end"></div>
         </div>
       </div>
     </div>
