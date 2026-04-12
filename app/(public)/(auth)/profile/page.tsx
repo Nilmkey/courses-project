@@ -7,15 +7,13 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { ExtendedUser } from "@/backend/auth";
 import { authClient } from "@/lib/auth-client";
-import { ApiError } from "@/lib/api/api-client";
-import { API_BASE_URL } from "@/config/config";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 import {
   enrollmentApi,
-  EnrollmentResponse,
   EnrollmentWithProgress,
 } from "@/lib/api/entities/api-enrollment";
+import { usersApi } from "@/lib/api/entities/api-users";
 import { useStreak } from "@/hooks/useStreak";
 import {
   Code,
@@ -224,34 +222,13 @@ export default function ProfilePage() {
     setIsUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("avatar", file);
-
-      const response = await fetch(`${API_BASE_URL}/v1/users/avatar`, {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: response.statusText,
-        }));
-        throw new ApiError(errorData.message, response.status, errorData);
-      }
-
-      const data = await response.json();
-
-      // Сразу обновляем аватар в UI
+      const data = await usersApi.uploadAvatar(file);
       setCurrentAvatar(data.avatar);
       if (fileInputRef.current) fileInputRef.current.value = "";
-
       toast.success("Аватар успешно загружен");
     } catch (error) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : "Ошибка при загрузке аватара";
+        error instanceof Error ? error.message : "Ошибка при загрузке аватара";
       toast.error(message);
     } finally {
       setIsUploading(false);
@@ -263,25 +240,12 @@ export default function ProfilePage() {
       "Вы уверены, что хотите удалить аватар?",
       async () => {
         try {
-          const response = await fetch(`${API_BASE_URL}/v1/users/avatar`, {
-            method: "DELETE",
-            credentials: "include",
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({
-              message: response.statusText,
-            }));
-            throw new ApiError(errorData.message, response.status, errorData);
-          }
-
-          // Сразу удаляем аватар из UI
+          await usersApi.deleteAvatar();
           setCurrentAvatar(null);
-
           toast.success("Аватар успешно удалён");
         } catch (error) {
           const message =
-            error instanceof ApiError
+            error instanceof Error
               ? error.message
               : "Ошибка при удалении аватара";
           toast.error(message);

@@ -13,8 +13,13 @@ interface ModalProps {
   id: string;
 }
 
-const FORM_COMPONENTS = {
-  text: MilkdownEditorWrapper,
+type FormComponentType = React.FC<{
+  content: BlockContent;
+  onUpdate: (newContent: BlockContent) => void;
+}>;
+
+const FORM_COMPONENTS: Record<string, FormComponentType> = {
+  text: MilkdownEditorWrapper as FormComponentType,
   video: VideoForm,
   quiz: QuizForm,
 };

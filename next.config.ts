@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone", // Для Docker
+  // output: "standalone", // Для Docker
   compress: true,
   images: {
     remotePatterns: [
@@ -45,11 +45,12 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' https://res.cloudinary.com",
+              // Добавляем data: и blob: для корректной работы превью изображений
+              "img-src 'self' https://res.cloudinary.com data: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' http://localhost:7777 https://res.cloudinary.com",
+              "connect-src 'self' http://localhost:7777 https://res.cloudinary.com data:",
               "base-uri 'self'",
               "form-action 'self'",
               "frame-ancestors 'none'",
