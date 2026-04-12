@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "react-hot-toast";
+import { ThemedToaster } from "@/components/themed-toaster";
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
+import Provider from "@/components/provider";
+import { ThemeProvider } from "next-themes";
 
 // Отключаем SSG для root layout — решаем баги Next.js 16 с client components
 export const dynamic = "force-dynamic";
@@ -17,8 +20,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CodeLearn",
-  description: "Интерактивная платформа для обучения IT",
+  title: {
+    default: "CodeLearn — Интерактивная платформа для обучения IT",
+    template: "%s | CodeLearn",
+  },
+  description: "Изучайте программирование с нуля до профессионального уровня. Практические курсы по HTML, CSS, JavaScript, Python, C++ и C#. Учитесь в своём темпе с сертификатом по окончании.",
 };
 
 export default function RootLayout({
@@ -32,7 +38,6 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        {children}
         <Toaster
           position="top-right"
           toastOptions={{
@@ -56,6 +61,17 @@ export default function RootLayout({
             },
           }}
         />
+        <Provider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <ThemedToaster />
+          </ThemeProvider>
+        </Provider>
       </body>
     </html>
   );

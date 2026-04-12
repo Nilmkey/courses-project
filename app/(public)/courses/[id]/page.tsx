@@ -123,7 +123,6 @@ export default function CoursePage() {
       const found = response.courses?.find((c) => c.slug === courseId);
       setCourse(found || null);
 
-      // Загружаем теги курса
       if (found && found.tags && found.tags.length > 0) {
         const tagsResponse = await tagsApi.getAll();
         const courseTags = tagsResponse.tags.filter((tag) =>
@@ -146,13 +145,11 @@ export default function CoursePage() {
       return;
     }
 
-    // Если пользователь уже записан, просто переходим к курсу
     if (isEnrolled) {
       router.push(`/learn/${course.slug}`);
       return;
     }
 
-    // Если набор закрыт, показываем ошибку
     if (!course.isOpenForEnrollment) {
       toast.error("Набор на этот курс закрыт");
       return;

@@ -12,6 +12,8 @@ import {
   recalculateProgressSchema,
 } from "./progress.validation";
 import { authMiddleware } from "../../../middleware/auth.middleware";
+import { teacherMiddleware } from "../../../middleware/teacher.middleware";
+import { requireEnrollment, requireEnrollmentFromBody } from "../../../middleware/enrollmentCheck.middleware";
 
 const router = Router();
 
@@ -19,6 +21,7 @@ const router = Router();
 router.get(
   "/course/:courseId/full",
   authMiddleware,
+  requireEnrollment,
   validateRequest(getCourseProgressSchema),
   progressController.getFullCourseProgress.bind(progressController),
 );
@@ -27,6 +30,7 @@ router.get(
 router.get(
   "/course/:courseId",
   authMiddleware,
+  requireEnrollment,
   validateRequest(getCourseProgressSchema),
   progressController.getCourseProgress.bind(progressController),
 );
@@ -43,6 +47,7 @@ router.get(
 router.post(
   "/lesson/:lessonId/complete",
   authMiddleware,
+  requireEnrollmentFromBody,
   validateRequest(markLessonCompleteSchema),
   progressController.markComplete.bind(progressController),
 );
@@ -51,6 +56,7 @@ router.post(
 router.post(
   "/lesson/:lessonId/block/:blockId/complete",
   authMiddleware,
+  requireEnrollmentFromBody,
   validateRequest(markBlockCompleteSchema),
   progressController.markBlockComplete.bind(progressController),
 );
@@ -59,6 +65,7 @@ router.post(
 router.patch(
   "/lesson/:lessonId",
   authMiddleware,
+  requireEnrollmentFromBody,
   validateRequest(updateLessonProgressSchema),
   progressController.updateLessonProgress.bind(progressController),
 );
@@ -67,6 +74,7 @@ router.patch(
 router.post(
   "/lesson/:lessonId/reset",
   authMiddleware,
+  requireEnrollmentFromBody,
   validateRequest(resetProgressSchema),
   progressController.resetProgress.bind(progressController),
 );
@@ -75,14 +83,16 @@ router.post(
 router.post(
   "/initialize",
   authMiddleware,
+  requireEnrollmentFromBody,
   validateRequest(initializeProgressSchema),
   progressController.initializeProgress.bind(progressController),
 );
 
-// Пересчитать прогресс всех пользователей по курсу
+// Пересчитать прогресс всех пользователей по курсу (только teacher/admin)
 router.post(
   "/course/:courseId/recalculate",
   authMiddleware,
+  teacherMiddleware,
   validateRequest(recalculateProgressSchema),
   progressController.recalculateProgress.bind(progressController),
 );

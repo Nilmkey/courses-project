@@ -26,6 +26,7 @@ const router = Router();
 
 router.get(
   "/section/:sectionId",
+  authMiddleware,
   validateRequest(getLessonsBySectionSchema),
   lessonsController.getBySection.bind(lessonsController),
 );
@@ -64,6 +65,7 @@ router.post(
 
 router.get(
   "/:id",
+  authMiddleware,
   validateRequest(getLessonByIdSchema),
   lessonsController.getById.bind(lessonsController),
 );

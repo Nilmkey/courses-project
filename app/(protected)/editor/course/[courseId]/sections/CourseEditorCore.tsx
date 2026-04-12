@@ -23,7 +23,7 @@ import { AddSectionButton } from "./AddSectionButton";
 import { useSection } from "@/hooks/useSection";
 import { useParams, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { ArrowLeft, Loader2, BookOpen, Layers, Sun, Moon } from "lucide-react";
+import { ArrowLeft, Loader2, BookOpen, Layers, Sun, Moon, GripVertical, Save } from "lucide-react";
 import { sectionsApi, lessonsApi } from "@/lib/api/entities/api-sections";
 import { useToast } from "@/hooks/useToast";
 import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
@@ -60,19 +60,13 @@ export function CourseEditorCore({ courseId, onSave, initialSections }: CourseEd
     setMounted(true);
   }, []);
 
-  // Проверка наличия несохраненных изменений
   const hasUnsavedChanges = useCallback(() => {
     if (!initialSections) return false;
-
-    // Сравниваем текущее состояние с начальным
     const current = JSON.stringify(sections);
     const initial = JSON.stringify(initialSections);
-
     return current !== initial;
   }, [sections, initialSections]);
 
-  // Отключаем отслеживание несохраненных изменений, т.к. все изменения
-  // автоматически сохраняются в БД при каждом действии
   useUnsavedChanges({
     hasUnsavedChanges,
     message: "У вас есть несохраненные изменения в секциях. Вы уверены, что хотите уйти?",
@@ -302,200 +296,179 @@ export function CourseEditorCore({ courseId, onSave, initialSections }: CourseEd
   }, [sections, courseId, sectionIds, onSave, toast]);
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4">
-      <div className="flex items-center justify-between mb-10">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleGoBack}
-            className="
-              flex items-center gap-2 px-4 py-2.5
-              text-slate-500 dark:text-slate-400 hover:text-[#3b5bdb] dark:hover:text-indigo-400
-              hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl
-              transition-all duration-200 font-semibold text-sm
-            "
-          >
-            <ArrowLeft size={18} />
-            <span>Назад к курсу</span>
-          </button>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300 relative overflow-hidden">
+        {/* Background Glows */}
+        <div className="absolute top-[20%] left-[-10%] w-[35rem] h-[35rem] bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-[140px] mix-blend-multiply dark:mix-blend-screen pointer-events-none z-0" />
+        
+        {/* Header */}
+        <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm transition-colors">
+          <div className="max-w-5xl mx-auto px-4 h-20 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleGoBack}
+                className="group flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all"
+              >
+                <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+                <span>Настройки курса</span>
+              </button>
+            </div>
 
-          {mounted && (
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2 rounded-full hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors"
-              title={theme === "dark" ? "Переключить на светлую тему" : "Переключить на тёмную тему"}
-            >
-              {theme === "dark" ? (
-                <Sun size={18} className="text-yellow-400" />
-              ) : (
-                <Moon size={18} className="text-slate-600" />
-              )}
-            </button>
-          )}
-        </div>
-
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className={`
-            px-6 py-2.5 text-white rounded-xl font-bold text-sm
-            transition-all duration-200
-            ${
-              isSaving
-                ? "bg-slate-300 dark:bg-slate-700 cursor-not-allowed text-slate-500 dark:text-slate-400"
-                : "bg-gradient-to-r from-[#3b5bdb] to-[#5c7cfa] hover:shadow-lg hover:shadow-indigo-500/25 hover:-translate-y-0.5"
-            }
-          `}
-        >
-          {isSaving ? (
-            <span className="flex items-center gap-2">
-              <Loader2 size={16} className="animate-spin" />
-              Сохранение...
-            </span>
-          ) : (
-            "Сохранить"
-          )}
-        </button>
-      </div>
-
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#3b5bdb] to-[#5c7cfa] flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
-            <Layers size={20} />
-          </div>
-          <h1 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">
-            Редактор секций
-          </h1>
-        </div>
-        <p className="text-sm font-medium text-slate-400 dark:text-slate-500 pl-[52px]">
-          Перетаскивайте секции и уроки для изменения порядка
-        </p>
-      </div>
-
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={sectionIds}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="space-y-4">
-            {sections.map((section) => {
-              const isPending = isTempId(section.id);
-              return (
-                <div
-                  key={section.id}
-                  className={`relative transition-all duration-300 ${
-                    isPending ? "opacity-70" : ""
-                  }`}
+            <div className="flex items-center gap-3">
+               {mounted && (
+                <button
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all shadow-inner border border-slate-200/50 dark:border-slate-700/50"
+                  title={theme === "dark" ? "Светлая тема" : "Темная тема"}
                 >
-                  <SectionItem
-                    section={section}
-                    onTitleChange={handleTitleChange}
-                    onLessonChange={handleLessonChange}
-                    onRemove={handleRemoveSection}
-                    onAddLesson={handleAddLesson}
-                    onEditLesson={handleEditLesson}
-                    onRemoveLesson={handleRemoveLesson}
-                    onToggleDraft={handleToggleDraft}
-                  />
-                  {isPending && (
-                    <div className="absolute top-3.5 right-4 flex items-center gap-1.5 text-[10px] text-[#3b5bdb] dark:text-indigo-400 font-black uppercase tracking-widest animate-pulse">
-                      <div className="w-1.5 h-1.5 bg-[#3b5bdb] rounded-full animate-bounce" />
-                      Создание...
-                    </div>
+                  {theme === "dark" ? (
+                    <Sun size={18} className="text-yellow-400" />
+                  ) : (
+                    <Moon size={18} className="text-slate-600" />
                   )}
-                </div>
-              );
-            })}
+                </button>
+              )}
+              <button
+                onClick={handleSave}
+                disabled={isSaving || !hasUnsavedChanges()}
+                className={`
+                  flex items-center gap-2 h-12 px-6 rounded-xl font-bold
+                  transition-all duration-300 ease-out
+                  ${
+                    isSaving || !hasUnsavedChanges()
+                      ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border-transparent"
+                      : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 active:scale-95"
+                  }
+                `}
+              >
+                {isSaving ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Save size={18} />
+                )}
+                <span className="hidden sm:inline">{isSaving ? "Сохранение..." : "Сохранить всё"}</span>
+              </button>
+            </div>
           </div>
-        </SortableContext>
+        </header>
 
-        <DragOverlay
-          dropAnimation={{
-            sideEffects: defaultDropAnimationSideEffects({
-              styles: { active: { opacity: "0.5" } },
-            }),
-          }}
+      <main className="max-w-4xl mx-auto py-12 px-4 relative z-10 w-full mb-20">
+        <div className="mb-10">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
+              <Layers size={24} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
+                Структура курса
+              </h1>
+               <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">
+                 Управляйте секциями и уроками, меняйте их порядок
+               </p>
+            </div>
+          </div>
+        </div>
+
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
         >
-          {activeSectionId && activeSection ? (
-            <div className="cursor-grabbing">
-              <SectionItem section={activeSection} isOverlay />
+          <SortableContext
+            items={sectionIds}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-4">
+              {sections.map((section) => {
+                const isPending = isTempId(section.id);
+                return (
+                  <div
+                    key={section.id}
+                    className={`relative transition-all duration-300 ${
+                      isPending ? "opacity-70 scale-[0.99]" : ""
+                    }`}
+                  >
+                    <SectionItem
+                      section={section}
+                      onTitleChange={handleTitleChange}
+                      onLessonChange={handleLessonChange}
+                      onRemove={handleRemoveSection}
+                      onAddLesson={handleAddLesson}
+                      onEditLesson={handleEditLesson}
+                      onRemoveLesson={handleRemoveLesson}
+                      onToggleDraft={handleToggleDraft}
+                    />
+                    {isPending && (
+                      <div className="absolute top-4 right-6 flex items-center gap-1.5 text-[10px] text-indigo-500 dark:text-indigo-400 font-black uppercase tracking-widest animate-pulse z-20">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Создание...
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+          </SortableContext>
 
-      <div className="mt-6">
-        <AddSectionButton onAdd={handleAddSection} />
-      </div>
+          <DragOverlay
+            dropAnimation={{
+              sideEffects: defaultDropAnimationSideEffects({
+                styles: { active: { opacity: "0.5" } },
+              }),
+            }}
+          >
+            {activeSectionId && activeSection ? (
+              <div className="cursor-grabbing scale-105 shadow-2xl rounded-2xl">
+                <SectionItem section={activeSection} isOverlay />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
 
-      <div className="mt-8 p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
-              <Layers
-                size={16}
-                className="text-[#3b5bdb] dark:text-indigo-400"
-              />
-            </div>
-            <div>
-              <div className="text-xl font-extrabold text-slate-800 dark:text-white">
-                {sections.length}
+        <div className="mt-8">
+          <AddSectionButton onAdd={handleAddSection} />
+        </div>
+
+        {/* Stats footer */}
+        <div className="mt-12 p-6 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-[2rem] border border-slate-200/50 dark:border-slate-800/50 shadow-sm">
+          <div className="flex items-center gap-8 justify-center">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center shadow-inner">
+                <Layers
+                  size={20}
+                  className="text-indigo-600 dark:text-indigo-400"
+                />
               </div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                секций
+              <div className="text-center">
+                <div className="text-2xl font-black text-slate-800 dark:text-white leading-none">
+                  {sections.length}
+                </div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                  секций
+                </div>
               </div>
             </div>
-          </div>
-          <div className="w-px h-10 bg-slate-100 dark:bg-slate-800" />
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-              <BookOpen
-                size={16}
-                className="text-emerald-600 dark:text-emerald-400"
-              />
-            </div>
-            <div>
-              <div className="text-xl font-extrabold text-slate-800 dark:text-white">
-                {sections.reduce((acc, s) => acc + s.lessons.length, 0)}
+            <div className="w-px h-12 bg-slate-200/50 dark:bg-slate-800/50" />
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center shadow-inner">
+                <BookOpen
+                  size={20}
+                  className="text-emerald-600 dark:text-emerald-400"
+                />
               </div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                уроков
+              <div className="text-center">
+                <div className="text-2xl font-black text-slate-800 dark:text-white leading-none">
+                  {sections.reduce((acc, s) => acc + s.lessons.length, 0)}
+                </div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                  уроков
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {editingLessonId && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl border border-slate-100 dark:border-slate-800">
-            <h2 className="text-lg font-extrabold text-slate-800 dark:text-white mb-4 tracking-tight">
-              Редактирование урока
-            </h2>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mb-6 font-medium">
-              ID урока: {editingLessonId}
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setEditingLessonId(null)}
-                className="px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={() => setEditingLessonId(null)}
-                className="px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-[#3b5bdb] to-[#5c7cfa] rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 transition-all"
-              >
-                Сохранить
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      </main>
     </div>
   );
 }

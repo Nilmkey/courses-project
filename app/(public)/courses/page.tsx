@@ -7,6 +7,7 @@ import { coursesApi } from "@/lib/api/entities/api-courses";
 import { tagsApi } from "@/lib/api/entities/api-tags";
 import { CourseApiResponse, CourseLevel, ITag } from "@/types/types";
 import HeaderNoCourses from "../../../components/ui/header-no-courses";
+import Footer from "@/components/ui/footer";
 
 const iconMap: Record<string, React.ReactNode> = {
   Layout: <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" /></svg>,
@@ -33,13 +34,13 @@ const getLevelLabel = (level: CourseLevel) => {
 const getLevelStyles = (level: CourseLevel) => {
   switch (level) {
     case "beginner":
-      return "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-100 dark:border-emerald-900/30";
+      return "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20";
     case "intermediate":
-      return "bg-blue-50 dark:bg-blue-900/20 text-blue-600 border-blue-100 dark:border-blue-900/30";
+      return "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20";
     case "advanced":
-      return "bg-rose-50 dark:bg-rose-900/20 text-rose-600 border-rose-100 dark:border-rose-900/30";
+      return "bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-500/20";
     default:
-      return "bg-slate-50 dark:bg-slate-900/20 text-slate-600 border-slate-100 dark:border-slate-900/30";
+      return "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700";
   }
 };
 
@@ -73,10 +74,8 @@ const CoursesPage = () => {
 
   if (!mounted) return null;
 
-  // Создаем маппинг ID тега → название
   const tagIdToName = new Map(tags.map((t) => [t._id, t.name]));
 
-  // Собираем все уникальные теги из курсов и маппим их в названия
   const allTags = Array.from(
     new Set(courses.flatMap((c) => c.tags || []))
   )
@@ -90,28 +89,35 @@ const CoursesPage = () => {
           c.tags?.some((tagId) => tagIdToName.get(tagId) === selectedTag)
         );
 
-  // Фильтруем только опубликованные курсы для публичной страницы
   const publishedCourses = filteredCourses.filter((c) => c.isPublished);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8faff] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
-      <HeaderNoCourses />
-      <section className="flex-grow py-16 px-4 max-w-6xl mx-auto text-center">
-        <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
-          Выбери свой путь в <span className="text-blue-600">IT</span>
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-2xl mx-auto mb-10">
-          Актуальные программы обучения из нашей базы данных. Начни учиться
-          сегодня.
-        </p>
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300 relative overflow-hidden">
+      {/* Background Orbs */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none fixed">
+        <div className="absolute top-[-10%] -left-[10%] w-[40rem] h-[40rem] bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen animate-pulse duration-[8000ms]" />
+        <div className="absolute bottom-[20%] right-[-10%] w-[35rem] h-[35rem] bg-pink-500/10 dark:bg-pink-600/10 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen" />
+      </div>
 
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
+      <HeaderNoCourses />
+      
+      <main className="flex-grow py-20 px-4 max-w-7xl mx-auto w-full relative z-10 space-y-16">
+        <div className="text-center animate-in slide-in-from-bottom-8 duration-700">
+          <h1 className="text-5xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight">
+            Освой профессию <br className="md:hidden" /> в <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-blue-600">IT</span>
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 font-medium text-xl max-w-2xl mx-auto">
+            От теории к практике. Все необходимое для уверенного старта и развития в разработке.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-3 animate-in fade-in duration-1000 delay-100">
           <button
             onClick={() => setSelectedTag(null)}
-            className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
+            className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
               selectedTag === null
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none scale-105"
-                : "bg-white dark:bg-slate-900 text-slate-500 border border-slate-200 dark:border-slate-800 hover:border-blue-300"
+                ? "bg-indigo-600 text-white shadow-xl shadow-indigo-500/30 scale-105"
+                : "bg-white/50 dark:bg-slate-900/50 backdrop-blur-md text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-white dark:hover:bg-slate-900"
             }`}
           >
             Все курсы
@@ -120,10 +126,10 @@ const CoursesPage = () => {
             <button
               key={tag}
               onClick={() => setSelectedTag(tag)}
-              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all capitalize ${
+              className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 capitalize ${
                 selectedTag === tag
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none scale-105"
-                  : "bg-white dark:bg-slate-900 text-slate-500 border border-slate-200 dark:border-slate-800 hover:border-blue-300"
+                  ? "bg-indigo-600 text-white shadow-xl shadow-indigo-500/30 scale-105"
+                  : "bg-white/50 dark:bg-slate-900/50 backdrop-blur-md text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-white dark:hover:bg-slate-900"
               }`}
             >
               {tag}
@@ -131,109 +137,100 @@ const CoursesPage = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left justify-items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20 justify-items-center animate-in slide-in-from-bottom-12 duration-700 delay-200">
           {loading
             ? [1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="w-[320px] h-[380px] bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 animate-pulse flex items-center justify-center"
+                  className="w-full max-w-[380px] h-[400px] bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 animate-pulse flex flex-col p-8"
                 >
-                  <Loader2 className="animate-spin text-slate-300" />
+                  <div className="flex justify-between items-center mb-6">
+                    <div className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                    <div className="h-12 w-12 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+                  </div>
+                  <div className="space-y-3 mt-4">
+                    <div className="h-8 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                    <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded-lg mt-4" />
+                    <div className="h-4 w-5/6 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                  </div>
+                  <div className="mt-auto h-12 w-full bg-slate-200 dark:bg-slate-800 rounded-2xl" />
                 </div>
               ))
             : publishedCourses.map((course) => {
                 return (
                   <div
                     key={course._id}
-                    className="group relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-8 flex flex-col h-[350px] w-[350px] transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/40 dark:hover:shadow-blue-900/20 overflow-hidden cursor-pointer"
+                    className="group relative bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 shadow-xl shadow-slate-200/20 dark:shadow-none p-8 flex flex-col h-[420px] w-full max-w-[380px] transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-500/20 dark:hover:shadow-indigo-500/10 hover:border-indigo-200 dark:hover:border-indigo-500/30 overflow-hidden cursor-pointer"
                     onClick={() => {
                       if (course.slug) {
                         window.location.href = `/courses/${course.slug}`;
                       }
                     }}
                   >
-                  <div className="mb-6 flex justify-between items-center">
+                  <div className="mb-6 flex justify-between items-center relative z-10">
                     <span
-                      className={`px-4 py-1.5 rounded-full text-[10px] uppercase font-black tracking-widest border ${getLevelStyles(course.level)}`}
+                      className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-sm ${getLevelStyles(course.level)}`}
                     >
                       {getLevelLabel(course.level)}
                     </span>
                     <div
-                      className={`w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-100 dark:shadow-none group-hover:rotate-12 transition-transform duration-500`}
+                      className={`w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}
                     >
                       {iconMap[course.iconName || "Code"] || iconMap.Code}
                     </div>
                   </div>
 
-                  <div className="flex-grow overflow-y-auto">
-                    <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-3 leading-tight group-hover:text-blue-600 transition-colors">
+                  <div className="flex-grow overflow-y-auto relative z-10 mt-2">
+                    <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-4 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                       {course.title}
                     </h3>
                     {course.description && (
-                      <p className="text-slate-400 dark:text-slate-500 font-medium text-sm leading-relaxed mb-6">
+                      <p className="text-slate-500 dark:text-slate-400 font-medium text-[15px] leading-relaxed line-clamp-4">
                         {course.description}
                       </p>
                     )}
                   </div>
-{/* asdasd */}
-                  <div className="mt-auto space-y-6">
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center gap-2">
+
+                  <div className="mt-8 space-y-6 relative z-10">
+                    <div className="flex items-center justify-between pt-5 border-t border-slate-100 dark:border-slate-800/50">
+                      <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-full font-bold">
                         <div
-                          className={`w-2 h-2 rounded-full animate-pulse ${course.isOpenForEnrollment ? "bg-emerald-500" : "bg-slate-300"}`}
+                          className={`w-2 h-2 rounded-full animate-pulse ${course.isOpenForEnrollment ? "bg-emerald-500" : "bg-rose-500"}`}
                         />
                         <span
-                          className={`text-[11px] font-black uppercase tracking-tighter ${course.isOpenForEnrollment ? "text-emerald-600" : "text-slate-400"}`}
+                          className={`text-xs uppercase tracking-tighter ${course.isOpenForEnrollment ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}
                         >
                           {course.isOpenForEnrollment
-                            ? "Набор открыт"
-                            : "Набор закрыт"}
+                            ? "Открыто"
+                            : "Закрыто"}
                         </span>
                       </div>
 
                       <div
-                        className={`flex items-center gap-1 font-bold text-sm transition-all ${
+                        className={`flex items-center gap-1 font-black text-sm uppercase tracking-widest transition-all ${
                           course.isOpenForEnrollment
-                            ? "text-blue-600 group-hover:gap-3"
-                            : "text-slate-300"
+                            ? "text-indigo-600 dark:text-indigo-400 group-hover:gap-3"
+                            : "text-slate-400"
                         }`}
                       >
                         {course.isOpenForEnrollment
-                          ? "Подробнее"
-                          : "Ждем старта"}
-                        <ChevronRight className="w-4 h-4" />
+                          ? "Вперед"
+                          : "Ждем"}
+                        <ChevronRight className="w-5 h-5" />
                       </div>
                     </div>
                   </div>
 
                   <div
-                    className={`absolute -right-12 -bottom-12 w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 opacity-[0.03] rounded-full blur-2xl group-hover:scale-[3] transition-transform duration-700`}
+                    className={`absolute -right-20 -bottom-20 w-64 h-64 bg-gradient-to-br from-indigo-500 to-blue-600 opacity-0 group-hover:opacity-[0.03] dark:group-hover:opacity-[0.1] rounded-full blur-3xl transition-all duration-700`}
                   />
                 </div>
               );
             })}
         </div>
-      </section>
+      </main>
 
-      <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-12">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8 text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-          <div className="flex items-center gap-2">
-            <Code className="w-5 h-5 text-blue-600" />
-            <span className="text-lg font-black text-slate-800 dark:text-white tracking-tight">
-              CodeLearn
-            </span>
-          </div>
-          <p>© {new Date().getFullYear()} CodeLearn. Все права защищены.</p>
-          <div className="flex gap-6 text-slate-400 font-bold text-sm">
-            <a href="#" className="hover:text-blue-600 transition-colors">
-              Политика
-            </a>
-            <a href="#" className="hover:text-blue-600 transition-colors">
-              Условия
-            </a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

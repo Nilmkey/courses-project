@@ -1,5 +1,6 @@
-"use client";
+export const dynamic = 'force-dynamic';
 
+<<<<<<< HEAD
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
@@ -44,6 +45,59 @@ const generateColor = () => {
     "#d63384", // fuchsia
   ];
   return colors[Math.floor(Math.random() * colors.length)];
+=======
+import type { Metadata } from "next";
+import AdminTagsClient from "./client";
+
+export const metadata: Metadata = {
+  title: "Управление тегами — CodeLearn Admin",
+  description: "Создание и редактирование тегов для категоризации курсов на платформе CodeLearn.",
+};
+
+// Нормализация цвета: преобразует названия цветов в hex
+const normalizeColor = (color: string): string => {
+  // Если уже hex
+  if (/^#[0-9a-fA-F]{6}$/.test(color) || /^#[0-9a-fA-F]{3}$/.test(color)) {
+    return color;
+  }
+
+  // Маппинг названий цветов в hex
+  const colorMap: Record<string, string> = {
+    red: "#ff0000",
+    green: "#008000",
+    blue: "#0000ff",
+    yellow: "#ffff00",
+    orange: "#ffa500",
+    purple: "#800080",
+    pink: "#ffc0cb",
+    cyan: "#00ffff",
+    magenta: "#ff00ff",
+    white: "#ffffff",
+    black: "#000000",
+    gray: "#808080",
+    grey: "#808080",
+    brown: "#a52a2a",
+    navy: "#000080",
+    teal: "#008080",
+    olive: "#808000",
+    maroon: "#800000",
+    lime: "#00ff00",
+    aqua: "#00ffff",
+    silver: "#c0c0c0",
+    gold: "#ffd700",
+    coral: "#ff7f50",
+    salmon: "#fa8072",
+    tomato: "#ff6347",
+    violet: "#ee82ee",
+    indigo: "#4b0082",
+    crimson: "#dc143c",
+    emerald: "#50c878",
+    turquoise: "#40e0d0",
+  };
+
+  const lowerColor = color.toLowerCase().trim();
+  return colorMap[lowerColor] || color;
+>>>>>>> 761e16e7f650bc093d7f7dd1f9e44b6cb70157ef
 };
 
 function ThemeToggle() {
@@ -126,7 +180,8 @@ export default function AdminTagsPage() {
 
     try {
       setIsCreating(true);
-      await tagsApi.create(formData);
+      const normalizedColor = normalizeColor(formData.color);
+      await tagsApi.create({ ...formData, color: normalizedColor });
       toast.success("Тег успешно создан");
       setFormData({ name: "", slug: "", color: generateColor() });
       await loadTags();
@@ -142,10 +197,11 @@ export default function AdminTagsPage() {
     const tag = tags.find((t) => t._id === id);
     if (!tag) return;
 
+    const normalizedColor = formData.color ? normalizeColor(formData.color) : undefined;
     const updateData: UpdateTagData = {
       name: formData.name || tag.name,
       slug: formData.slug || tag.slug,
-      color: formData.color || tag.color,
+      color: normalizedColor || tag.color,
     };
 
     try {
@@ -310,13 +366,9 @@ export default function AdminTagsPage() {
                   Цвет
                 </label>
                 <div className="flex gap-2">
-                  <Input
-                    type="color"
-                    value={formData.color}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, color: e.target.value }))
-                    }
-                    className="w-16 h-10 p-1 border-slate-200 dark:border-slate-700 cursor-pointer"
+                  <div
+                    className="w-16 h-10 p-1 border border-slate-200 dark:border-slate-700 rounded cursor-pointer transition-colors"
+                    style={{ backgroundColor: normalizeColor(formData.color) }}
                   />
                   <Input
                     type="text"
@@ -324,7 +376,7 @@ export default function AdminTagsPage() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, color: e.target.value }))
                     }
-                    placeholder="#3b5bdb"
+                    placeholder="pink или #3b5bdb"
                     className="flex-1 border-slate-200 dark:border-slate-700"
                   />
                   <Button
@@ -347,7 +399,7 @@ export default function AdminTagsPage() {
                 <span>Предпросмотр:</span>
                 <span
                   className="px-3 py-1 rounded-full text-white font-medium text-xs"
-                  style={{ backgroundColor: formData.color }}
+                  style={{ backgroundColor: normalizeColor(formData.color) }}
                 >
                   {formData.name}
                 </span>
@@ -441,7 +493,7 @@ export default function AdminTagsPage() {
                   <div className="flex items-start justify-between mb-3">
                     <span
                       className="px-3 py-1 rounded-full text-white font-medium text-sm"
-                      style={{ backgroundColor: tag.color }}
+                      style={{ backgroundColor: normalizeColor(tag.color) }}
                     >
                       {tag.name}
                     </span>
@@ -476,7 +528,7 @@ export default function AdminTagsPage() {
                       <div className="flex items-center gap-1">
                         <div
                           className="w-4 h-4 rounded"
-                          style={{ backgroundColor: tag.color }}
+                          style={{ backgroundColor: normalizeColor(tag.color) }}
                         />
                         <code className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
                           {tag.color}

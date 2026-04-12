@@ -1,25 +1,26 @@
 export default function Stats() {
   const stats = [
-    { number: "6+", label: "Курсов", description: "На любой вкус" },
-    { number: "100+", label: "Уроков", description: "Без лишней воды" },
-    { number: "1000+", label: "Учеников", description: "Довольны обучением" },
+    { number: "6+", label: "Курсов", description: "На любой вкус", color: "text-blue-600 dark:text-blue-400" },
+    { number: "100+", label: "Уроков", description: "Без лишней воды", color: "text-indigo-600 dark:text-indigo-400" },
+    { number: "1000+", label: "Учеников", description: "Довольны обучением", color: "text-purple-600 dark:text-purple-400" },
   ];
 
   return (
-    <section className="container mx-auto px-4 -mt-16 relative z-10">
+    <section className="container mx-auto px-4 -mt-10 relative z-20">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {stats.map((stat, index) => (
           <div
             key={index}
-            className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-8 rounded-[2.5rem] border border-white dark:border-slate-800 shadow-xl text-center group hover:border-blue-200 transition-colors"
+            className="group relative bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white dark:border-slate-800 shadow-2xl shadow-indigo-500/5 dark:shadow-none text-center hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all duration-500 overflow-hidden hover:-translate-y-1"
           >
-            <div className="text-5xl font-black text-blue-600 mb-2 tracking-tighter group-hover:scale-110 transition-transform">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent dark:from-indigo-900/10 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            <div className={`text-5xl md:text-6xl font-black mb-3 tracking-tighter group-hover:scale-110 transition-transform duration-500 ${stat.color}`}>
               {stat.number}
             </div>
-            <div className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-1">
+            <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2 tracking-tight">
               {stat.label}
             </div>
-            <div className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+            <div className="text-slate-500 dark:text-slate-400 font-medium">
               {stat.description}
             </div>
           </div>

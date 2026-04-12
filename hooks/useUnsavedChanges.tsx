@@ -6,17 +6,12 @@ import toast from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 
 interface UseUnsavedChangesProps {
-  // Функция для проверки наличия несохраненных изменений
   hasUnsavedChanges: () => boolean;
-  // Сообщение для toast
   message?: string;
-  // Включено ли отслеживание
   enabled?: boolean;
 }
 
-/**
- * Хук для отслеживания несохраненных изменений и подтверждения перехода
- */
+
 export function useUnsavedChanges({
   hasUnsavedChanges,
   message = "У вас есть несохраненные изменения. Вы уверены, что хотите уйти?",
@@ -30,12 +25,10 @@ export function useUnsavedChanges({
   const originalRouterReplace = useRef<typeof router.replace | null>(null);
   const isConfirmingRef = useRef(false);
 
-  // Обновляем ref при изменении состояния
   useEffect(() => {
     hasChangesRef.current = hasUnsavedChanges();
   }, [hasUnsavedChanges]);
 
-  // Показываем toast с подтверждением
   const confirmNavigation = useCallback(async (): Promise<boolean> => {
     if (!hasChangesRef.current || isConfirmingRef.current) {
       return true;
@@ -69,16 +62,13 @@ export function useUnsavedChanges({
     }
   }, [message, dismiss]);
 
-  // Перехват навигации
   useEffect(() => {
     if (!enabled) return undefined;
 
-    // Сохраняем оригинальные методы
     originalRouterPush.current = router.push;
     originalRouterBack.current = router.back;
     originalRouterReplace.current = router.replace;
 
-    // Переопределяем router.push
     const originalPush = router.push;
     router.push = async function (
       ...args: Parameters<typeof router.push>
@@ -86,29 +76,25 @@ export function useUnsavedChanges({
       if (hasChangesRef.current) {
         const confirmed = await confirmNavigation();
         if (!confirmed) {
-          return; // Отменяем навигацию
+          return;
         }
       }
 
-      // Вызываем оригинальный метод
       return originalPush(...args);
     };
 
-    // Переопределяем router.back
     const originalBack = router.back;
     router.back = async function (): Promise<void> {
       if (hasChangesRef.current) {
         const confirmed = await confirmNavigation();
         if (!confirmed) {
-          return; // Отменяем навигацию
+          return; 
         }
       }
 
-      // Вызываем оригинальный метод
       return originalBack();
     };
 
-    // Переопределяем router.replace
     const originalReplace = router.replace;
     router.replace = async function (
       ...args: Parameters<typeof router.replace>
@@ -116,15 +102,13 @@ export function useUnsavedChanges({
       if (hasChangesRef.current) {
         const confirmed = await confirmNavigation();
         if (!confirmed) {
-          return; // Отменяем навигацию
+          return;
         }
       }
 
-      // Вызываем оригинальный метод
       return originalReplace(...args);
     };
 
-    // Очистка при размонтировании
     return () => {
       router.push = originalPush;
       router.back = originalBack;
@@ -132,7 +116,6 @@ export function useUnsavedChanges({
     };
   }, [enabled, confirmNavigation, router]);
 
-  // Предупреждение при закрытии вкладки
   useEffect(() => {
     if (!enabled) return undefined;
 
@@ -150,7 +133,6 @@ export function useUnsavedChanges({
     };
   }, [enabled]);
 
-  // Метод для сброса флага изменений
   const resetChanges = useCallback(() => {
     hasChangesRef.current = false;
   }, []);
@@ -158,7 +140,6 @@ export function useUnsavedChanges({
   return { resetChanges, hasUnsavedChanges: () => hasChangesRef.current };
 }
 
-// Компонент предупреждения
 interface UnsavedWarningToastProps {
   message: string;
   onConfirm: () => void;
