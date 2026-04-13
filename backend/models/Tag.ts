@@ -23,11 +23,10 @@ const TagSchema = new Schema<ITag>(
       lowercase: true,
       trim: true,
     },
-    color: { 
-      type: String, 
+    color: {
+      type: String,
       required: true,
       default: "#3b5bdb",
-      match: /^#[0-9A-Fa-f]{6}$/,
     },
   },
   { timestamps: true },
