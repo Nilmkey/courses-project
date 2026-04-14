@@ -4,6 +4,7 @@ import React, { useRef, useState } from "react";
 import { Download, Home, Award, Loader2, Medal } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { toPng } from "html-to-image";
+import jsPDF from "jspdf";
 
 
 export default function CertificatePage() {
@@ -26,34 +27,28 @@ export default function CertificatePage() {
     try {
       await document.fonts.ready;
 
-      const loadScript = (src: string) =>
-        new Promise((resolve, reject) => {
-          if (document.querySelector(`script[src="${src}"]`))
-            return resolve(true);
-          const script = document.createElement("script");
-          script.src = src;
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-
-      await loadScript(
-        "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
-      );
-
       const element = certificateRef.current;
+      
+      const originalBoxShadow = element.style.boxShadow;
+      element.style.boxShadow = "none";
 
       const dataUrl = await toPng(element, {
         quality: 1.0,
         backgroundColor: "#ffffff",
         cacheBust: true,
-        skipFonts: true,
-        style: {
-          fontFamily: "system-ui, -apple-system, sans-serif",
-        },
+        pixelRatio: 2,
+        fontEmbedCSS: "",
       });
+      
+      element.style.boxShadow = originalBoxShadow;
 
-      const pdf = new (window as any).jspdf.jsPDF("landscape", "mm", "a4");
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4",
+        compress: false,
+      });
+      
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
