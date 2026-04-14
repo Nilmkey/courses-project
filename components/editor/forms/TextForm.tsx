@@ -5,8 +5,10 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Toaster } from "react-hot-toast";
 import { apiRequest } from "@/lib/api/api-client";
 import { BlockContent } from "@/types/types";
+import { SlashMenu } from "@/components/editor/SlashMenu";
 import "@/styles/tiptap-editor.css";
 
 interface EditorProps {
@@ -313,8 +315,19 @@ export const TipTapEditor: React.FC<EditorProps> = ({ content, onUpdate }) => {
   }
 
   return (
-    <div className="tiptap-editor-wrapper">
+    <div className="tiptap-editor-wrapper relative">
       <EditorContent editor={editor} />
+      <SlashMenu editor={editor} />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "#1e293b",
+            color: "#f1f5f9",
+          },
+        }}
+      />
     </div>
   );
 };

@@ -41,13 +41,13 @@ router.post(
 
     try {
       const result = await uploadImage(req.file.path, 'course-images');
-      
+
       // Удаляем временный файл
       fs.unlinkSync(req.file.path);
 
       res.json({
-        url: result.secure_url || result.url,
-        publicId: result.public_id,
+        url: result.url,
+        publicId: result.publicId,
       });
     } catch (error) {
       // Удаляем временный файл при ошибке
