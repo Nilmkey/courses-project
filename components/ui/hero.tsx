@@ -42,7 +42,7 @@ export default function Hero() {
 
   const title = useTypingEffect("на реальной практике", 55, 600);
   const subtitle = useTypingEffect(
-    "CodeLearn — это современная экосистема обучения. Мы учим создавать реальные продукты через практику во встроенном редакторе кода.",
+    "CodeLearn — это место, где обучение превращается в практику: вы создаёте реальные продукты, а не просто изучаете теорию.",
     16.7,
     1670
   );
@@ -70,7 +70,6 @@ export default function Hero() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-sm font-bold mb-8 shadow-sm backdrop-blur-sm animate-in slide-in-from-bottom-4 duration-500">
-          <Sparkles className="w-4 h-4" />
           <span>Платформа №1 для будущих разработчиков</span>
         </div>
 
@@ -97,7 +96,7 @@ export default function Hero() {
                 className="h-16 px-10 text-lg font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-xl shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95 w-full flex items-center gap-3"
               >
                 Продолжить обучение
-                <BookOpen className="w-6 h-6" />
+                <ArrowRight className="w-6 h-6" />
               </Button>
             </Link>
           ) : (
