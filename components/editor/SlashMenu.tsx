@@ -1,11 +1,7 @@
 "use client";
 
-import React, { useCallback, useRef, useState, useEffect } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Editor } from "@tiptap/react";
-import { Extension } from "@tiptap/core";
-import { PluginKey } from "@tiptap/pm/state";
-import { Suggestion, SuggestionOptions } from "@tiptap/suggestion";
-import tippy from "tippy.js";
 import toast from "react-hot-toast";
 import {
   Type,
@@ -49,175 +45,13 @@ interface SlashMenuItem {
   command: (editor: Editor, range: { from: number; to: number }) => void;
 }
 
-// Фильтрация пунктов меню по поисковому запросу
-function filterItems(items: SlashMenuItem[], query: string): SlashMenuItem[] {
-  if (!query) return items;
-
-  const lowerQuery = query.toLowerCase();
-
-  return items.filter((item) => {
-    return (
-      item.title.toLowerCase().includes(lowerQuery) ||
-      item.subtext.toLowerCase().includes(lowerQuery) ||
-      item.aliases.some((alias) => alias.toLowerCase().includes(lowerQuery))
-    );
-  });
+interface SlashMenuProps {
+  editor: Editor | null;
 }
 
-// TipTap расширение для Slash Command
-export const SlashCommand = Extension.create({
-  name: "slashCommand",
-
-  addOptions() {
-    return {
-      suggestion: {
-        char: "/",
-        command: ({ editor, range, props }) => {
-          props.command(editor, range);
-        },
-      },
-    };
-  },
-
-  addProseMirrorPlugins() {
-    return [
-      Suggestion({
-        editor: this.editor,
-        ...this.options.suggestion,
-      }),
-    ];
-  },
-});
-
-// Компонент рендера меню
-function SlashMenuRenderer(props: {
-  items: SlashMenuItem[];
-  command: (item: SlashMenuItem) => void;
-  editor: Editor;
-}) {
-  const { items, command, editor } = props;
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [pendingImageItem, setPendingImageItem] = useState<SlashMenuItem | null>(null);
-
-  const selectItem = (index: number) => {
-    const item = items[index];
-    if (item) {
-      // Для image команды - сначала открываем file picker
-      if (item.aliases.includes("image")) {
-        setPendingImageItem(item);
-        fileInputRef.current?.click();
-      } else {
-        command(item);
-      }
-    }
-  };
-
-  const handleFileSelect = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file || !editor || !pendingImageItem) return;
-
-      const loadingToast = toast.loading("Загрузка изображения...");
-
-      try {
-        const url = await uploadImageFile(file);
-        
-        // Удаляем slash команду и вставляем изображение
-        editor
-          .chain()
-          .focus()
-          .setImage({ src: url, alt: file.name })
-          .run();
-        
-        toast.success("Изображение загружено!", { id: loadingToast });
-      } catch (error) {
-        console.error("[SlashMenu] Image upload error:", error);
-        toast.error("Ошибка загрузки изображения", { id: loadingToast });
-      } finally {
-        e.target.value = "";
-        setPendingImageItem(null);
-      }
-    },
-    [editor, pendingImageItem],
-  );
-
-  // Навигация клавишами
-  const upHandler = () => {
-    setSelectedIndex((selectedIndex + items.length - 1) % items.length);
-  };
-
-  const downHandler = () => {
-    setSelectedIndex((selectedIndex + 1) % items.length);
-  };
-
-  const enterHandler = () => {
-    selectItem(selectedIndex);
-  };
-
-  useEffect(() => setSelectedIndex(0), [items]);
-
-  // Группировка элементов
-  const groupedItems = items.reduce<Record<string, SlashMenuItem[]>>(
-    (acc, item) => {
-      if (!acc[item.group]) acc[item.group] = [];
-      acc[item.group].push(item);
-      return acc;
-    },
-    {},
-  );
-
-  let globalIndex = 0;
-
-  return (
-    <>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileSelect}
-      />
-
-      <div className="slash-menu">
-        {Object.entries(groupedItems).map(([groupName, groupItems]) => (
-          <div key={groupName} className="slash-menu-group">
-            <div className="slash-menu-group-label">{groupName}</div>
-            {groupItems.map((item) => {
-              const currentIndex = globalIndex;
-              globalIndex++;
-              const isSelected = currentIndex === selectedIndex;
-
-              return (
-                <button
-                  key={item.title}
-                  className={`slash-menu-item ${isSelected ? "selected" : ""}`}
-                  onClick={() => selectItem(currentIndex)}
-                >
-                  <span className="slash-menu-item-icon">{item.icon}</span>
-                  <div className="slash-menu-item-content">
-                    <div className="slash-menu-item-title">{item.title}</div>
-                    <div className="slash-menu-item-subtext">{item.subtext}</div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        ))}
-        {items.length === 0 && (
-          <div className="slash-menu-no-results">Ничего не найдено</div>
-        )}
-      </div>
-    </>
-  );
-}
-
-export function createSlashCommandExtension(
-  fileInputRef: React.RefObject<HTMLInputElement | null>,
-  setUploading: (v: boolean) => void,
-  editor: Editor | null,
-) {
-  const getItems = (editor: Editor): SlashMenuItem[] => [
+// Определение пунктов меню
+function getSlashMenuItems(editor: Editor): SlashMenuItem[] {
+  return [
     {
       title: "Text",
       subtext: "Plain text paragraph",
@@ -314,74 +148,332 @@ export function createSlashCommandExtension(
       icon: <Image className="w-4 h-4" />,
       aliases: ["image", "photo", "picture", "img", "upload"],
       group: "Media",
-      command: async (ed, range) => {
+      command: (ed, range) => {
         ed.chain().focus().deleteRange(range).run();
-        fileInputRef.current?.click();
       },
     },
   ];
+}
 
-  return SlashCommand.configure({
-    suggestion: {
-      items: ({ query, editor }: { query: string; editor: Editor }) => {
-        const allItems = editor ? getItems(editor) : [];
-        return filterItems(allItems, query);
-      },
-      render: () => {
-        let component: any;
-        let popup: any;
+// Фильтрация пунктов меню по поисковому запросу
+function filterItems(items: SlashMenuItem[], query: string): SlashMenuItem[] {
+  if (!query) return items;
 
-        return {
-          onStart: (props: any) => {
-            component = new SlashMenuRenderer({
-              props: {
-                ...props,
-                editor: props.editor,
-              },
-            });
+  const lowerQuery = query.toLowerCase();
 
-            if (!props.clientRect) {
-              return;
-            }
-
-            popup = tippy("body", {
-              getReferenceClientRect: props.clientRect,
-              appendTo: () => document.body,
-              content: component.element,
-              showOnCreate: true,
-              interactive: true,
-              trigger: "manual",
-              placement: "bottom-start",
-            });
-          },
-
-          onUpdate(props: any) {
-            component.updateProps(props);
-
-            if (!props.clientRect) {
-              return;
-            }
-
-            popup[0].setProps({
-              getReferenceClientRect: props.clientRect,
-            });
-          },
-
-          onKeyDown(props: any) {
-            if (props.event.key === "Escape") {
-              popup[0].hide();
-              return true;
-            }
-
-            return component.ref?.onKeyDown(props);
-          },
-
-          onExit() {
-            popup[0].destroy();
-            component.destroy();
-          },
-        };
-      },
-    },
+  return items.filter((item) => {
+    return (
+      item.title.toLowerCase().includes(lowerQuery) ||
+      item.subtext.toLowerCase().includes(lowerQuery) ||
+      item.aliases.some((alias) => alias.toLowerCase().includes(lowerQuery))
+    );
   });
+}
+
+export function SlashMenu({ editor }: SlashMenuProps) {
+  const [visible, setVisible] = useState(false);
+  const [position, setPosition] = useState<{ top: number; left: number }>({
+    top: 0,
+    left: 0,
+  });
+  const [query, setQuery] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [pendingRange, setPendingRange] = useState<{ from: number; to: number } | null>(null);
+
+  const allItems = editor ? getSlashMenuItems(editor) : [];
+  const filteredItems = filterItems(allItems, query);
+
+  // Обработка выбора файла для загрузки изображения
+  const handleFileSelect = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || !editor) return;
+
+      setUploading(true);
+      const loadingToast = toast.loading("Загрузка изображения...");
+
+      try {
+        const url = await uploadImageFile(file);
+        
+        // Если есть pending range - удаляем slash команду
+        if (pendingRange) {
+          editor.chain().focus().deleteRange(pendingRange).run();
+        }
+        
+        editor.chain().focus().setImage({ src: url, alt: file.name }).run();
+        toast.success("Изображение загружено!", { id: loadingToast });
+      } catch (error) {
+        console.error("[SlashMenu] Image upload error:", error);
+        toast.error("Ошибка загрузки изображения", { id: loadingToast });
+      } finally {
+        setUploading(false);
+        setPendingRange(null);
+        // Сбрасываем input для повторного выбора того же файла
+        e.target.value = "";
+      }
+    },
+    [editor, pendingRange],
+  );
+
+  // Мониторинг ввода для slash команд
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleTransaction = () => {
+      const { state } = editor;
+      const { selection, doc } = state;
+      const { $anchor } = selection;
+
+      // Получаем текст от начала текущего узла до позиции курсора
+      const textFromStart = doc.textBetween(
+        $anchor.start(),
+        $anchor.pos,
+        "\n"
+      );
+
+      // Ищем паттерн "/" или "/что-то" в конце текста
+      const slashMatch = textFromStart.match(/\/(\w*)$/);
+
+      if (slashMatch) {
+        // Проверяем, что "/" не является частью URL или другого контекста
+        const lineStart = textFromStart.slice(0, -slashMatch[0].length);
+        const lastSpaceIndex = lineStart.lastIndexOf(" ");
+        const lineBeforeSlash = lastSpaceIndex >= 0 
+          ? lineStart.slice(lastSpaceIndex + 1) 
+          : lineStart;
+        
+        // Если перед "/" есть только пробелы или это начало строки - показываем меню
+        if (lineBeforeSlash.trim() === "" || lineBeforeSlash === "") {
+          const view = editor.view;
+          
+          // Получаем DOM элемент на позиции курсора
+          const domAtPos = view.domAtPos($anchor.pos);
+          if (!domAtPos) {
+            setVisible(false);
+            return;
+          }
+
+          // Создаем Range для получения точных координат
+          const range = document.createRange();
+          const { node, offset } = domAtPos;
+          
+          let rect: DOMRect;
+          
+          if (node.nodeType === Node.TEXT_NODE && offset > 0) {
+            // Для текстового узла получаем координаты перед курсором
+            range.setStart(node, Math.max(0, offset - 1));
+            range.setEnd(node, offset);
+            rect = range.getBoundingClientRect();
+          } else {
+            // Для элемента используем его rect
+            const element = node.nodeType === Node.ELEMENT_NODE 
+              ? node as Element 
+              : (node.parentElement || view.dom);
+            rect = element.getBoundingClientRect();
+          }
+
+          // Сохраняем range для удаления slash команды
+          const from = $anchor.pos - slashMatch[0].length;
+          const to = $anchor.pos;
+          setPendingRange({ from, to });
+
+          // Определяем доступное пространство в viewport
+          const viewportHeight = window.innerHeight;
+          const viewportWidth = window.innerWidth;
+          
+          const menuHeight = 400;
+          const menuWidth = 320;
+          const menuPadding = 4;
+
+          // Доступное пространство снизу и сверху
+          const spaceBelow = viewportHeight - rect.bottom;
+          const spaceAbove = rect.top;
+          
+          // Показываем меню снизу, если есть место, иначе сверху
+          const showBelow = spaceBelow >= menuHeight || spaceBelow > spaceAbove;
+
+          // Рассчитываем позицию
+          let topPos = showBelow 
+            ? rect.bottom + menuPadding 
+            : rect.top - menuHeight - menuPadding;
+          
+          let leftPos = rect.left;
+          
+          // Корректируем, чтобы меню не выходило за правый край viewport
+          if (leftPos + menuWidth > viewportWidth - 10) {
+            leftPos = viewportWidth - menuWidth - 10;
+          }
+          
+          // Корректируем, чтобы меню не выходило за левый край viewport
+          if (leftPos < 10) {
+            leftPos = 10;
+          }
+
+          // Корректируем вертикальную позицию
+          if (topPos < 10) {
+            topPos = 10;
+          }
+          if (topPos + menuHeight > viewportHeight - 10) {
+            topPos = viewportHeight - menuHeight - 10;
+          }
+
+          setPosition({
+            top: topPos,
+            left: leftPos,
+          });
+          setVisible(true);
+          setQuery(slashMatch[1] || "");
+          setSelectedIndex(0);
+          return;
+        }
+      }
+      
+      setVisible(false);
+    };
+
+    editor.on("transaction", handleTransaction);
+
+    return () => {
+      editor.off("transaction", handleTransaction);
+    };
+  }, [editor]);
+
+  // Клавиатурная навигация
+  useEffect(() => {
+    if (!visible || filteredItems.length === 0) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedIndex((prev) =>
+            prev < filteredItems.length - 1 ? prev + 1 : 0,
+          );
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex((prev) =>
+            prev > 0 ? prev - 1 : filteredItems.length - 1,
+          );
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (filteredItems[selectedIndex] && editor) {
+            const item = filteredItems[selectedIndex];
+            
+            // Для image - открываем file picker
+            if (item.aliases.includes("image")) {
+              if (pendingRange) {
+                editor.chain().focus().deleteRange(pendingRange).run();
+              }
+              fileInputRef.current?.click();
+            } else {
+              selectItem(item);
+            }
+          }
+          break;
+        case "Escape":
+          e.preventDefault();
+          setVisible(false);
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [visible, filteredItems, selectedIndex, editor, pendingRange]);
+
+  // Выбор пункта меню
+  const selectItem = (item: SlashMenuItem) => {
+    if (!editor) return;
+    
+    if (pendingRange) {
+      item.command(editor, pendingRange);
+    }
+    
+    setVisible(false);
+  };
+
+  // Группировка элементов
+  const groupedItems = filteredItems.reduce<Record<string, SlashMenuItem[]>>(
+    (acc, item) => {
+      if (!acc[item.group]) acc[item.group] = [];
+      acc[item.group].push(item);
+      return acc;
+    },
+    {},
+  );
+
+  if (!visible || filteredItems.length === 0) {
+    return (
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+    );
+  }
+
+  let globalIndex = 0;
+
+  return (
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+
+      <div
+        className="slash-menu"
+        style={{
+          position: "fixed",
+          top: `${position.top}px`,
+          left: `${position.left}px`,
+          zIndex: 99999,
+        }}
+      >
+        {Object.entries(groupedItems).map(([groupName, items]) => (
+          <div key={groupName} className="slash-menu-group">
+            <div className="slash-menu-group-label">{groupName}</div>
+            {items.map((item) => {
+              const currentIndex = globalIndex;
+              globalIndex++;
+              const isSelected = currentIndex === selectedIndex;
+
+              return (
+                <button
+                  key={item.title}
+                  className={`slash-menu-item ${isSelected ? "selected" : ""}`}
+                  onClick={() => {
+                    if (item.aliases.includes("image")) {
+                      if (pendingRange) {
+                        editor?.chain().focus().deleteRange(pendingRange).run();
+                      }
+                      fileInputRef.current?.click();
+                    } else {
+                      selectItem(item);
+                    }
+                  }}
+                  onMouseEnter={() => setSelectedIndex(currentIndex)}
+                >
+                  <span className="slash-menu-item-icon">{item.icon}</span>
+                  <div className="slash-menu-item-content">
+                    <div className="slash-menu-item-title">{item.title}</div>
+                    <div className="slash-menu-item-subtext">{item.subtext}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </>
+  );
 }
