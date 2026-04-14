@@ -29,15 +29,59 @@ import { useToast } from "@/hooks/useToast";
 const generateColor = () => {
   const colors = [
     "#3b5bdb", // indigo
+    "#1971c2", // blue
+    "#0c8599", // cyan
+    "#1098ad", // cyan light
     "#0ca678", // emerald
-    "#e67700", // orange
-    "#c2255c", // pink
-    "#845ef7", // violet
-    "#1098ad", // cyan
-    "#f08c00", // amber
     "#2b8a3e", // green
-    "#5c7cfa", // blue
+    "#2f9e44", // green light
+    "#845ef7", // violet
+    "#7950f2", // purple
+    "#5c7cfa", // blue light
+    "#4263eb", // royal blue
+    "#364fc7", // navy
+    "#c2255c", // pink dark
     "#d63384", // fuchsia
+    "#e64980", // pink
+    "#f06595", // pink light
+    "#fa5252", // red
+    "#e03131", // red dark
+    "#c92a2a", // red darker
+    "#ff6b6b", // coral
+    "#ee5a24", // red-orange
+    "#e67700", // orange
+    "#f08c00", // amber
+    "#fab005", // yellow
+    "#fd7e14", // orange light
+    "#e8590c", // dark orange
+    "#f59f00", // gold
+    "#9c36b5", // purple dark
+    "#be4bdb", // magenta
+    "#cc5de8", // orchid
+    "#da77f2", // lavender
+    "#ae3ec9", // violet dark
+    "#01a3a4", // teal
+    "#099268", // mint
+    "#12b886", // turquoise
+    "#38d9a9", // aqua
+    "#66d9c8", // seafoam
+    "#495057", // gray dark
+    "#868e96", // gray
+    "#adb5bd", // gray light
+    "#343a40", // charcoal
+    "#212529", // almost black
+    "#ff69b4", // hotpink
+    "#ff1493", // deeppink
+    "#db7093", // palevioletred
+    "#9370db", // mediumpurple
+    "#6a5acd", // slateblue
+    "#20b2aa", // lightseagreen
+    "#3cb371", // mediumseagreen
+    "#ffa500", // orange (named)
+    "#ff8c00", // darkorange
+    "#ffd700", // gold
+    "#ff6347", // tomato
+    "#ff4500", // orangered
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 };
