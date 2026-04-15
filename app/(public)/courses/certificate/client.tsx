@@ -4,15 +4,20 @@ import React, { useRef, useState } from "react";
 import { Download, Home, Award, Loader2, Medal } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { toPng } from "html-to-image";
+import Link from "next/link";
 
+interface CertificatePageProps {
+  nonce: string;
+}
 
-export default function CertificatePage() {
+export default function CertificatePage({ nonce }: CertificatePageProps) {
   const searchParams = useSearchParams();
   const certificateRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const userName = searchParams.get("userName") || "Пользователь";
   const courseName = searchParams.get("courseName") || "Курс";
+
   const date = new Date().toLocaleDateString("ru-RU", {
     day: "numeric",
     month: "long",
@@ -34,6 +39,7 @@ export default function CertificatePage() {
           script.src = src;
           script.onload = resolve;
           script.onerror = reject;
+          script.nonce = nonce;
           document.head.appendChild(script);
         });
 
@@ -53,7 +59,12 @@ export default function CertificatePage() {
         },
       });
 
-      const pdf = new (window as any).jspdf.jsPDF("landscape", "mm", "a4");
+      const pdf = new (
+        window as Window &
+          typeof globalThis & {
+            jspdf: typeof import("jspdf");
+          }
+      ).jspdf.jsPDF("landscape", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
@@ -144,7 +155,10 @@ export default function CertificatePage() {
               </div>
 
               <div className="flex flex-col items-center">
-                <span className="text-3xl text-slate-800 mb-1" style={{ fontFamily: "cursive" }}>
+                <span
+                  className="text-3xl text-slate-800 mb-1"
+                  style={{ fontFamily: "cursive" }}
+                >
                   А.Копьев
                 </span>
                 <span className="text-sm text-slate-500 border-t border-slate-300 pt-2 w-48 text-center uppercase tracking-wider">
@@ -175,13 +189,13 @@ export default function CertificatePage() {
           )}
         </button>
 
-        <a
+        <Link
           href="/"
           className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-8 py-4 rounded-2xl font-bold transition-all active:scale-95"
         >
           <Home className="w-5 h-5" />
           На главную
-        </a>
+        </Link>
       </div>
     </div>
   );
