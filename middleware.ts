@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// URL бэкенда берём из переменной окружения
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:7777";
+
 export async function middleware(request: NextRequest) {
   // Проверка админки
   if (request.nextUrl.pathname.startsWith("/admin")) {
@@ -8,7 +11,7 @@ export async function middleware(request: NextRequest) {
 
     try {
       const response = await fetch(
-        "http://localhost:7777/api/auth/get-session",
+        `${BACKEND_URL}/api/auth/get-session`,
         {
           headers: { cookie: request.headers.get("cookie") || "" },
         },
@@ -43,7 +46,7 @@ export async function middleware(request: NextRequest) {
   const learnMatch = request.nextUrl.pathname.match(/^\/learn\/([^/]+)(\/.*)?$/);
   if (learnMatch) {
     const courseSlug = learnMatch[1];
-    console.log("--- Проверка доступа к обучению ---", { 
+    console.log("--- Проверка доступа к обучению ---", {
       courseSlug,
       pathname: request.nextUrl.pathname,
       hasCookie: !!request.headers.get("cookie")
@@ -52,7 +55,7 @@ export async function middleware(request: NextRequest) {
     try {
       // Получаем сессию пользователя
       const sessionResponse = await fetch(
-        "http://localhost:7777/api/auth/get-session",
+        `${BACKEND_URL}/api/auth/get-session`,
         {
           headers: { cookie: request.headers.get("cookie") || "" },
         },
@@ -83,7 +86,7 @@ export async function middleware(request: NextRequest) {
 
       // Проверяем, записан ли пользователь на курс
       const courseResponse = await fetch(
-        `http://localhost:7777/api/v1/courses/${courseSlug}`,
+        `${BACKEND_URL}/api/v1/courses/${courseSlug}`,
         {
           headers: { cookie: request.headers.get("cookie") || "" },
         },
@@ -98,7 +101,7 @@ export async function middleware(request: NextRequest) {
 
       // Проверяем enrollment
       const enrollmentResponse = await fetch(
-        `http://localhost:7777/api/v1/enrollment/${course._id}/check`,
+        `${BACKEND_URL}/api/v1/enrollment/${course._id}/check`,
         {
           headers: { cookie: request.headers.get("cookie") || "" },
         },
