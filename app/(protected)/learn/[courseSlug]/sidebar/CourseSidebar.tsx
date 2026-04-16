@@ -19,48 +19,48 @@ export function CourseSidebar() {
   }, []);
 
   return (
-    <div className="h-full flex flex-col pt-6 pb-4">
+    <div className="h-full flex flex-col pt-4 sm:pt-6 pb-3 sm:pb-4">
       {/* Header Info */}
-      <div className="px-6 pb-6 border-b border-slate-200/50 dark:border-slate-800/50">
-        <div className="flex items-center justify-between mb-6">
+      <div className="px-4 sm:px-6 pb-4 sm:pb-6 border-b border-slate-200/50 dark:border-slate-800/50">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           <button
             onClick={() => router.push("/courses")}
-            className="flex items-center justify-center w-10 h-10 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 transition-all active:scale-95 shadow-sm"
+            className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 transition-all active:scale-95 shadow-sm"
             title="Назад к курсам"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={16} />
           </button>
 
           {mounted && (
             <button
               onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 transition-all shadow-inner"
+              className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 transition-all shadow-inner"
               title="Переключить тему"
             >
               {resolvedTheme === "dark" ? (
-                <Sun className="h-5 w-5 text-yellow-400" />
+                <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
               ) : (
-                <Moon className="h-5 w-5" />
+                <Moon className="h-4 w-4 sm:h-5 sm:w-5" />
               )}
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-            <BookOpen size={16} />
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <BookOpen size={14} />
           </div>
-          <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+          <span className="text-[10px] sm:text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
             Учебный План
           </span>
         </div>
-        <h2 className="text-xl font-black text-slate-900 dark:text-white line-clamp-2 tracking-tight">
+        <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white line-clamp-2 tracking-tight">
           {course.title}
         </h2>
       </div>
 
       {/* Progress Box */}
-      <div className="p-6 border-b border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/30">
+      <div className="px-4 sm:px-6 py-3 sm:py-6 border-b border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/30">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Trophy className={`w-5 h-5 ${

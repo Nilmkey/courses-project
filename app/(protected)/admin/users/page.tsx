@@ -19,7 +19,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 import { usersApi, type User } from "@/lib/api/entities/api-users";
 import UserDetailModal from "@/components/admin/UserDetailModal";
@@ -83,22 +82,6 @@ export default function AdminUsers() {
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300 relative overflow-hidden">
       {/* Background Glows */}
       <div className="absolute top-[-10%] left-[10%] w-[30rem] h-[30rem] bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen pointer-events-none z-0" />
-
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
-            color: resolvedTheme === "dark" ? "#f8fafc" : "#0f172a",
-            border: resolvedTheme === "dark" ? "1px solid #1e293b" : "1px solid #e2e8f0",
-            borderRadius: "1rem",
-            boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
-            padding: "16px 20px",
-            fontWeight: "600",
-          },
-        }}
-      />
 
       <header className="border-b bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border-slate-200/50 dark:border-slate-800/50 sticky top-0 z-50 transition-colors">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">

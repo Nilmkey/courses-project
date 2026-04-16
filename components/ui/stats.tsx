@@ -6,21 +6,21 @@ export default function Stats() {
   ];
 
   return (
-    <section className="container mx-auto px-4 -mt-10 relative z-20">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+    <section className="container mx-auto px-4 -mt-6 sm:-mt-10 relative z-20">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
         {stats.map((stat, index) => (
           <div
             key={index}
-            className="group relative bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white dark:border-slate-800 shadow-2xl shadow-indigo-500/5 dark:shadow-none text-center hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all duration-500 overflow-hidden hover:-translate-y-1"
+            className="group relative bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-white dark:border-slate-800 shadow-2xl shadow-indigo-500/5 dark:shadow-none text-center hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all duration-500 overflow-hidden hover:-translate-y-1"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent dark:from-indigo-900/10 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            <div className={`text-5xl md:text-6xl font-black mb-3 tracking-tighter group-hover:scale-110 transition-transform duration-500 ${stat.color}`}>
+            <div className={`text-4xl sm:text-5xl md:text-6xl font-black mb-2 sm:mb-3 tracking-tighter group-hover:scale-110 transition-transform duration-500 ${stat.color}`}>
               {stat.number}
             </div>
-            <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2 tracking-tight">
+            <div className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100 mb-1 sm:mb-2 tracking-tight">
               {stat.label}
             </div>
-            <div className="text-slate-500 dark:text-slate-400 font-medium">
+            <div className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium">
               {stat.description}
             </div>
           </div>

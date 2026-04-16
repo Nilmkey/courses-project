@@ -7,7 +7,6 @@ import { useTheme } from "next-themes";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { StreakFire } from "@/components/StreakFire";
-import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 
 interface SessionUser {
@@ -68,36 +67,21 @@ export default function Header() {
 
   return (
     <>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
-            color: resolvedTheme === "dark" ? "#f8fafc" : "#0f172a",
-            border: resolvedTheme === "dark" ? "1px solid #1e293b" : "1px solid #e2e8f0",
-            borderRadius: "1rem",
-            boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
-            padding: "16px 20px",
-            fontWeight: "600",
-          },
-        }}
-      />
       <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-950/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-slate-800/50 transition-colors duration-300">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8 h-16 sm:h-20 flex justify-between items-center">
           <div
-            className="flex items-center gap-3 group cursor-pointer"
+            className="flex items-center gap-2 sm:gap-3 group cursor-pointer"
             onClick={() => router.push("/")}
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 ring-2 ring-indigo-100 dark:ring-indigo-900">
-              <Code className="w-6 h-6 text-white" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 ring-2 ring-indigo-100 dark:ring-indigo-900">
+              <Code className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+            <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
               CodeLearn
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {mounted && user && <StreakFire showCount={true} size="sm" />}
 
             {mounted && (
@@ -107,12 +91,12 @@ export default function Header() {
                 onClick={() =>
                   setTheme(resolvedTheme === "dark" ? "light" : "dark")
                 }
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300"
+                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300"
               >
                 {resolvedTheme === "dark" ? (
-                  <Sun className="h-5 w-5 text-yellow-400" />
+                  <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
                 ) : (
-                  <Moon className="h-5 w-5 text-slate-600" />
+                  <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
                 )}
               </Button>
             )}
@@ -181,7 +165,7 @@ export default function Header() {
 
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden w-10 h-10 flex items-center justify-center ml-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300"
+              className="md:hidden w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center ml-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300"
               aria-label="Открыть меню"
             >
               {isMenuOpen ? (

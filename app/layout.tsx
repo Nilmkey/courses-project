@@ -2,11 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemedToaster } from "@/components/themed-toaster";
 import "./globals.css";
-import { Toaster } from "react-hot-toast";
 import Provider from "@/components/provider";
 import { ThemeProvider } from "next-themes";
 
-// Отключаем SSG для root layout — решаем баги Next.js 16 с client components
 export const dynamic = "force-dynamic";
 
 const geistSans = Geist({
@@ -38,29 +36,6 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: "#363636",
-              color: "#fff",
-            },
-            success: {
-              duration: 2000,
-              iconTheme: {
-                primary: "#10b981",
-                secondary: "#fff",
-              },
-            },
-            error: {
-              iconTheme: {
-                primary: "#ef4444",
-                secondary: "#fff",
-              },
-            },
-          }}
-        />
         <Provider>
           <ThemeProvider
             attribute="class"

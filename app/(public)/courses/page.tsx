@@ -100,21 +100,21 @@ const CoursesPage = () => {
       </div>
 
       <HeaderNoCourses />
-      
-      <main className="flex-grow py-20 px-4 max-w-7xl mx-auto w-full relative z-10 space-y-16">
+
+      <main className="flex-grow py-12 sm:py-16 lg:py-20 px-4 sm:px-6 max-w-7xl mx-auto w-full relative z-10 space-y-12 sm:space-y-16">
         <div className="text-center animate-in slide-in-from-bottom-8 duration-700">
-          <h1 className="text-5xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white mb-4 sm:mb-6 tracking-tight">
             Освой профессию <br className="md:hidden" /> в <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-blue-600">IT</span>
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 font-medium text-xl max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-400 font-medium max-w-2xl mx-auto">
             От теории к практике. Все необходимое для уверенного старта и развития в разработке.
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-3 animate-in fade-in duration-1000 delay-100">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 animate-in fade-in duration-1000 delay-100">
           <button
             onClick={() => setSelectedTag(null)}
-            className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
+            className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all duration-300 ${
               selectedTag === null
                 ? "bg-indigo-600 text-white shadow-xl shadow-indigo-500/30 scale-105"
                 : "bg-white/50 dark:bg-slate-900/50 backdrop-blur-md text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-white dark:hover:bg-slate-900"
@@ -126,7 +126,7 @@ const CoursesPage = () => {
             <button
               key={tag}
               onClick={() => setSelectedTag(tag)}
-              className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 capitalize ${
+              className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all duration-300 capitalize ${
                 selectedTag === tag
                   ? "bg-indigo-600 text-white shadow-xl shadow-indigo-500/30 scale-105"
                   : "bg-white/50 dark:bg-slate-900/50 backdrop-blur-md text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-white dark:hover:bg-slate-900"
@@ -137,12 +137,12 @@ const CoursesPage = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20 justify-items-center animate-in slide-in-from-bottom-12 duration-700 delay-200">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 pb-16 sm:pb-20 justify-items-center animate-in slide-in-from-bottom-12 duration-700 delay-200">
           {loading
             ? [1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="w-full max-w-[380px] h-[400px] bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 animate-pulse flex flex-col p-8"
+                  className="w-full h-[380px] sm:h-[400px] bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 animate-pulse flex flex-col p-6 sm:p-8"
                 >
                   <div className="flex justify-between items-center mb-6">
                     <div className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full" />
@@ -160,7 +160,7 @@ const CoursesPage = () => {
                 return (
                   <div
                     key={course._id}
-                    className="group relative bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 shadow-xl shadow-slate-200/20 dark:shadow-none p-8 flex flex-col h-[420px] w-full max-w-[380px] transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-500/20 dark:hover:shadow-indigo-500/10 hover:border-indigo-200 dark:hover:border-indigo-500/30 overflow-hidden cursor-pointer"
+                    className="group relative bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 shadow-xl shadow-slate-200/20 dark:shadow-none p-6 sm:p-8 flex flex-col h-[400px] sm:h-[420px] w-full max-w-full sm:max-w-[380px] transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-500/20 dark:hover:shadow-indigo-500/10 hover:border-indigo-200 dark:hover:border-indigo-500/30 overflow-hidden cursor-pointer"
                     onClick={() => {
                       if (course.slug) {
                         window.location.href = `/courses/${course.slug}`;

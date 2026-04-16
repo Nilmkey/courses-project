@@ -13,7 +13,7 @@ interface StreakFireProps {
 export function StreakFire({
   showCount = true,
   size = "sm",
-  className = ""
+  className = "",
 }: StreakFireProps) {
   const { count, isFire, isLoading, status } = useStreak();
 
