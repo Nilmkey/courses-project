@@ -9,6 +9,7 @@ import usersRouter from "./users/users.router";
 import tagsRouter from "./tags/tags.router";
 import streakRouter from "./streak/streak.router";
 import uploadRouter from "./upload/upload.router";
+import accessRouter from "./access/access.router";
 
 const router = Router();
 
@@ -21,5 +22,6 @@ router.use("/users", usersRouter);
 router.use("/tags", tagsRouter);
 router.use("/streak", streakRouter);
 router.use("/upload", uploadRouter);
+router.use("/access", accessRouter);
 
 export default router;

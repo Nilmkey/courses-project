@@ -60,6 +60,8 @@ export async function getAuthHeaders() {
 /**
  * Выполнить API запрос с cookie сессии
  */
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7777/api";
+
 export async function apiRequestWithAuth<T>(
   endpoint: string,
   options: RequestInit = {},
@@ -71,7 +73,7 @@ export async function apiRequestWithAuth<T>(
 
   console.log("🍪 apiRequestWithAuth cookie:", cookie ? "есть" : "нет");
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:7777/api"}${endpoint}`, {
+  const response = await fetch(`${API_URL}${endpoint}`, {
     method,
     headers: {
       "Content-Type": "application/json",

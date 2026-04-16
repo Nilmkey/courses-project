@@ -3,10 +3,24 @@ import { db } from "./lib/db";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import type { StreakObj, ExtendedUser } from "./types";
 
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:7777";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+
+async function createIndexes() {
+  await db.collection("user").createIndex({ email: 1 }, { unique: true });
+  await db.collection("user").createIndex({ role: 1 });
+}
+
+async function initAuth() {
+  console.log("Create Indexes...");
+  await createIndexes();
+  console.log("indexes done!!!!");
+}
+
 export const auth = betterAuth({
   database: mongodbAdapter(db),
-  baseURL: "http://localhost:7777",
-  trustedOrigins: ["http://localhost:3000", "http://localhost:7777"],
+  baseURL: BACKEND_URL,
+  trustedOrigins: [FRONTEND_URL, BACKEND_URL],
   emailAndPassword: {
     enabled: true,
   },
@@ -31,8 +45,10 @@ export const auth = betterAuth({
   },
   secret: process.env.BETTER_AUTH_SECRET,
   cookie: {
-    domain: process.env.COOKIE_DOMAIN,
-    secure: process.env.NODE_ENV === 'production',
+    // В production domain должен быть задан явно (например, yourdomain.com)
+    // В development оставляем undefined — браузер будет использовать текущий домен
+    ...(process.env.COOKIE_DOMAIN && { domain: process.env.COOKIE_DOMAIN }),
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
   },
@@ -41,5 +57,7 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24, // 1 day
   },
 });
+
+initAuth();
 
 export type { StreakObj, ExtendedUser };

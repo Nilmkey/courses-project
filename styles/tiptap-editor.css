@@ -179,3 +179,158 @@
 .tiptap-editor-wrapper .ProseMirror ::selection {
   background: rgba(59, 91, 219, 0.1);
 }
+
+/* ===== Slash Menu Styles ===== */
+
+.slash-menu {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  max-height: 400px;
+  overflow-y: auto;
+  min-width: 320px;
+  animation: slash-menu-appear 0.15s ease-out;
+}
+
+.dark .slash-menu {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes slash-menu-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slash-menu-group {
+  padding: 0.25rem 0;
+}
+
+.slash-menu-group:not(:last-child) {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dark .slash-menu-group:not(:last-child) {
+  border-bottom-color: #334155;
+}
+
+.slash-menu-group-label {
+  padding: 0.5rem 0.75rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dark .slash-menu-group-label {
+  color: #94a3b8;
+}
+
+.slash-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  text-align: left;
+}
+
+.slash-menu-item:hover,
+.slash-menu-item.selected {
+  background: #f1f5f9;
+}
+
+.dark .slash-menu-item:hover,
+.dark .slash-menu-item.selected {
+  background: #334155;
+}
+
+.slash-menu-item-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  color: #64748b;
+  transition: all 0.15s ease;
+}
+
+.dark .slash-menu-item-icon {
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.slash-menu-item:hover .slash-menu-item-icon,
+.slash-menu-item.selected .slash-menu-item-icon {
+  background: #3b5bdb;
+  color: #ffffff;
+}
+
+.slash-menu-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.slash-menu-item-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0f172a;
+  line-height: 1.4;
+}
+
+.dark .slash-menu-item-title {
+  color: #f1f5f9;
+}
+
+.slash-menu-item-subtext {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+  margin-top: 0.125rem;
+}
+
+.dark .slash-menu-item-subtext {
+  color: #94a3b8;
+}
+
+/* Scrollbar styling for slash menu */
+.slash-menu::-webkit-scrollbar {
+  width: 8px;
+}
+
+.slash-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.slash-menu::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.slash-menu::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark .slash-menu::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark .slash-menu::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}

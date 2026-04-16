@@ -55,7 +55,7 @@ function fetchWithTimeout(
 export async function apiRequest<T>(
   endpoint: string,
   options: ApiRequestOptions = {},
-  withCredentials: boolean = false,
+  withCredentials: boolean = true, // ← Changed to true by default
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
@@ -70,7 +70,7 @@ export async function apiRequest<T>(
 
   const fetchOptions: RequestInit = {
     ...options,
-    credentials: withCredentials ? "include" : "same-origin",
+    credentials: withCredentials ? "include" : "same-origin", // "include" для cross-origin, "same-origin" для local
     headers,
     body: isFormData
       ? options.body

@@ -41,22 +41,6 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-              "style-src 'self' 'unsafe-inline'",
-              // Добавляем data: и blob: для корректной работы превью изображений
-              "img-src 'self' https://res.cloudinary.com data: blob:",
-              "font-src 'self' data:",
-              "connect-src 'self' http://localhost:7777 https://res.cloudinary.com data:",
-              "base-uri 'self'",
-              "form-action 'self'",
-              "frame-ancestors 'none'",
-              "upgrade-insecure-requests",
-            ].join("; "),
-          },
         ],
       },
     ];
