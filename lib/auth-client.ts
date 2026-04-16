@@ -4,6 +4,9 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:777
 
 export const authClient = createAuthClient({
   baseURL: BACKEND_URL,
+  fetchOptions: {
+    credentials: "include", // Важно для отправки cookies на бэкенд
+  },
   // Добавляем инфу о дополнительных полях для TypeScript
   plugins: [
     // Это скажет клиенту, что в объекте user есть роль и image

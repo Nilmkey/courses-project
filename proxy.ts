@@ -31,11 +31,17 @@ export async function proxy(request: NextRequest) {
   // --- 1. ГЕНЕРАЦИЯ NONCE И CSP (Для всех страниц) ---
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
 
-  // Собираем твой CSP, заменяя 'unsafe-inline' на nonce для скриптов
+  // В dev режиме Next.js вставляет inline-скрипты (HMR, hydration, error overlay)
+  // 'strict-dynamic' конфликтует с 'unsafe-inline' в некоторых браузерах
+  // Поэтому в dev используем просто 'unsafe-inline', в production — nonce + strict-dynamic
+  const scriptSrc = IS_DEV
+    ? `'self' 'unsafe-inline' 'unsafe-eval'`
+    : `'self' 'nonce-${nonce}' 'strict-dynamic'`;
+
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${IS_DEV ? "'unsafe-eval'" : ""};
-    style-src 'self' 'unsafe-inline'; 
+    script-src ${scriptSrc};
+    style-src 'self' 'unsafe-inline';
     img-src 'self' https://res.cloudinary.com data: blob:;
     font-src 'self' data:;
     connect-src 'self' ${BACKEND_URL} https://res.cloudinary.com data:;
@@ -60,6 +66,9 @@ export async function proxy(request: NextRequest) {
     const cookie = request.headers.get("cookie");
 
     if (!cookie) {
+      if (IS_DEV) {
+        console.log("[proxy] ❌ Нет cookie, редирект на логин", { pathname });
+      }
       return isAdmin
         ? redirectTo(request, "/")
         : redirectTo(request, "/login", true);
@@ -72,6 +81,9 @@ export async function proxy(request: NextRequest) {
         courseSlug = parts[2] || "";
 
         if (!courseSlug || courseSlug.length < 3 || courseSlug.includes(".")) {
+          if (IS_DEV) {
+            console.log("[proxy] ❌ Неверный slug курса", { courseSlug, pathname });
+          }
           return redirectTo(request, "/courses");
         }
       }
@@ -80,11 +92,29 @@ export async function proxy(request: NextRequest) {
         ? `${BACKEND_URL}/api/auth/get-session`
         : `${BACKEND_URL}/api/v1/access/check-learn?slug=${encodeURIComponent(courseSlug)}`;
 
+      if (IS_DEV) {
+        console.log("[proxy] 🔍 Проверка доступа:", { accessUrl, hasCookie: !!cookie });
+      }
+
       const response = await fetchWithTimeout(accessUrl, {
         headers: { cookie },
       });
 
+      if (IS_DEV) {
+        console.log("[proxy] 📡 Ответ бэкенда:", { 
+          status: response.status, 
+          ok: response.ok 
+        });
+      }
+
       if (!response.ok) {
+        if (IS_DEV) {
+          const body = await response.text();
+          console.log("[proxy] ❌ Бэкенд отказал в доступе:", { 
+            status: response.status, 
+            body: body.slice(0, 200) 
+          });
+        }
         return isAdmin
           ? redirectTo(request, "/")
           : redirectTo(request, "/login", true);
@@ -93,11 +123,21 @@ export async function proxy(request: NextRequest) {
       const data = await response.json();
       const userRole = data?.user?.role;
 
+      if (IS_DEV) {
+        console.log("[proxy] ✅ Данные получены:", { 
+          userRole, 
+          hasAccess: data?.hasAccess,
+          isAdmin: userRole === "admin"
+        });
+      }
+
       if (isAdmin && userRole !== "admin") {
+        if (IS_DEV) console.log("[proxy] ❌ Не админ, редирект на главную");
         return redirectTo(request, "/");
       }
 
       if (isLearn && userRole !== "admin" && !data.hasAccess) {
+        if (IS_DEV) console.log("[proxy] ❌ Нет доступа к курсу, редирект на страницу курса");
         return redirectTo(request, `/courses/${courseSlug}`);
       }
     } catch (error) {
@@ -105,7 +145,7 @@ export async function proxy(request: NextRequest) {
         const isTimeout =
           error instanceof DOMException && error.name === "AbortError";
         console.error(
-          isTimeout ? "Таймаут бэкенда" : "Middleware Error:",
+          isTimeout ? "❌ Таймаут бэкенда" : "❌ Middleware Error:",
           error,
         );
       }

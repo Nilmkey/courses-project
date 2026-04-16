@@ -1,50 +1,51 @@
 import type { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
+import { ApiError } from "../utils/ApiError";
 
-export class AppError extends Error {
-  public readonly statusCode: number;
-  public readonly isOperational: boolean;
+// export class ApiError extends Error {
+//   public readonly statusCode: number;
+//   public readonly isOperational: boolean;
 
-  constructor(message: string, statusCode: number) {
-    super(message);
-    this.statusCode = statusCode;
-    this.isOperational = true;
+//   constructor(message: string, statusCode: number) {
+//     super(message);
+//     this.statusCode = statusCode;
+//     this.isOperational = true;
 
-    Error.captureStackTrace(this, this.constructor);
-  }
+//     Error.captureStackTrace(this, this.constructor);
+//   }
 
-  static badRequest(message = "Некорректный запрос") {
-    return new AppError(message, 400);
-  }
+//   static badRequest(message = "Некорректный запрос") {
+//     return new ApiError(message, 400);
+//   }
 
-  static unauthorized(message = "Не авторизован") {
-    return new AppError(message, 401);
-  }
+//   static unauthorized(message = "Не авторизован") {
+//     return new ApiError(message, 401);
+//   }
 
-  static forbidden(message = "Доступ запрещён") {
-    return new AppError(message, 403);
-  }
+//   static forbidden(message = "Доступ запрещён") {
+//     return new ApiError(message, 403);
+//   }
 
-  static notFound(message = "Не найдено") {
-    return new AppError(message, 404);
-  }
+//   static notFound(message = "Не найдено") {
+//     return new ApiError(message, 404);
+//   }
 
-  static conflict(message = "Конфликт данных") {
-    return new AppError(message, 409);
-  }
+//   static conflict(message = "Конфликт данных") {
+//     return new ApiError(message, 409);
+//   }
 
-  static internal(message = "Внутренняя ошибка сервера") {
-    return new AppError(message, 500);
-  }
-}
+//   static internal(message = "Внутренняя ошибка сервера") {
+//     return new ApiError(message, 500);
+//   }
+// }
 
 export const createError = {
-  badRequest: AppError.badRequest,
-  unauthorized: AppError.unauthorized,
-  forbidden: AppError.forbidden,
-  notFound: AppError.notFound,
-  conflict: AppError.conflict,
-  internal: AppError.internal,
+  badRequest: ApiError.badRequest,
+  unauthorized: ApiError.unauthorized,
+  forbidden: ApiError.forbidden,
+  notFound: ApiError.notFound,
+  conflict: ApiError.conflict,
+  internal: ApiError.internal,
 };
 
 interface ErrorResponse {
@@ -55,7 +56,7 @@ interface ErrorResponse {
 }
 
 export const errorHandler = (
-  err: Error | AppError | ZodError,
+  err: Error | ApiError | ZodError,
   _req: Request,
   res: Response,
   _next: NextFunction,
@@ -70,7 +71,7 @@ export const errorHandler = (
     return;
   }
 
-  const statusCode = err instanceof AppError ? err.statusCode : 500;
+  const statusCode = err instanceof ApiError ? err.statusCode : 500;
   const isDevelopment = process.env.NODE_ENV === "development";
 
   const response: ErrorResponse = {
