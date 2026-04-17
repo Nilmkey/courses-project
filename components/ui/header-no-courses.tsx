@@ -7,7 +7,6 @@ import { useTheme } from "next-themes";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { StreakFire } from "@/components/StreakFire";
-import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 
 interface SessionUser {
@@ -67,21 +66,6 @@ export default function HeaderNoCourses() {
 
   return (
     <>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
-            color: resolvedTheme === "dark" ? "#f8fafc" : "#0f172a",
-            border: resolvedTheme === "dark" ? "1px solid #1e293b" : "1px solid #e2e8f0",
-            borderRadius: "1rem",
-            boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
-            padding: "16px 20px",
-            fontWeight: "600",
-          },
-        }}
-      />
       <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-950/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-slate-800/50 transition-colors duration-300">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
           <div

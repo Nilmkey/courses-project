@@ -23,7 +23,6 @@ import {
   Moon,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Toaster } from "react-hot-toast";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -92,21 +91,6 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors duration-300 relative overflow-hidden font-sans">
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
-            color: resolvedTheme === "dark" ? "#f8fafc" : "#0f172a",
-            border: resolvedTheme === "dark" ? "1px solid #1e293b" : "1px solid #e2e8f0",
-            borderRadius: "1rem",
-            boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
-            padding: "16px 20px",
-            fontWeight: "600",
-          },
-        }}
-      />
       {/* Background Orbs */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
         <div className="absolute top-[-10%] left-[10%] w-[40rem] h-[40rem] bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen animate-pulse duration-[8000ms]" />
