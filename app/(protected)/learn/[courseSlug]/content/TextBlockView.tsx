@@ -3,12 +3,14 @@
 import { memo, useEffect, useState } from "react";
 import { CompletionButton } from "@/components/learning/CompletionButton";
 import type { ITextBlock } from "@/types/types";
+import DOMPurify from "dompurify";
 import "@/styles/tiptap-viewer.css";
 
 // Простая конвертация Markdown в HTML
 function markdownToHtml(md: string): string {
-  if (!md || !md.trim()) return '<p class="text-slate-400 dark:text-slate-500 italic">Содержимое блока отсутствует</p>';
-  
+  if (!md || !md.trim())
+    return '<p class="text-slate-400 dark:text-slate-500 italic">Содержимое блока отсутствует</p>';
+
   let html = md;
 
   // Экранируем HTML entities (чтобы не было XSS)
@@ -18,7 +20,10 @@ function markdownToHtml(md: string): string {
   html = html.replace(/&quot;/g, "&quot;");
 
   // Блоки кода
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+  html = html.replace(
+    /```(\w*)\n([\s\S]*?)```/g,
+    '<pre><code class="language-$1">$2</code></pre>',
+  );
 
   // Заголовки
   html = html.replace(/^###### (.+)$/gm, "<h6>$1</h6>");
@@ -41,7 +46,10 @@ function markdownToHtml(md: string): string {
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />');
 
   // Ссылки
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  html = html.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+  );
 
   // Горизонтальная линия
   html = html.replace(/^---$/gm, "<hr />");
@@ -69,7 +77,15 @@ function markdownToHtml(md: string): string {
     .map((block) => {
       block = block.trim();
       if (!block) return "";
-      if (block.startsWith("<h") || block.startsWith("<ul") || block.startsWith("<ol") || block.startsWith("<pre") || block.startsWith("<blockquote") || block.startsWith("<hr") || block.startsWith("<img")) {
+      if (
+        block.startsWith("<h") ||
+        block.startsWith("<ul") ||
+        block.startsWith("<ol") ||
+        block.startsWith("<pre") ||
+        block.startsWith("<blockquote") ||
+        block.startsWith("<hr") ||
+        block.startsWith("<img")
+      ) {
         return block;
       }
       // Заменяем одиночные переносы на <br>
@@ -89,12 +105,15 @@ interface ReadonlyEditorProps {
 }
 
 // Оптимизированный компонент для отображения (без TipTap)
-const ReadonlyEditor = memo<ReadonlyEditorProps>(function ReadonlyEditor({ content }) {
+const ReadonlyEditor = memo<ReadonlyEditorProps>(function ReadonlyEditor({
+  content,
+}) {
   const [htmlContent, setHtmlContent] = useState("");
 
   useEffect(() => {
     const converted = markdownToHtml(content);
-    setHtmlContent(converted);
+    const cleanHtml = DOMPurify.sanitize(converted);
+    setHtmlContent(cleanHtml);
   }, [content]);
 
   return (

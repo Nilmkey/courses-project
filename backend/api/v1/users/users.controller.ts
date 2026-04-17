@@ -84,7 +84,7 @@ export const usersController = {
       email: session.user.email,
       name: session.user.name,
       avatar: extendedUser.image ?? undefined,
-      role: extendedUser.role ?? "student",
+      role: (extendedUser.role as "admin" | "student") ?? "student",
       createdAt: new Date(),
     };
 
