@@ -7,6 +7,7 @@ import type {
   ISectionProgress,
 } from "../models";
 import { Types, Document } from "mongoose";
+import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiError";
 import { streakService } from "./streak.service";
 
@@ -153,8 +154,6 @@ async function getCourseStructure(courseId: string): Promise<{
 
 /**
  * Инициализация или обновление структуры прогресса при изменении курса
- * Добавляет новые секции, уроки и блоки, сохраняя существующий прогресс
- * Также удаляет секции, уроки и блоки, которых больше нет в курсе
  */
 async function syncProgressWithCourseStructure(
   progressDoc: IProgress,
@@ -173,35 +172,19 @@ async function syncProgressWithCourseStructure(
   const sections = courseStructure.sections;
   const currentSectionIds = new Set(sections.map((s) => s._id.toString()));
 
-  // Удаляем секции, которых больше нет в курсе
-  progressDoc.sections = progressDoc.sections.filter((s) => {
-    const exists = currentSectionIds.has(s.section_id.toString());
-    if (!exists) {
-      console.log(`[Progress Sync] Removed deleted section: ${s.section_id}`);
-    }
-    return exists;
-  });
+  progressDoc.sections = progressDoc.sections.filter((s) => currentSectionIds.has(s.section_id.toString()));
 
-  // Удаляем уроки, которых больше нет в курсе (из основного массива lessons)
   const currentLessonIds = new Set(
     sections.flatMap((s) => s.lessons.map((l) => l._id.toString())),
   );
-  progressDoc.lessons = progressDoc.lessons.filter((l) => {
-    const exists = currentLessonIds.has(l.lesson_id.toString());
-    if (!exists) {
-      console.log(`[Progress Sync] Removed deleted lesson: ${l.lesson_id}`);
-    }
-    return exists;
-  });
+  progressDoc.lessons = progressDoc.lessons.filter((l) => currentLessonIds.has(l.lesson_id.toString()));
 
-  // Синхронизация секций
   for (const section of sections) {
     let sectionProgress = progressDoc.sections.find(
       (s) => s.section_id.toString() === section._id.toString(),
     );
 
     if (!sectionProgress) {
-      // Новая секция - создаем прогресс
       sectionProgress = {
         section_id: section._id,
         completed: false,
@@ -211,34 +194,22 @@ async function syncProgressWithCourseStructure(
       };
       progressDoc.sections.push(sectionProgress);
     } else {
-      // Обновляем количество уроков в секции
       sectionProgress.totalLessonsCount = section.lessons.length;
     }
 
-    // Удаляем уроки, которых больше нет в этой секции
     const currentLessonIdsInSection = new Set(
       section.lessons.map((l) => l._id.toString()),
     );
     sectionProgress.lessonProgress = sectionProgress.lessonProgress.filter(
-      (l) => {
-        const exists = currentLessonIdsInSection.has(l.lesson_id.toString());
-        if (!exists) {
-          console.log(
-            `[Progress Sync] Removed deleted lesson from section: ${l.lesson_id}`,
-          );
-        }
-        return exists;
-      },
+      (l) => currentLessonIdsInSection.has(l.lesson_id.toString()),
     );
 
-    // Синхронизация уроков в секции
     for (const lesson of section.lessons) {
       let lessonProgress = sectionProgress.lessonProgress.find(
         (l) => l.lesson_id.toString() === lesson._id.toString(),
       );
 
       if (!lessonProgress) {
-        // Новый урок - создаем прогресс
         lessonProgress = {
           lesson_id: lesson._id,
           completed: false,
@@ -248,7 +219,6 @@ async function syncProgressWithCourseStructure(
         };
         sectionProgress.lessonProgress.push(lessonProgress);
 
-        // Добавляем также в основной массив lessons (для обратной совместимости)
         const mainLessonProgress = progressDoc.lessons.find(
           (l) => l.lesson_id.toString() === lesson._id.toString(),
         );
@@ -256,25 +226,10 @@ async function syncProgressWithCourseStructure(
           progressDoc.lessons.push(lessonProgress);
         }
       } else {
-        // Урок существует - обновляем количество блоков
-
-        // Запоминаем, сколько блоков было до синхронизации
-        const oldTotalBlocks = lessonProgress.totalBlocksCount;
-
-        // Удаляем блоки, которых больше нет в уроке
         const currentBlockIds = new Set(lesson.content_blocks.map((b) => b.id));
-        lessonProgress.blocks = lessonProgress.blocks.filter((b) => {
-          const exists = currentBlockIds.has(b.blockId);
-          if (!exists) {
-            console.log(`[Progress Sync] Removed deleted block: ${b.blockId}`);
-          }
-          return exists;
-        });
-
-        // Обновляем количество блоков
+        lessonProgress.blocks = lessonProgress.blocks.filter((b) => currentBlockIds.has(b.blockId));
         lessonProgress.totalBlocksCount = lesson.content_blocks.length;
 
-        // Синхронизация блоков (добавляем новые)
         let newBlocksAdded = false;
         for (const block of lesson.content_blocks) {
           const blockId = block.id;
@@ -283,7 +238,6 @@ async function syncProgressWithCourseStructure(
           );
 
           if (!blockProgress) {
-            // Новый блок - создаем прогресс
             blockProgress = {
               blockId: blockId,
               completed: false,
@@ -293,46 +247,34 @@ async function syncProgressWithCourseStructure(
           }
         }
 
-        // Если добавлены новые блоки - сбрасываем статус завершенности урока
         if (newBlocksAdded && lessonProgress.completed) {
-          console.log(
-            `[Progress Sync] Lesson ${lesson._id} has new blocks, marking as incomplete`,
-          );
           lessonProgress.completed = false;
           lessonProgress.completedAt = undefined;
         }
 
-        // Пересчитываем completedBlocksCount
         lessonProgress.completedBlocksCount = lessonProgress.blocks.filter(
           (b) => b.completed,
         ).length;
       }
     }
 
-    // Пересчитываем completedLessonsCount для секции
     sectionProgress.completedLessonsCount =
       sectionProgress.lessonProgress.filter((l) => l.completed).length;
 
-    // Если в секции есть незавершенные уроки, сбрасываем завершенность секции
     if (
       sectionProgress.completedLessonsCount <
         sectionProgress.totalLessonsCount &&
       sectionProgress.completed
     ) {
-      console.log(
-        `[Progress Sync] Section ${sectionProgress.section_id} has incomplete lessons, marking as incomplete`,
-      );
       sectionProgress.completed = false;
       sectionProgress.completedAt = undefined;
     }
   }
 
-  // Обновляем общую статистику
   progressDoc.stats.totalSections = sections.length;
   progressDoc.stats.totalLessons = courseStructure.totalLessons;
   progressDoc.stats.totalBlocks = courseStructure.totalBlocks;
 
-  // Если в курсе есть незавершенные секции, пересчитываем общую завершенность
   progressDoc.stats.completedSections = progressDoc.sections.filter(
     (s) => s.completed,
   ).length;
@@ -386,22 +328,12 @@ async function calculateOverallProgress(
     };
   }
 
-  // Считаем завершенные секции
-  const completedSections = progressDoc.sections.filter(
-    (s) => s.completed,
-  ).length;
-
-  // Считаем завершенные уроки
-  const completedLessons = progressDoc.lessons.filter(
-    (l) => l.completed,
-  ).length;
-
-  // Считаем завершенные блоки
+  const completedSections = progressDoc.sections.filter((s) => s.completed).length;
+  const completedLessons = progressDoc.lessons.filter((l) => l.completed).length;
   const completedBlocks = progressDoc.lessons.reduce((acc, lesson) => {
     return acc + lesson.blocks.filter((b) => b.completed).length;
   }, 0);
 
-  // Расчет прогресса на основе завершенных уроков (основная метрика)
   const progress =
     courseStructure.totalLessons > 0
       ? Math.round((completedLessons / courseStructure.totalLessons) * 100)
@@ -424,11 +356,12 @@ async function calculateOverallProgress(
 async function initializeProgressIfNotExists(
   userId: string,
   courseId: string,
+  session?: mongoose.ClientSession,
 ): Promise<void> {
   const exists = await Progress.findOne({
     user_id: userId,
     course_id: courseId,
-  });
+  }).session(session || null);
 
   if (!exists) {
     const courseStructure = await getCourseStructure(courseId);
@@ -456,7 +389,7 @@ async function initializeProgressIfNotExists(
       (s) => s.lessonProgress,
     );
 
-    await Progress.create({
+    await Progress.create([{
       user_id: userId,
       course_id: courseId,
       lessons,
@@ -470,8 +403,62 @@ async function initializeProgressIfNotExists(
         totalSections: courseStructure.sections.length,
         completedSections: 0,
       },
-    });
+    }], { session });
   }
+}
+
+/**
+ * Обновление статистики и прогресса документа
+ */
+function calculateProgressStats(
+  progressDoc: IProgress,
+  courseStructure: {
+    totalLessons: number;
+    totalBlocks: number;
+    sections: Array<{ _id: Types.ObjectId }>;
+  },
+): void {
+  const completedLessons = progressDoc.lessons.filter(
+    (l) => l.completed,
+  ).length;
+  const completedBlocks = progressDoc.lessons.reduce(
+    (acc, l) => acc + l.blocks.filter((b) => b.completed).length,
+    0,
+  );
+  const completedSections = progressDoc.sections.filter(
+    (s) => s.completed,
+  ).length;
+
+  progressDoc.stats.completedLessons = completedLessons;
+  progressDoc.stats.completedBlocks = completedBlocks;
+  progressDoc.stats.completedSections = completedSections;
+  progressDoc.stats.totalLessons = courseStructure.totalLessons;
+  progressDoc.stats.totalBlocks = courseStructure.totalBlocks;
+  progressDoc.stats.totalSections = courseStructure.sections.length;
+
+  progressDoc.overallProgress =
+    courseStructure.totalLessons > 0
+      ? Math.round((completedLessons / courseStructure.totalLessons) * 100)
+      : 0;
+
+  for (const section of progressDoc.sections) {
+    section.completedLessonsCount = section.lessonProgress.filter(
+      (l) => l.completed,
+    ).length;
+    section.totalLessonsCount = section.lessonProgress.length;
+  }
+}
+
+async function updateProgressStats(
+  progressDoc: IProgress,
+  courseStructure: {
+    totalLessons: number;
+    totalBlocks: number;
+    sections: Array<{ _id: Types.ObjectId }>;
+  },
+): Promise<void> {
+  calculateProgressStats(progressDoc, courseStructure);
+  await progressDoc.save();
 }
 
 /**
@@ -501,51 +488,6 @@ async function updateEnrollmentStatus(
       },
     );
   }
-}
-
-/**
- * Обновление статистики и прогресса документа
- */
-async function updateProgressStats(
-  progressDoc: IProgress,
-  courseStructure: {
-    totalLessons: number;
-    totalBlocks: number;
-    sections: Array<{ _id: Types.ObjectId }>;
-  },
-): Promise<void> {
-  const completedLessons = progressDoc.lessons.filter(
-    (l) => l.completed,
-  ).length;
-  const completedBlocks = progressDoc.lessons.reduce(
-    (acc, l) => acc + l.blocks.filter((b) => b.completed).length,
-    0,
-  );
-  const completedSections = progressDoc.sections.filter(
-    (s) => s.completed,
-  ).length;
-
-  progressDoc.stats.completedLessons = completedLessons;
-  progressDoc.stats.completedBlocks = completedBlocks;
-  progressDoc.stats.completedSections = completedSections;
-  progressDoc.stats.totalLessons = courseStructure.totalLessons;
-  progressDoc.stats.totalBlocks = courseStructure.totalBlocks;
-  progressDoc.stats.totalSections = courseStructure.sections.length;
-
-  progressDoc.overallProgress =
-    courseStructure.totalLessons > 0
-      ? Math.round((completedLessons / courseStructure.totalLessons) * 100)
-      : 0;
-
-  // Обновляем completedLessonsCount в каждой секции
-  for (const section of progressDoc.sections) {
-    section.completedLessonsCount = section.lessonProgress.filter(
-      (l) => l.completed,
-    ).length;
-    section.totalLessonsCount = section.lessonProgress.length;
-  }
-
-  await progressDoc.save();
 }
 
 /**
@@ -619,21 +561,13 @@ export const progressService = {
       }).lean();
     }
 
-    // Гарантируем наличие массивов
-    const lessons = progressDoc?.lessons || [];
-    const sections = progressDoc?.sections || [];
-    const stats = progressDoc?.stats || {
-      totalBlocks: 0,
-      completedBlocks: 0,
-      totalLessons: 0,
-      completedLessons: 0,
-      totalSections: 0,
-      completedSections: 0,
-    };
-
     if (!progressDoc) {
       return null;
     }
+
+    const lessons = progressDoc.lessons || [];
+    const sections = progressDoc.sections || [];
+    const stats = progressDoc.stats;
 
     return {
       _id: progressDoc._id.toString(),
@@ -745,7 +679,6 @@ export const progressService = {
       return null;
     }
 
-    // Находим урок в прогрессе
     const lessonProgress = progress.lessons.find(
       (l) => l.lesson_id.toString() === lessonId,
     );
@@ -754,7 +687,6 @@ export const progressService = {
       lessonProgress.completed = true;
       lessonProgress.completedAt = new Date();
 
-      // Отмечаем все блоки как завершенные
       for (const block of lessonProgress.blocks) {
         if (!block.completed) {
           block.completed = true;
@@ -763,7 +695,6 @@ export const progressService = {
       }
       lessonProgress.completedBlocksCount = lessonProgress.blocks.length;
     } else {
-      // Урок не найден в прогрессе - создаем запись
       const lesson = await Lesson.findById(lessonId);
       if (lesson) {
         const newLessonProgress: ILessonProgress = {
@@ -782,20 +713,16 @@ export const progressService = {
       }
     }
 
-    // Продлеваем стрик пользователя после успешного сохранения прогресса
     try {
       await streakService.extendStreak(studentId, headers);
     } catch (error) {
-      // Логгируем ошибку, но не прерываем основной поток
       console.error("[Progress] Не удалось обновить стрик:", error);
     }
 
-    // Синхронизируем со структурой курса и пересчитываем статистику
     const courseStructure = await getCourseStructure(courseId);
     await syncProgressWithCourseStructure(progress, courseStructure);
     await updateProgressStats(progress, courseStructure);
 
-    // Обновляем статус enrollment
     await updateEnrollmentStatus(studentId, courseId, progress.overallProgress);
 
     return progress;
@@ -834,7 +761,6 @@ export const progressService = {
       lessonProgress.quizAnswers = [];
       lessonProgress.completedBlocksCount = 0;
 
-      // Сбрасываем все блоки
       for (const block of lessonProgress.blocks) {
         block.completed = false;
         block.completedAt = undefined;
@@ -842,7 +768,6 @@ export const progressService = {
       }
     }
 
-    // Синхронизируем со структурой курса и пересчитываем статистику
     const courseStructure = await getCourseStructure(courseId);
     await syncProgressWithCourseStructure(progress, courseStructure);
     await updateProgressStats(progress, courseStructure);
@@ -868,7 +793,7 @@ export const progressService = {
   },
 
   /**
-   * Обновить прогресс урока (например, ответы на quiz)
+   * Обновить прогресс урока
    */
   async updateLessonProgress(
     studentId: string,
@@ -903,7 +828,6 @@ export const progressService = {
     );
 
     if (!lessonProgress) {
-      // Создаем новый прогресс урока
       const lesson = await Lesson.findById(lessonId);
       if (!lesson) {
         return null;
@@ -928,7 +852,6 @@ export const progressService = {
 
       progress.lessons.push(lessonProgress);
     } else {
-      // Обновляем существующий прогресс
       lessonProgress.completed = data.completed;
       if (data.completed) {
         lessonProgress.completedAt = new Date();
@@ -943,7 +866,6 @@ export const progressService = {
       }
     }
 
-    // Синхронизируем со структурой курса и пересчитываем статистику
     const courseStructure = await getCourseStructure(courseId);
     await syncProgressWithCourseStructure(progress, courseStructure);
     await updateProgressStats(progress, courseStructure);
@@ -969,7 +891,6 @@ export const progressService = {
     const lessonObjId = new Types.ObjectId(lessonId);
     const courseObjId = new Types.ObjectId(courseId);
 
-    // Сначала пробуем найти существующий прогресс и обновить блок
     let progress = await Progress.findOne({
       user_id: studentId,
       course_id: courseObjId,
@@ -977,19 +898,16 @@ export const progressService = {
     });
 
     if (progress) {
-      // Находим урок в прогрессе
       const lessonProgress = progress.lessons.find(
         (l) => l.lesson_id.toString() === lessonId,
       );
 
       if (lessonProgress) {
-        // Находим блок
         const blockProgress = lessonProgress.blocks.find(
           (b) => b.blockId === blockId,
         );
 
         if (blockProgress) {
-          // Отмечаем блок как завершенный
           blockProgress.completed = true;
           blockProgress.completedAt = new Date();
 
@@ -1001,12 +919,10 @@ export const progressService = {
             }));
           }
 
-          // Пересчитываем completedBlocksCount
           lessonProgress.completedBlocksCount = lessonProgress.blocks.filter(
             (b) => b.completed,
           ).length;
 
-          // Если все блоки завершены - автоматически отмечаем урок как завершенный
           if (
             lessonProgress.completedBlocksCount ===
               lessonProgress.totalBlocksCount &&
@@ -1018,15 +934,12 @@ export const progressService = {
 
           await progress.save();
 
-          // Продлеваем стрик пользователя после успешного сохранения прогресса
           try {
             await streakService.extendStreak(studentId, headers);
           } catch (error) {
-            // Логгируем ошибку, но не прерываем основной поток
             console.error("[Progress] Не удалось обновить стрик:", error);
           }
 
-          // Пересчитываем общую статистику асинхронно
           recalculateUserProgress(studentId, courseId).catch(console.error);
 
           return progress;
@@ -1034,10 +947,8 @@ export const progressService = {
       }
     }
 
-    // Если прогресс не найден или блок не найден, инициализируем
     await initializeProgressIfNotExists(studentId, courseId);
 
-    // Теперь обновляем блок
     const updatedProgress = await Progress.findOne({
       user_id: studentId,
       course_id: courseObjId,
@@ -1081,11 +992,9 @@ export const progressService = {
 
           await updatedProgress.save();
 
-          // Продлеваем стрик пользователя после успешного сохранения прогресса
           try {
             await streakService.extendStreak(studentId, headers);
           } catch (error) {
-            // Логгируем ошибку, но не прерываем основной поток
             console.error("[Progress] Не удалось обновить стрик:", error);
           }
 
@@ -1099,78 +1008,75 @@ export const progressService = {
     return null;
   },
 
-  /**
-   * Инициализировать прогресс при записи на курс
-   */
-  async initializeProgress(studentId: string, courseId: string): Promise<void> {
-    await initializeProgressIfNotExists(studentId, courseId);
+  async initializeProgress(studentId: string, courseId: string, session?: mongoose.ClientSession): Promise<void> {
+    await initializeProgressIfNotExists(studentId, courseId, session);
   },
 
   /**
-   * Пересчитать прогресс всех пользователей при изменении курса
-   * (добавлены секции, уроки или блоки)
-   *
-   * Ключевая особенность: сохраняет весь существующий прогресс пользователей,
-   * добавляя только новые элементы с статусом "не начат"
+   * Оптимизированный пересчет прогресса всех пользователей (Bulk)
    */
   async recalculateCourseProgress(courseId: string): Promise<{
     updatedUsers: number;
     message: string;
   }> {
-    // Получаем актуальную структуру курса
     const courseStructure = await getCourseStructure(courseId);
-
-    // Получаем все прогрессы пользователей по этому курсу
     const allProgresses = await Progress.find({ course_id: courseId });
 
-    let updatedUsers = 0;
+    if (allProgresses.length === 0) {
+      return { updatedUsers: 0, message: "Нет активных пользователей" };
+    }
+
+    const progressBulkOps: any[] = [];
+    const completedUserIds: Types.ObjectId[] = [];
+    const activeUserIds: Types.ObjectId[] = [];
 
     for (const progress of allProgresses) {
       try {
-        // Синхронизируем структуру прогресса с актуальной структурой курса
         await syncProgressWithCourseStructure(progress, courseStructure);
+        calculateProgressStats(progress, courseStructure);
 
-        // Пересчитываем статистику и общий прогресс
-        await updateProgressStats(progress, courseStructure);
+        progressBulkOps.push({
+          replaceOne: {
+            filter: { _id: progress._id },
+            replacement: progress.toObject(),
+          },
+        });
 
-        // Если прогресс 100% - обновляем статус enrollment
         if (progress.overallProgress === 100) {
-          await Enrollment.findOneAndUpdate(
-            { user_id: progress.user_id, course_id: courseId },
-            {
-              status: "completed",
-              completedAt: new Date(),
-            },
-          );
+          completedUserIds.push(progress.user_id as Types.ObjectId);
         } else {
-          // Если меньше 100% - ставим active
-          await Enrollment.findOneAndUpdate(
-            { user_id: progress.user_id, course_id: courseId },
-            {
-              status: "active",
-              completedAt: undefined,
-            },
-          );
+          activeUserIds.push(progress.user_id as Types.ObjectId);
         }
-
-        updatedUsers++;
       } catch (error) {
-        console.error(
-          `[Progress] Ошибка пересчета прогресса для пользователя ${progress.user_id}:`,
-          error,
-        );
+        console.error(`[Progress Bulk] Error for user ${progress.user_id}:`, error);
       }
     }
 
+    if (progressBulkOps.length > 0) {
+      await Progress.bulkWrite(progressBulkOps);
+    }
+
+    const courseObjId = new Types.ObjectId(courseId);
+
+    if (completedUserIds.length > 0) {
+      await Enrollment.updateMany(
+        { user_id: { $in: completedUserIds }, course_id: courseObjId },
+        { $set: { status: "completed", completedAt: new Date() } }
+      );
+    }
+
+    if (activeUserIds.length > 0) {
+      await Enrollment.updateMany(
+        { user_id: { $in: activeUserIds }, course_id: courseObjId },
+        { $set: { status: "active" }, $unset: { completedAt: "" } }
+      );
+    }
+
     return {
-      updatedUsers,
-      message: `Прогресс пересчитан для ${updatedUsers} пользователей`,
+      updatedUsers: progressBulkOps.length,
+      message: `Прогресс пересчитан для ${progressBulkOps.length} пользователей (Bulk)`,
     };
   },
 
-  /**
-   * Пересчитать прогресс конкретного пользователя при изменении курса
-   * Использует внутреннюю функцию recalculateUserProgress
-   */
   recalculateUserProgress,
 };
