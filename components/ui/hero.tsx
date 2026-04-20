@@ -49,19 +49,19 @@ export default function Hero() {
 
   if (isPending) {
     return (
-      <section className="relative pt-24 pb-32 md:pt-32 md:pb-40 overflow-hidden">
+      <section className="relative pt-16 pb-24 sm:pt-24 sm:pb-32 md:pt-32 md:pb-40 overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-8 animate-pulse" />
-          <div className="h-20 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-8 animate-pulse" />
-          <div className="h-6 w-2/3 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-12 animate-pulse" />
-          <div className="h-16 w-80 bg-slate-200 dark:bg-slate-800 rounded-2xl mx-auto animate-pulse" />
+          <div className="h-6 sm:h-8 w-48 sm:w-64 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-6 sm:mb-8 animate-pulse" />
+          <div className="h-16 sm:h-20 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-6 sm:mb-8 animate-pulse" />
+          <div className="h-4 sm:h-6 w-2/3 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-8 sm:mb-12 animate-pulse" />
+          <div className="h-14 sm:h-16 w-72 sm:w-80 bg-slate-200 dark:bg-slate-800 rounded-2xl mx-auto animate-pulse" />
         </div>
       </section>
     );
   }
 
   return (
-    <section className="relative pt-24 pb-32 md:pt-32 md:pb-40 overflow-hidden">
+    <section className="relative pt-16 pb-24 sm:pt-24 sm:pb-32 md:pt-32 md:pb-40 overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
         <div className="absolute top-[-10%] left-[10%] w-[40rem] h-[40rem] bg-indigo-500/20 dark:bg-indigo-600/20 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen animate-pulse duration-[8000ms]" />
         <div className="absolute bottom-[20%] right-[-10%] w-[35rem] h-[35rem] bg-pink-500/20 dark:bg-pink-600/20 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen" />
@@ -69,11 +69,11 @@ export default function Hero() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-sm font-bold mb-8 shadow-sm backdrop-blur-sm animate-in slide-in-from-bottom-4 duration-500">
+        <div className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs sm:text-sm font-bold mb-6 sm:mb-8 shadow-sm backdrop-blur-sm animate-in slide-in-from-bottom-4 duration-500">
           <span>Платформа №1 для будущих разработчиков</span>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 dark:text-white mb-8 tracking-tighter leading-[1.05]">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl font-black text-slate-900 dark:text-white mb-6 sm:mb-8 tracking-tighter leading-[1.05]">
           <span className="block">
             Построй свой<br className="hidden md:block" /> путь в IT <br className="md:hidden" />
           </span>
@@ -83,20 +83,20 @@ export default function Hero() {
           </span>
         </h1>
 
-        <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed font-medium min-h-[3.5rem]">
+        <p className="text-base sm:text-lg md:text-2xl text-slate-600 dark:text-slate-400 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed font-medium min-h-[3.5rem]">
           {subtitle.displayed}
           {!subtitle.isComplete && <TypingCursor />}
         </p>
 
-        <div className={`flex flex-col sm:flex-row gap-4 justify-center items-center transition-opacity duration-700 ${subtitle.isComplete ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center transition-opacity duration-700 ${subtitle.isComplete ? 'opacity-100' : 'opacity-0'}`}>
           {isAuthenticated ? (
             <Link href="/courses" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="h-16 px-10 text-lg font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-xl shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95 w-full flex items-center gap-3"
+                className="h-14 sm:h-16 px-8 sm:px-10 text-base sm:text-lg font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-xl shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95 w-full flex items-center gap-2 sm:gap-3"
               >
                 Продолжить обучение
-                <ArrowRight className="w-6 h-6" />
+                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
               </Button>
             </Link>
           ) : (
@@ -104,17 +104,17 @@ export default function Hero() {
               <Link href="/courses" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="h-16 px-10 text-lg font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-xl shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95 w-full flex items-center gap-3"
+                  className="h-14 sm:h-16 px-8 sm:px-10 text-base sm:text-lg font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-xl shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95 w-full flex items-center gap-2 sm:gap-3"
                 >
                   Начать обучение
-                  <ArrowRight className="w-6 h-6" />
+                  <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
                 </Button>
               </Link>
               <Link href="/login" className="w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="lg"
-                  className="h-16 px-10 text-lg font-bold border-2 border-slate-200 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-500/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-2xl shadow-sm transition-all hover:scale-105 active:scale-95 w-full"
+                  className="h-14 sm:h-16 px-8 sm:px-10 text-base sm:text-lg font-bold border-2 border-slate-200 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-500/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-2xl shadow-sm transition-all hover:scale-105 active:scale-95 w-full"
                 >
                   Войти
                 </Button>

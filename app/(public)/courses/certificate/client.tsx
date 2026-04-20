@@ -48,15 +48,16 @@ export default function CertificatePage({ nonce }: CertificatePageProps) {
       );
 
       const element = certificateRef.current;
+      
+      const originalBoxShadow = element.style.boxShadow;
+      element.style.boxShadow = "none";
 
       const dataUrl = await toPng(element, {
         quality: 1.0,
         backgroundColor: "#ffffff",
         cacheBust: true,
-        skipFonts: true,
-        style: {
-          fontFamily: "system-ui, -apple-system, sans-serif",
-        },
+        pixelRatio: 2,
+        fontEmbedCSS: "",
       });
 
       const pdf = new (

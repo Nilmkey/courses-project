@@ -237,24 +237,6 @@ export default function Editor() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300 relative overflow-hidden">
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: {
-            background: resolvedTheme === "dark" ? "#0f172a" : "#ffffff",
-            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
-            border:
-              resolvedTheme === "dark"
-                ? "1px solid #1e293b"
-                : "1px solid #e2e8f0",
-            borderRadius: "1rem",
-            boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
-            padding: "16px 20px",
-            fontWeight: "600",
-          },
-        }}
-      />
-
        {/* Glow Effects */}
        <div className="absolute top-[20%] right-[-10%] w-[35rem] h-[35rem] bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-[140px] mix-blend-multiply dark:mix-blend-screen pointer-events-none z-0" />
        

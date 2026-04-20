@@ -199,21 +199,6 @@ export default function Editor() {
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: {
-            background: resolvedTheme === "dark" ? "#0a0a0a" : "#ffffff",
-            color: resolvedTheme === "dark" ? "#f1f5f9" : "#0f172a",
-            border:
-              resolvedTheme === "dark"
-                ? "1px solid #1e293b"
-                : "1px solid #e2e8f0",
-            borderRadius: "0.75rem",
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-          },
-        }}
-      />
       <div className="flex items-center justify-between mb-10">
         <div className="flex items-center gap-4">
           <button
