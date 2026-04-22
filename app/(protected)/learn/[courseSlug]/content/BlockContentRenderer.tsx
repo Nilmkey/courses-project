@@ -10,28 +10,36 @@ import { EmptyState } from "@/components/learning/EmptyState";
 import type { ITextBlock, IVideoBlock, IQuizBlock } from "@/types/types";
 
 export function BlockContentRenderer() {
-  const { getCurrentBlock, getCurrentLesson, getCurrentSection, getLessonProgress } = useLearning();
+  const {
+    getCurrentBlock,
+    getCurrentLesson,
+    getCurrentSection,
+    getLessonProgress,
+  } = useLearning();
 
   const block = getCurrentBlock;
   const lesson = getCurrentLesson;
   const section = getCurrentSection;
+  const blockId = block?._id || "";
+  const lessonId = lesson?._id;
 
   const isBlockCompleted = useMemo(() => {
-    if (!block || !lesson?._id) return false;
-    
-    const blockId = block.id || block._id || '';
-    const lessonProgress = getLessonProgress(lesson._id);
-    
-    return lessonProgress?.blocks?.some(
-      (b) => b.blockId === blockId && b.completed
-    ) || false;
-  }, [block, lesson?._id, getLessonProgress]);
+    if (!blockId || !lessonId) return false;
+
+    const lessonProgress = getLessonProgress(lessonId);
+
+    return (
+      lessonProgress?.blocks?.some(
+        (b) => b.blockId === blockId && b.completed,
+      ) || false
+    );
+  }, [blockId, lessonId, getLessonProgress]);
 
   if (!block) {
     return <EmptyState />;
   }
 
-  const blockId = block.id || block._id || '';
+  // const blockId = block.id || block._id || "";
 
   return (
     <div>
@@ -41,7 +49,9 @@ export function BlockContentRenderer() {
           <span className="mx-2">/</span>
           <span>{lesson?.title}</span>
           <span className="mx-2">/</span>
-          <span className="text-slate-900 dark:text-white font-medium">{block.title}</span>
+          <span className="text-slate-900 dark:text-white font-medium">
+            {block.title}
+          </span>
         </div>
         {isBlockCompleted && (
           <CheckCircle2 className="text-green-500 flex-shrink-0" size={20} />
@@ -55,7 +65,8 @@ export function BlockContentRenderer() {
         <VideoBlockView content={(block as IVideoBlock).content} />
       )}
       {block.type === "quiz" && (
-        <QuizBlockView content={(block as IQuizBlock).content} />
+        <QuizBlockView key={blockId} content={(block as IQuizBlock).content} />
+        
       )}
     </div>
   );

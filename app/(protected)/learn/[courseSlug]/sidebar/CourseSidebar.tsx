@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMounted } from "@/hooks/useMounted";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useLearning } from "@/hooks/useLearning";
@@ -11,12 +11,8 @@ import { BookOpen, ArrowLeft, Sun, Moon, Trophy } from "lucide-react";
 export function CourseSidebar() {
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const { course, sections, overallProgress } = useLearning();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   return (
     <div className="h-full flex flex-col pt-4 sm:pt-6 pb-3 sm:pb-4">

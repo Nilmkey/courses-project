@@ -1,8 +1,8 @@
-// services/enrollment.service.ts
 import { Enrollment, Course, Progress } from '../models';
 import { ApiError } from '../utils/ApiError';
 import type { IEnrollment } from '../models';
-import type { Types, Document } from 'mongoose';
+import type { Types } from 'mongoose';
+import mongoose from 'mongoose';
 import { progressService } from './progress.service';
 
 export interface EnrollmentCreateInput {
@@ -31,44 +31,66 @@ export interface PopulatedEnrollment extends Document {
 
 export const enrollmentService = {
   async enroll(userId: string, courseId: string): Promise<IEnrollment> {
-    const course = await Course.findById(courseId);
-    if (!course) {
-      throw ApiError.notFound("Курс не найден");
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const course = await Course.findById(courseId).session(session);
+      if (!course) {
+        throw ApiError.notFound("Курс не найден");
+      }
+
+      // Проверяем, записан ли уже пользователь на этот курс
+      const existing = await Enrollment.findOne({
+        user_id: userId,
+        course_id: courseId,
+      }).session(session);
+      
+      if (existing) {
+        throw ApiError.conflict("Вы уже записаны на этот курс");
+      }
+
+      // Если набор закрыт и пользователь еще не записан - запрещаем запись
+      if (!course.isOpenForEnrollment) {
+        throw ApiError.badRequest("Набор на этот курс закрыт");
+      }
+
+      const enrollment = await Enrollment.create([{
+        user_id: userId,
+        course_id: courseId,
+      }], { session });
+
+      // Инициализируем прогресс для нового курса внутри транзакции
+      await progressService.initializeProgress(userId, courseId, session);
+
+      await session.commitTransaction();
+      return enrollment[0].toObject();
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
     }
-
-    // Проверяем, записан ли уже пользователь на этот курс
-    const existing = await Enrollment.findOne({
-      user_id: userId,
-      course_id: courseId,
-    });
-    if (existing) {
-      throw ApiError.conflict("Вы уже записаны на этот курс");
-    }
-
-    // Если набор закрыт и пользователь еще не записан - запрещаем запись
-    if (!course.isOpenForEnrollment) {
-      throw ApiError.badRequest("Набор на этот курс закрыт");
-    }
-
-    const enrollment = await Enrollment.create({
-      user_id: userId,
-      course_id: courseId,
-    });
-
-    // Инициализируем прогресс для нового курса
-    await progressService.initializeProgress(userId, courseId);
-
-    return enrollment;
   },
 
   async unenroll(userId: string, courseId: string): Promise<void> {
-    // Удаляем прогресс вместе с записью
-    await Progress.deleteOne({
-      user_id: userId,
-      course_id: courseId,
-    });
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      // Удаляем прогресс вместе с записью
+      await Progress.deleteOne({
+        user_id: userId,
+        course_id: courseId,
+      }).session(session);
 
-    await Enrollment.findOneAndDelete({ user_id: userId, course_id: courseId });
+      await Enrollment.findOneAndDelete({ user_id: userId, course_id: courseId }).session(session);
+      
+      await session.commitTransaction();
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   },
 
   async getMyCourses(userId: string): Promise<PopulatedEnrollment[]> {
@@ -97,7 +119,7 @@ export const enrollmentService = {
       const sections = await import('../models/Section').then(m => 
         m.Section.find({ course_id: enrollment.course_id._id }).sort({ order_index: 1 }).lean()
       );
-      (enrollment.course_id as any).sections = sections;
+      (enrollment.course_id as PopulatedEnrollment['course_id'] & { sections?: unknown }).sections = sections;
     }
 
     return filteredEnrollments;
@@ -141,7 +163,7 @@ export const enrollmentService = {
       );
 
       // Добавляем информацию о прогрессе в объект enrollment (как дополнительное поле)
-      (enrollment as any).progress = progress;
+      (enrollment as PopulatedEnrollment & { progress?: unknown }).progress = progress;
     }
 
     return enrollments;

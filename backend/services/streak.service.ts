@@ -122,7 +122,7 @@ export const streakService = {
         session = await auth.api.getSession({ headers });
       }
 
-      let streak: StreakObj = session?.user?.streak || { count: 0, isFire: false, updatedAt: new Date(0) };
+      const streak: StreakObj = session?.user?.streak || { count: 0, isFire: false, updatedAt: new Date(0) };
 
       // Вычисляем визуальное состояние на основе updatedAt
       const now = new Date();

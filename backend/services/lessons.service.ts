@@ -1,7 +1,7 @@
 import { Lesson, Section, Progress } from "../models";
 import { ApiError } from "../utils/ApiError";
 import type { ILesson } from "../models";
-import type { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { progressService } from "./progress.service";
 
 export interface LessonBlockInput {
@@ -31,34 +31,47 @@ export interface LessonUpdateInput {
 
 export const lessonsService = {
   async create(data: LessonCreateInput): Promise<ILesson> {
-    const lesson = await Lesson.create({
-      section_id: data.section_id,
-      title: data.title,
-      slug: data.slug,
-      order_index: data.order_index ?? 0,
-      is_free: data.is_free ?? false,
-      content_blocks: data.content_blocks?.map((b, i) => ({
-        ...b,
-        order_index: b.order_index ?? i,
-      })),
-    });
-
-    // Добавляем ID урока в массив lessons секции
-    await Section.findByIdAndUpdate(data.section_id, {
-      $push: { lessons: lesson._id },
-    });
-
-    // Пересчитываем прогресс всех пользователей после добавления урока
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
-      const section = await Section.findById(data.section_id);
-      if (section) {
-        await progressService.recalculateCourseProgress(section.course_id.toString());
-      }
-    } catch (error) {
-      console.error("[Lessons] Ошибка пересчета прогресса после создания урока:", error);
-    }
+      const lessons = await Lesson.create([{
+        section_id: data.section_id,
+        title: data.title,
+        slug: data.slug,
+        order_index: data.order_index ?? 0,
+        is_free: data.is_free ?? false,
+        content_blocks: data.content_blocks?.map((b, i) => ({
+          ...b,
+          order_index: b.order_index ?? i,
+        })),
+      }], { session });
 
-    return lesson;
+      const lesson = lessons[0];
+
+      // Получаем секцию, чтобы узнать course_id для пересчета прогресса
+      const section = await Section.findById(data.section_id).session(session);
+      if (!section) {
+        throw ApiError.notFound("Секция не найдена");
+      }
+      const courseId = section.course_id.toString();
+
+      // Добавляем ID урока в массив lessons секции
+      await Section.findByIdAndUpdate(data.section_id, {
+        $push: { lessons: lesson._id },
+      }, { session });
+
+      await session.commitTransaction();
+
+      // Пересчитываем прогресс фоном, используя правильный courseId
+      progressService.recalculateCourseProgress(courseId).catch(console.error);
+
+      return lesson;
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   },
 
   async update(id: string, data: LessonUpdateInput): Promise<ILesson> {
@@ -88,37 +101,50 @@ export const lessonsService = {
   },
 
   async delete(id: string): Promise<void> {
-    const lesson = await Lesson.findById(id);
-    if (!lesson) {
-      throw ApiError.notFound("Урок не найден");
-    }
-
-    const sectionId = lesson.section_id;
-    const section = await Section.findById(sectionId);
-    const courseId = section?.course_id.toString();
-
-    // Удаляем ID урока из массива lessons секции
-    await Section.findByIdAndUpdate(lesson.section_id, {
-      $pull: { lessons: lesson._id },
-    });
-
-    await Lesson.findByIdAndDelete(id);
-
-    // Пересчитываем прогресс всех пользователей после удаления урока
-    if (courseId) {
-      try {
-        await progressService.recalculateCourseProgress(courseId);
-      } catch (error) {
-        console.error("[Lessons] Ошибка пересчета прогресса после удаления урока:", error);
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const lesson = await Lesson.findById(id).session(session);
+      if (!lesson) {
+        throw ApiError.notFound("Урок не найден");
       }
+
+      const sectionId = lesson.section_id;
+      const section = await Section.findById(sectionId).session(session);
+      const courseId = section?.course_id.toString();
+
+      // Удаляем ID урока из массива lessons секции
+      await Section.findByIdAndUpdate(lesson.section_id, {
+        $pull: { lessons: lesson._id },
+      }, { session });
+
+      await Lesson.findByIdAndDelete(id).session(session);
+
+      await session.commitTransaction();
+
+      // Пересчитываем прогресс фоном
+      if (courseId) {
+        progressService.recalculateCourseProgress(courseId).catch(console.error);
+      }
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
     }
   },
 
   async reorder(sectionId: string, lessonIds: string[]): Promise<void> {
-    const updates = lessonIds.map((id, index) =>
-      Lesson.findByIdAndUpdate(id, { order_index: index }),
-    );
-    await Promise.all(updates);
+    if (lessonIds.length === 0) return;
+
+    const bulkOps = lessonIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: new mongoose.Types.ObjectId(id) },
+        update: { $set: { order_index: index } },
+      },
+    }));
+
+    await Lesson.bulkWrite(bulkOps);
   },
 
   async getBySection(sectionId: string): Promise<ILesson[]> {

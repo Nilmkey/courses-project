@@ -29,7 +29,10 @@ export const requireEnrollment = async (
     return;
   }
 
-  const isEnrolled = await enrollmentService.isEnrolled(user.id, courseId);
+  const isEnrolled = await enrollmentService.isEnrolled(
+    user.id,
+    courseId as string,
+  );
   if (!isEnrolled) {
     next(ApiError.forbidden("Вы не записаны на этот курс"));
     return;
@@ -55,7 +58,7 @@ export const requireEnrollmentFromBody = async (
     return;
   }
 
-  const courseId = (req.body as any)?.courseId;
+  const courseId = req.body?.courseId;
   if (!courseId) {
     next(ApiError.badRequest("courseId не указан в теле запроса"));
     return;

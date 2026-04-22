@@ -9,17 +9,18 @@ type AuthRequest = Request & { user?: AuthenticatedUser };
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 
-/**
- * Преобразует StreakObj в GetStreakResponse с дополнительными данными
- */
-const toStreakResponse = (streak: ReturnType<typeof streakService.getStreak> extends Promise<infer T> ? T : never): GetStreakResponse => {
+const toStreakResponse = (
+  streak: ReturnType<typeof streakService.getStreak> extends Promise<infer T>
+    ? T
+    : never,
+): GetStreakResponse => {
   const now = new Date();
-  const lastUpdate = streak.updatedAt 
-    ? new Date(streak.updatedAt) 
+  const lastUpdate = streak.updatedAt
+    ? new Date(streak.updatedAt)
     : new Date(0);
-  
+
   const hoursSinceUpdate = (now.getTime() - lastUpdate.getTime()) / MS_PER_HOUR;
-  
+
   return {
     count: streak.count,
     isFire: streak.isFire,
@@ -38,7 +39,7 @@ export const streakController = {
     res: Response<GetStreakResponse>,
   ): Promise<void> {
     const authReq = req as AuthRequest;
-    
+
     if (!authReq.user) {
       throw ApiError.unauthorized("Требуется авторизация");
     }
@@ -48,7 +49,7 @@ export const streakController = {
     for (const [key, value] of Object.entries(req.headers)) {
       if (value) {
         if (Array.isArray(value)) {
-          value.forEach(v => headers.append(key, v));
+          value.forEach((v) => headers.append(key, v));
         } else {
           headers.append(key, value);
         }

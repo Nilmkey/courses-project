@@ -1,7 +1,7 @@
 import { Section, Lesson, Progress } from "../models";
 import { ApiError } from "../utils/ApiError";
 import type { ISection } from "../models";
-import type { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { progressService } from "./progress.service";
 
 export interface SectionCreateInput {
@@ -46,33 +46,46 @@ export const sectionsService = {
     if (!updated) {
       throw ApiError.notFound("Секция не найдена");
     }
-    return updated;
+    return updated as unknown as ISection;
   },
 
   async delete(id: string): Promise<void> {
-    const section = await Section.findById(id);
-    if (!section) {
-      throw ApiError.notFound("Секция не найдена");
-    }
-
-    const courseId = section.course_id.toString();
-
-    await Lesson.deleteMany({ section_id: id });
-    await Section.findByIdAndDelete(id);
-
-    // Пересчитываем прогресс всех пользователей после удаления секции
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
-      await progressService.recalculateCourseProgress(courseId);
+      const section = await Section.findById(id).session(session);
+      if (!section) {
+        throw ApiError.notFound("Секция не найдена");
+      }
+
+      const courseId = section.course_id.toString();
+
+      await Lesson.deleteMany({ section_id: id }).session(session);
+      await Section.findByIdAndDelete(id).session(session);
+
+      await session.commitTransaction();
+
+      // Пересчитываем прогресс фоном
+      progressService.recalculateCourseProgress(courseId).catch(console.error);
     } catch (error) {
-      console.error("[Sections] Ошибка пересчета прогресса после удаления секции:", error);
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
     }
   },
 
   async reorder(courseId: string, sectionIds: string[]): Promise<void> {
-    const updates = sectionIds.map((id, index) =>
-      Section.findByIdAndUpdate(id, { order_index: index }),
-    );
-    await Promise.all(updates);
+    if (sectionIds.length === 0) return;
+
+    const bulkOps = sectionIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: new mongoose.Types.ObjectId(id) },
+        update: { $set: { order_index: index } },
+      },
+    }));
+
+    await Section.bulkWrite(bulkOps);
   },
 
   async getByCourse(courseId: string): Promise<ISection[]> {

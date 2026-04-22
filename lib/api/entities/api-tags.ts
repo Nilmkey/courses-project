@@ -1,10 +1,8 @@
 import { api } from "@/lib/api/api-client";
 import type { ITag } from "@/types/types";
 
-export interface TagResponse extends ITag {}
-
 export interface TagsListResponse {
-  tags: TagResponse[];
+  tags: ITag[];
 }
 
 export interface CreateTagData {
@@ -29,41 +27,53 @@ export const tagsApi = {
    * Поиск тегов по названию (для autocomplete)
    */
   search: (query: string) =>
-    api.get<TagsListResponse>(`/v1/tags/search?query=${encodeURIComponent(query)}`, undefined, true),
+    api.get<TagsListResponse>(
+      `/v1/tags/search?query=${encodeURIComponent(query)}`,
+      undefined,
+      true,
+    ),
 
   /**
    * Получить тег по ID
    */
   getById: (id: string) =>
-    api.get<TagResponse>(`/v1/tags/${id}`, undefined, true),
+    api.get<TagsListResponse>(`/v1/tags/${id}`, undefined, true),
 
   /**
    * Создать новый тег
    */
   create: (data: CreateTagData) =>
-    api.post<TagResponse>("/v1/tags", data, undefined, true),
+    api.post<TagsListResponse>("/v1/tags", data, undefined, true),
 
   /**
    * Обновить тег
    */
   update: (id: string, data: UpdateTagData) =>
-    api.patch<TagResponse>(`/v1/tags/${id}`, data, undefined, true),
+    api.patch<TagsListResponse>(`/v1/tags/${id}`, data, undefined, true),
 
   /**
    * Удалить тег
    */
-  delete: (id: string) =>
-    api.delete<void>(`/v1/tags/${id}`, undefined, true),
+  delete: (id: string) => api.delete<void>(`/v1/tags6/${id}`, undefined, true),
 
   /**
    * Получить теги курса
    */
   getCourseTags: (courseId: string) =>
-    api.get<TagsListResponse>(`/v1/tags/courses/${courseId}/tags`, undefined, true),
+    api.get<TagsListResponse>(
+      `/v1/tags/courses/${courseId}/tags`,
+      undefined,
+      true,
+    ),
 
   /**
    * Присвоить теги курсу
    */
   assignTagsToCourse: (courseId: string, tagIds: string[]) =>
-    api.post<void>(`/v1/tags/courses/${courseId}/tags`, { tagIds }, undefined, true),
+    api.post<void>(
+      `/v1/tags/courses/${courseId}/tags`,
+      { tagIds },
+      undefined,
+      true,
+    ),
 };

@@ -53,20 +53,21 @@ export interface EnrollResponse {
   message: string;
   enrollment: EnrollmentResponse;
 }
+export interface PopulatedCourse {
+  _id: Types.ObjectId;
+  title: string;
+  slug: string;
+  thumbnail?: string;
+  level: "beginner" | "intermediate" | "advanced";
+}
+
 export interface EnrollmentData {
   _id: Types.ObjectId;
   user_id: Types.ObjectId;
-  course_id: Types.ObjectId;
+  course_id: Types.ObjectId | PopulatedCourse;
   enrolledAt: Date;
   completedAt?: Date;
   status: "active" | "completed" | "cancelled";
   createdAt: Date;
   updatedAt: Date;
-  course?: {
-    _id: Types.ObjectId;
-    title: string;
-    slug: string;
-    thumbnail?: string;
-    level: "beginner" | "intermediate" | "advanced";
-  };
 }

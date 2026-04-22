@@ -16,11 +16,9 @@ export default function Provider({ children }: { children: React.ReactNode }) {
   });
   const [sections, setSections] = useState<Section[]>([]);
   
-  let router;
-  try {
-    router = useRouter();
-  } catch {
-  }
+  
+  const router = useRouter();
+  
 
   useEffect(() => {
     addErrorObserver((error) => {
