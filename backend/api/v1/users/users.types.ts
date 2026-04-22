@@ -15,7 +15,7 @@ export interface UserProfileResponse {
   email: string;
   name: string;
   avatar?: string;
-  role: "admin" | "student";
+  role: "admin" | "student" | "teacher";
   createdAt: string;
 }
 
@@ -30,7 +30,7 @@ export interface UsersListResponse {
 export interface UpdateUserRoleRequest {
   params: { id: string };
   body: {
-    role: "admin" | "student";
+    role: "admin" | "student" | "teacher";
   };
 }
 

@@ -264,33 +264,28 @@ export function LearningContextProvider({
   const findBlockLocation = useMemo(() => {
     if (!currentLessonId || !currentBlockId || !currentSectionId) return null;
 
-    for (let sIdx = 0; sIdx < sections.length; sIdx++) {
-      const section = sections[sIdx];
-      if (section._id !== currentSectionId) continue;
+    const sIdx = sections.findIndex((s) => s._id === currentSectionId);
+    if (sIdx === -1) return null;
 
-      for (let lIdx = 0; lIdx < section.lessons.length; lIdx++) {
-        const lesson = section.lessons[lIdx];
-        if (lesson._id !== currentLessonId) continue;
+    const section = sections[sIdx];
+    const lIdx = section.lessons.findIndex((l) => l._id === currentLessonId);
+    if (lIdx === -1) return null;
 
-        const blockIdx = lesson.content_blocks.findIndex(
-          (b) => {
-            const blockId = b.id || b._id;
-            return blockId === currentBlockId;
-          }
-        );
-        if (blockIdx === -1) continue;
+    const lesson = section.lessons[lIdx];
+    const blockIdx = lesson.content_blocks.findIndex((b) => {
+      const blockId = b.id || b._id;
+      return blockId === currentBlockId;
+    });
+    if (blockIdx === -1) return null;
 
-        return {
-          sectionIndex: sIdx,
-          lessonIndex: lIdx,
-          blockIndex: blockIdx,
-          section,
-          lesson,
-          block: lesson.content_blocks[blockIdx],
-        };
-      }
-    }
-    return null;
+    return {
+      sectionIndex: sIdx,
+      lessonIndex: lIdx,
+      blockIndex: blockIdx,
+      section,
+      lesson,
+      block: lesson.content_blocks[blockIdx],
+    };
   }, [sections, currentSectionId, currentLessonId, currentBlockId]);
 
   // Переход к следующему блоку

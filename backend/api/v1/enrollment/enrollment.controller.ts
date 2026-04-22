@@ -21,13 +21,16 @@ const toEnrollmentResponse = (
   enrollment: EnrollmentData,
 ): EnrollmentResponse => {
   // Проверяем, что course_id - это объект (после populate)
-  const populatedCourse = (enrollment as any).course_id;
-  const isPopulated = populatedCourse && typeof populatedCourse === 'object';
-  
+  const courseId = enrollment.course_id;
+  const isPopulated =
+    courseId && typeof courseId === "object" && "title" in courseId;
+
   return {
     _id: enrollment._id.toString(),
     user_id: enrollment.user_id.toString(),
-    course_id: isPopulated ? populatedCourse._id.toString() : enrollment.course_id.toString(),
+    course_id: isPopulated
+      ? courseId._id.toString()
+      : enrollment.course_id.toString(),
     enrolledAt: enrollment.enrolledAt.toISOString(),
     completedAt: enrollment.completedAt?.toISOString(),
     status: enrollment.status,
@@ -35,11 +38,11 @@ const toEnrollmentResponse = (
     updatedAt: enrollment.updatedAt.toISOString(),
     course: isPopulated
       ? {
-          _id: populatedCourse._id.toString(),
-          title: populatedCourse.title,
-          slug: populatedCourse.slug,
-          thumbnail: populatedCourse.thumbnail,
-          level: populatedCourse.level,
+          _id: courseId._id.toString(),
+          title: courseId.title,
+          slug: courseId.slug,
+          thumbnail: courseId.thumbnail,
+          level: courseId.level,
         }
       : undefined,
   };
@@ -93,8 +96,13 @@ export const enrollmentController = {
       throw ApiError.unauthorized("Требуется авторизация");
     }
 
-    const enrollments = await enrollmentService.getMyCoursesWithSections(authReq.user.id);
-    console.log("=== Backend getMyCourses ===", JSON.stringify(enrollments, null, 2));
+    const enrollments = await enrollmentService.getMyCoursesWithSections(
+      authReq.user.id,
+    );
+    console.log(
+      "=== Backend getMyCourses ===",
+      JSON.stringify(enrollments, null, 2),
+    );
 
     const response = enrollments.map((e) =>
       toEnrollmentResponse(e as unknown as EnrollmentData),

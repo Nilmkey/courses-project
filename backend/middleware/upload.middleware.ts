@@ -4,6 +4,9 @@ import type { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../utils/ApiError';
 import fs from 'fs';
 
+// Разрешённые MIME типы для изображений
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
 // Создаём папку uploads, если её нет
 const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -21,15 +24,13 @@ const storage = multer.diskStorage({
   },
 });
 
-// Фильтр: только изображения
+// Фильтр: проверка MIME типа
 const fileFilter = (
   _req: Express.Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback,
 ) => {
-  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-
-  if (allowedMimeTypes.includes(file.mimetype)) {
+  if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
     cb(null, true);
   } else {
     cb(new ApiError(400, 'Неверный тип файла. Разрешены только JPEG, PNG, WebP, GIF'));

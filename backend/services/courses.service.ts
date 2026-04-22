@@ -1,21 +1,21 @@
-import { Course, Section, Lesson } from "../models";
-import { createError } from "../middleware/error.middleware";
+import { Course, Section, Lesson, Progress, Enrollment } from "../models";
+import { ApiError } from "../utils/ApiError";
 import type { ICourse } from "../models";
 import { slugify } from "../utils/slugify";
-import mongoose from "mongoose";
+import mongoose, { Document } from "mongoose";
 
 type LeanCourse = Omit<ICourse, keyof Document>;
 
 export const coursesService = {
   async getAll(): Promise<LeanCourse[]> {
     const courses = await Course.find().select("-__v").lean();
-    return courses;
+    return courses as unknown as LeanCourse[];
   },
 
   async getBySlug(slug: string) {
     const course = await Course.findOne({ slug }).lean();
     if (!course) {
-      throw createError.notFound("Курс не найден");
+      throw ApiError.notFound("Курс не найден");
     }
 
     const sections = await Section.find({ course_id: course._id })
@@ -29,7 +29,7 @@ export const coursesService = {
   async getById(id: string) {
     const course = await Course.findById(id).lean();
     if (!course) {
-      throw createError.notFound("Курс не найден");
+      throw ApiError.notFound("Курс не найден");
     }
 
     const sections = await Section.find({ course_id: course._id })
@@ -53,20 +53,19 @@ export const coursesService = {
       isOpenForEnrollment: false,
     });
 
-    return course;
+    return course.toObject() as unknown as LeanCourse;
   },
 
   async update(id: string, data: Partial<ICourse>): Promise<LeanCourse> {
     const course = await Course.findById(id);
     if (!course) {
-      throw createError.notFound("Курс не найден");
+      throw ApiError.notFound("Курс не найден");
     }
 
     if (!data) {
-      throw createError.badRequest("Нет даты");
+      throw ApiError.badRequest("Нет данных для обновления");
     }
 
-    // Обрабатываем tags отдельно, преобразуя строки в ObjectId
     const updateData: Partial<ICourse> = { ...data };
     
     if (data.tags) {
@@ -78,36 +77,48 @@ export const coursesService = {
       });
     }
 
-    const dataWithSlug: Partial<ICourse> = {
-      slug: slugify(data.title!),
-      ...updateData,
-    };
+    if (data.title) {
+      updateData.slug = slugify(data.title);
+    }
 
-    const updated = await Course.findByIdAndUpdate(id, dataWithSlug, {
+    const updated = await Course.findByIdAndUpdate(id, updateData, {
       returnDocument: "after",
     }).lean();
 
-    return updated as LeanCourse;
+    return updated as unknown as LeanCourse;
   },
 
   async delete(id: string): Promise<void> {
-    const course = await Course.findById(id);
-    if (!course) {
-      throw createError.notFound("Курс не найден");
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const course = await Course.findById(id).session(session);
+      if (!course) {
+        throw ApiError.notFound("Курс не найден");
+      }
+
+      const sections = await Section.find({ course_id: course._id }).session(session);
+      const sectionIds = sections.map((s) => s._id);
+
+      await Lesson.deleteMany({ section_id: { $in: sectionIds } }).session(session);
+      await Section.deleteMany({ course_id: course._id }).session(session);
+      await Progress.deleteMany({ course_id: course._id }).session(session);
+      await Enrollment.deleteMany({ course_id: course._id }).session(session);
+      await Course.findByIdAndDelete(course._id).session(session);
+
+      await session.commitTransaction();
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
     }
-
-    const sections = await Section.find({ course_id: course._id });
-    const sectionIds = sections.map((s) => s._id);
-
-    await Lesson.deleteMany({ section_id: { $in: sectionIds } });
-    await Section.deleteMany({ course_id: course._id });
-    await Course.findByIdAndDelete(course._id);
   },
 
   async publish(id: string): Promise<LeanCourse> {
     const course = await Course.findById(id);
     if (!course) {
-      throw createError.notFound("Курс не найден");
+      throw ApiError.notFound("Курс не найден");
     }
 
     const updated = await Course.findByIdAndUpdate(
@@ -116,6 +127,6 @@ export const coursesService = {
       { returnDocument: "after" },
     ).lean();
 
-    return updated as LeanCourse;
+    return updated as unknown as LeanCourse;
   },
 };

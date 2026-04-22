@@ -7,52 +7,64 @@ import { useLearning } from "@/hooks/useLearning";
 import type { IQuizBlock, IQuizAnswer } from "@/types/types";
 
 const QUESTION_TYPE_BADGES = {
-  single: { label: "Один ответ", color: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400" },
+  single: {
+    label: "Один ответ",
+    color:
+      "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
+  },
   multiple: {
     label: "Несколько ответов",
-    color: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400",
+    color:
+      "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400",
   },
   text: {
     label: "Текстовый ответ",
-    color: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
+    color:
+      "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
   },
 } as const;
 
 export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
   const { currentLessonId, updateQuizAnswers } = useLearning();
 
-  const [answers, setAnswers] = useState<Record<string, number | number[] | string>>({});
+  const [answers, setAnswers] = useState<
+    Record<string, number | number[] | string>
+  >({});
   const [submitted, setSubmitted] = useState(false);
-  const [score, setScore] = useState<{ correct: number; total: number } | null>(null);
+  const [score, setScore] = useState<{ correct: number; total: number } | null>(
+    null,
+  );
   const [isChecking, setIsChecking] = useState(false);
 
-  useEffect(() => {
-    setAnswers({});
-    setSubmitted(false);
-    setScore(null);
-    setIsChecking(false);
-  }, [content]);
+  const handleSingleAnswer = useCallback(
+    (questionId: string, answerIndex: number) => {
+      if (submitted) return;
+      setAnswers((prev) => ({ ...prev, [questionId]: answerIndex }));
+    },
+    [submitted],
+  );
 
-  const handleSingleAnswer = useCallback((questionId: string, answerIndex: number) => {
-    if (submitted) return;
-    setAnswers((prev) => ({ ...prev, [questionId]: answerIndex }));
-  }, [submitted]);
+  const handleMultipleAnswer = useCallback(
+    (questionId: string, answerIndex: number) => {
+      if (submitted) return;
+      setAnswers((prev) => {
+        const current = (prev[questionId] as number[]) || [];
+        const next = current.includes(answerIndex)
+          ? current.filter((i) => i !== answerIndex)
+          : [...current, answerIndex];
+        return { ...prev, [questionId]: next };
+      });
+    },
+    [submitted],
+  );
 
-  const handleMultipleAnswer = useCallback((questionId: string, answerIndex: number) => {
-    if (submitted) return;
-    setAnswers((prev) => {
-      const current = (prev[questionId] as number[]) || [];
-      const next = current.includes(answerIndex)
-        ? current.filter((i) => i !== answerIndex)
-        : [...current, answerIndex];
-      return { ...prev, [questionId]: next };
-    });
-  }, [submitted]);
-
-  const handleTextAnswer = useCallback((questionId: string, answer: string) => {
-    if (submitted) return;
-    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
-  }, [submitted]);
+  const handleTextAnswer = useCallback(
+    (questionId: string, answer: string) => {
+      if (submitted) return;
+      setAnswers((prev) => ({ ...prev, [questionId]: answer }));
+    },
+    [submitted],
+  );
 
   const checkAnswers = useCallback(async () => {
     if (!currentLessonId || isChecking) return;
@@ -104,7 +116,13 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
     updateQuizAnswers(currentLessonId, quizAnswers).catch((error) => {
       console.error("Ошибка при сохранении ответов:", error);
     });
-  }, [answers, content.questions, currentLessonId, isChecking, updateQuizAnswers]);
+  }, [
+    answers,
+    content.questions,
+    currentLessonId,
+    isChecking,
+    updateQuizAnswers,
+  ]);
 
   const resetQuiz = useCallback(() => {
     setAnswers({});
@@ -117,7 +135,9 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Викторина</h2>
+      <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+        Викторина
+      </h2>
       <p className="text-slate-500 dark:text-slate-400 mb-8">
         Ответьте на все вопросы и нажмите &quot;Проверить ответы&quot;
       </p>
@@ -148,11 +168,13 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
           </button>
         ) : (
           <div className="flex items-center gap-6">
-            <div className={`px-6 py-3 rounded-xl font-bold ${
-              score && score.correct === score.total
-                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200"
-            }`}>
+            <div
+              className={`px-6 py-3 rounded-xl font-bold ${
+                score && score.correct === score.total
+                  ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200"
+              }`}
+            >
               Ваш результат: {score?.correct} из {score?.total}
             </div>
             <button
@@ -195,7 +217,9 @@ const QuestionCard = memo<QuestionCardProps>(function QuestionCard({
           {index + 1}
         </span>
         <div className="flex-1">
-          <p className="font-semibold text-slate-900 dark:text-white">{question.questionText}</p>
+          <p className="font-semibold text-slate-900 dark:text-white">
+            {question.questionText}
+          </p>
           <QuestionTypeBadge type={question.type} />
         </div>
       </div>
@@ -235,7 +259,9 @@ const QuestionCard = memo<QuestionCardProps>(function QuestionCard({
 function QuestionTypeBadge({ type }: { type: string }) {
   const badge = QUESTION_TYPE_BADGES[type as keyof typeof QUESTION_TYPE_BADGES];
   return (
-    <span className={`inline-block mt-2 px-2.5 py-1 rounded-full text-xs font-medium ${badge.color}`}>
+    <span
+      className={`inline-block mt-2 px-2.5 py-1 rounded-full text-xs font-medium ${badge.color}`}
+    >
       {badge.label}
     </span>
   );
@@ -248,61 +274,77 @@ interface SingleChoiceOptionsProps {
   onSelect: (qId: string, idx: number) => void;
 }
 
-const SingleChoiceOptions = memo<SingleChoiceOptionsProps>(function SingleChoiceOptions({
-  question,
-  answer,
-  submitted,
-  onSelect,
-}) {
-  const options = question.options || [];
-  const correctIndex = question.correctAnswerIndex;
+const SingleChoiceOptions = memo<SingleChoiceOptionsProps>(
+  function SingleChoiceOptions({ question, answer, submitted, onSelect }) {
+    const options = question.options || [];
+    const correctIndex = question.correctAnswerIndex;
 
-  return (
-    <div className="space-y-2">
-      {options.map((option, optIdx) => {
-        const isSelected = answer === optIdx;
-        const isCorrect = optIdx === correctIndex;
-        let buttonStyle = "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700";
+    return (
+      <div className="space-y-2">
+        {options.map((option, optIdx) => {
+          const isSelected = answer === optIdx;
+          const isCorrect = optIdx === correctIndex;
+          let buttonStyle =
+            "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700";
 
-        if (submitted) {
-          if (isCorrect) {
-            buttonStyle = "bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-400";
-          } else if (isSelected && !isCorrect) {
-            buttonStyle = "bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-400";
-          } else {
-            buttonStyle = "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60";
+          if (submitted) {
+            if (isCorrect) {
+              buttonStyle =
+                "bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-400";
+            } else if (isSelected && !isCorrect) {
+              buttonStyle =
+                "bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-400";
+            } else {
+              buttonStyle =
+                "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60";
+            }
+          } else if (isSelected) {
+            buttonStyle =
+              "bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400";
           }
-        } else if (isSelected) {
-          buttonStyle = "bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400";
-        }
 
-        return (
-          <button
-            key={optIdx}
-            onClick={() => onSelect(question.id, optIdx)}
-            disabled={submitted}
-            className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors disabled:cursor-not-allowed ${buttonStyle}`}
-          >
-            {submitted ? (
-              isCorrect ? (
-                <CheckCircle2 className="text-green-500 flex-shrink-0" size={20} />
+          return (
+            <button
+              key={optIdx}
+              onClick={() => onSelect(question.id, optIdx)}
+              disabled={submitted}
+              className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors disabled:cursor-not-allowed ${buttonStyle}`}
+            >
+              {submitted ? (
+                isCorrect ? (
+                  <CheckCircle2
+                    className="text-green-500 flex-shrink-0"
+                    size={20}
+                  />
+                ) : isSelected ? (
+                  <XCircle className="text-red-500 flex-shrink-0" size={20} />
+                ) : (
+                  <Circle
+                    className="text-slate-400 dark:text-slate-500 flex-shrink-0"
+                    size={20}
+                  />
+                )
               ) : isSelected ? (
-                <XCircle className="text-red-500 flex-shrink-0" size={20} />
+                <CheckCircle2
+                  className="text-blue-500 flex-shrink-0"
+                  size={20}
+                />
               ) : (
-                <Circle className="text-slate-400 dark:text-slate-500 flex-shrink-0" size={20} />
-              )
-            ) : isSelected ? (
-              <CheckCircle2 className="text-blue-500 flex-shrink-0" size={20} />
-            ) : (
-              <Circle className="text-slate-400 dark:text-slate-500 flex-shrink-0" size={20} />
-            )}
-            <span className="text-left text-slate-900 dark:text-white">{option}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-});
+                <Circle
+                  className="text-slate-400 dark:text-slate-500 flex-shrink-0"
+                  size={20}
+                />
+              )}
+              <span className="text-left text-slate-900 dark:text-white">
+                {option}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  },
+);
 
 interface MultipleChoiceOptionsProps {
   question: IQuizBlock["content"]["questions"][0];
@@ -311,61 +353,77 @@ interface MultipleChoiceOptionsProps {
   onSelect: (qId: string, idx: number) => void;
 }
 
-const MultipleChoiceOptions = memo<MultipleChoiceOptionsProps>(function MultipleChoiceOptions({
-  question,
-  answers,
-  submitted,
-  onSelect,
-}) {
-  const options = question.options || [];
-  const correctIndices = question.correctAnswerIndices || [];
+const MultipleChoiceOptions = memo<MultipleChoiceOptionsProps>(
+  function MultipleChoiceOptions({ question, answers, submitted, onSelect }) {
+    const options = question.options || [];
+    const correctIndices = question.correctAnswerIndices || [];
 
-  return (
-    <div className="space-y-2">
-      {options.map((option, optIdx) => {
-        const isSelected = answers.includes(optIdx);
-        const isCorrect = correctIndices.includes(optIdx);
-        let buttonStyle = "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700";
+    return (
+      <div className="space-y-2">
+        {options.map((option, optIdx) => {
+          const isSelected = answers.includes(optIdx);
+          const isCorrect = correctIndices.includes(optIdx);
+          let buttonStyle =
+            "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700";
 
-        if (submitted) {
-          if (isCorrect) {
-            buttonStyle = "bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-400";
-          } else if (isSelected && !isCorrect) {
-            buttonStyle = "bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-400";
-          } else {
-            buttonStyle = "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60";
+          if (submitted) {
+            if (isCorrect) {
+              buttonStyle =
+                "bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-400";
+            } else if (isSelected && !isCorrect) {
+              buttonStyle =
+                "bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-400";
+            } else {
+              buttonStyle =
+                "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60";
+            }
+          } else if (isSelected) {
+            buttonStyle =
+              "bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400";
           }
-        } else if (isSelected) {
-          buttonStyle = "bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400";
-        }
 
-        return (
-          <button
-            key={optIdx}
-            onClick={() => onSelect(question.id, optIdx)}
-            disabled={submitted}
-            className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors disabled:cursor-not-allowed ${buttonStyle}`}
-          >
-            {submitted ? (
-              isCorrect ? (
-                <CheckCircle2 className="text-green-500 flex-shrink-0" size={20} />
+          return (
+            <button
+              key={optIdx}
+              onClick={() => onSelect(question.id, optIdx)}
+              disabled={submitted}
+              className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors disabled:cursor-not-allowed ${buttonStyle}`}
+            >
+              {submitted ? (
+                isCorrect ? (
+                  <CheckCircle2
+                    className="text-green-500 flex-shrink-0"
+                    size={20}
+                  />
+                ) : isSelected ? (
+                  <XCircle className="text-red-500 flex-shrink-0" size={20} />
+                ) : (
+                  <Circle
+                    className="text-slate-400 dark:text-slate-500 flex-shrink-0"
+                    size={20}
+                  />
+                )
               ) : isSelected ? (
-                <XCircle className="text-red-500 flex-shrink-0" size={20} />
+                <CheckCircle2
+                  className="text-blue-500 flex-shrink-0"
+                  size={20}
+                />
               ) : (
-                <Circle className="text-slate-400 dark:text-slate-500 flex-shrink-0" size={20} />
-              )
-            ) : isSelected ? (
-              <CheckCircle2 className="text-blue-500 flex-shrink-0" size={20} />
-            ) : (
-              <Circle className="text-slate-400 dark:text-slate-500 flex-shrink-0" size={20} />
-            )}
-            <span className="text-left text-slate-900 dark:text-white">{option}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-});
+                <Circle
+                  className="text-slate-400 dark:text-slate-500 flex-shrink-0"
+                  size={20}
+                />
+              )}
+              <span className="text-left text-slate-900 dark:text-white">
+                {option}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  },
+);
 
 interface TextAnswerInputProps {
   question: IQuizBlock["content"]["questions"][0];

@@ -3,15 +3,12 @@
 import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import { useTheme } from "next-themes";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback } from "react";
+import { useMounted } from "@/hooks/useMounted";
 
 export const useToast = () => {
   const { theme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   const getToastStyles = useCallback(() => {
     const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");

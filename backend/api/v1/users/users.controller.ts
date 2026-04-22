@@ -8,13 +8,18 @@ import type {
   UsersListResponse,
   UpdateUserRoleRequest,
   UserEnrollmentResponse,
+  EnrollUserRequest,
+  DeleteUserRequest,
 } from "./users.types";
 import { ApiError } from "../../../utils/ApiError";
 import type { AuthenticatedUser } from "../../../middleware/auth.middleware";
 import { auth, type ExtendedUser } from "../../../auth";
-import { uploadImage, deleteImage, extractPublicId } from "../../../utils/cloudinary";
+import {
+  uploadImage,
+  deleteImage,
+  extractPublicId,
+} from "../../../utils/cloudinary";
 import { Enrollment, Progress, Course, Section } from "../../../models";
-import type { IEnrollment } from "../../../models";
 import { Types } from "mongoose";
 import { progressService } from "../../../services/progress.service";
 import { enrollmentService } from "../../../services/enrollment.service";
@@ -29,8 +34,17 @@ interface UserData {
   email: string;
   name: string;
   avatar?: string;
-  role: "admin" | "student";
+  role: "admin" | "student" | "teacher";
   createdAt: Date;
+}
+
+interface MongoUserDoc {
+  _id: Types.ObjectId;
+  email: string;
+  name: string;
+  image?: string;
+  role?: "admin" | "student" | "teacher";
+  createdAt?: string | Date;
 }
 
 const toUserProfileResponse = (user: UserData): UserProfileResponse => ({
@@ -84,7 +98,7 @@ export const usersController = {
       email: session.user.email,
       name: session.user.name,
       avatar: extendedUser.image ?? undefined,
-      role: extendedUser.role ?? "student",
+      role: (extendedUser.role as "admin" | "student" | "teacher") ?? "student",
       createdAt: new Date(),
     };
 
@@ -134,7 +148,9 @@ export const usersController = {
     }
 
     // Получаем пользователя из MongoDB
-    const userDoc = await db.collection("user").findOne({ _id: new Types.ObjectId(id) });
+    const userDoc = await db
+      .collection("user")
+      .findOne({ _id: new Types.ObjectId(id) });
 
     if (!userDoc) {
       throw ApiError.notFound("Пользователь не найден");
@@ -165,14 +181,14 @@ export const usersController = {
       throw ApiError.internal("База данных не подключена");
     }
 
-    const queryRaw = req.query as any;
+    const queryRaw = req.query as Record<string, string | undefined>;
     const page = parseInt(queryRaw.page || "1", 10);
     const limit = parseInt(queryRaw.limit || "20", 10);
     const search = queryRaw.search;
     const skip = (page - 1) * limit;
 
     // Получаем пользователей напрямую из MongoDB
-    const query: any = {};
+    const query: Record<string, unknown> = {};
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -182,7 +198,8 @@ export const usersController = {
 
     console.log("Получение пользователей из MongoDB, query:", query);
     const total = await db.collection("user").countDocuments(query);
-    const usersDocs = await db.collection("user")
+    const usersDocs = await db
+      .collection("user")
       .find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -191,14 +208,17 @@ export const usersController = {
 
     console.log("Найдено пользователей:", usersDocs.length);
 
-    const users = usersDocs.map((doc: any) => ({
-      id: doc._id.toString(),
-      email: doc.email,
-      name: doc.name,
-      avatar: doc.image ?? undefined,
-      role: doc.role ?? "student",
-      createdAt: new Date(doc.createdAt || Date.now()).toISOString(),
-    }));
+    const users = usersDocs.map((doc) => {
+      const user = doc as unknown as MongoUserDoc;
+      return {
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        avatar: user.image ?? undefined,
+        role: user.role ?? "student",
+        createdAt: new Date(user.createdAt || Date.now()).toISOString(),
+      };
+    });
 
     res.json({
       users,
@@ -210,7 +230,11 @@ export const usersController = {
   },
 
   async updateUserRole(
-    req: Request<UpdateUserRoleRequest["params"], any, UpdateUserRoleRequest["body"]>,
+    req: Request<
+      UpdateUserRoleRequest["params"],
+      unknown,
+      UpdateUserRoleRequest["body"]
+    >,
     res: Response<UserProfileResponse>,
   ): Promise<void> {
     const authReq = req as AuthRequest;
@@ -222,17 +246,18 @@ export const usersController = {
     const { role } = req.body;
 
     // Обновляем роль напрямую в MongoDB
-    const result = await db.collection("user").updateOne(
-      { _id: new Types.ObjectId(id) },
-      { $set: { role } }
-    );
+    const result = await db
+      .collection("user")
+      .updateOne({ _id: new Types.ObjectId(id) }, { $set: { role } });
 
     if (result.matchedCount === 0) {
       throw ApiError.notFound("Пользователь не найден");
     }
 
     // Получаем обновленного пользователя
-    const userDoc = await db.collection("user").findOne({ _id: new Types.ObjectId(id) });
+    const userDoc = await db
+      .collection("user")
+      .findOne({ _id: new Types.ObjectId(id) });
 
     if (!userDoc) {
       throw ApiError.notFound("Пользователь не найден");
@@ -262,14 +287,18 @@ export const usersController = {
     }
 
     // Проверяем существование пользователя
-    const userDoc = await db.collection("user").findOne({ _id: new Types.ObjectId(id) });
+    const userDoc = await db
+      .collection("user")
+      .findOne({ _id: new Types.ObjectId(id) });
 
     if (!userDoc) {
       throw ApiError.notFound("Пользователь не найден");
     }
 
     // Получаем все записи пользователя с populated курсами
-    const enrollments = await Enrollment.find({ user_id: new Types.ObjectId(id) })
+    const enrollments = await Enrollment.find({
+      user_id: new Types.ObjectId(id),
+    })
       .populate("course_id")
       .sort({ enrolledAt: -1 })
       .lean();
@@ -277,11 +306,21 @@ export const usersController = {
     const result: UserEnrollmentResponse[] = [];
 
     for (const enrollment of enrollments) {
-      const course = enrollment.course_id as any;
+      const course = enrollment.course_id as unknown as {
+        _id: Types.ObjectId;
+        title: string;
+        slug: string;
+        thumbnail?: string;
+        level: "beginner" | "intermediate" | "advanced";
+        isPublished: boolean;
+      };
       if (!course) continue; // Курс мог быть удален
 
       // Получаем прогресс
-      const progress = await progressService.getCourseProgress(id, course._id.toString());
+      const progress = await progressService.getCourseProgress(
+        id,
+        course._id.toString(),
+      );
 
       result.push({
         _id: enrollment._id.toString(),
@@ -297,15 +336,17 @@ export const usersController = {
           level: course.level,
           isPublished: course.isPublished,
         },
-        progress: progress ? {
-          overallProgress: progress.progress,
-          stats: {
-            totalBlocks: progress.totalBlocks,
-            completedBlocks: progress.completedBlocks,
-            totalLessons: progress.totalLessons,
-            completedLessons: progress.completedLessons,
-          },
-        } : undefined,
+        progress: progress
+          ? {
+              overallProgress: progress.progress,
+              stats: {
+                totalBlocks: progress.totalBlocks,
+                completedBlocks: progress.completedBlocks,
+                totalLessons: progress.totalLessons,
+                completedLessons: progress.completedLessons,
+              },
+            }
+          : undefined,
       });
     }
 
@@ -324,7 +365,9 @@ export const usersController = {
     const { id, courseId } = req.params;
 
     // Проверяем существование пользователя
-    const userDoc = await db.collection("user").findOne({ _id: new Types.ObjectId(id) });
+    const userDoc = await db
+      .collection("user")
+      .findOne({ _id: new Types.ObjectId(id) });
 
     if (!userDoc) {
       throw ApiError.notFound("Пользователь не найден");
@@ -350,7 +393,9 @@ export const usersController = {
     const { id, courseId } = req.params;
 
     // Проверяем существование пользователя
-    const userDoc = await db.collection("user").findOne({ _id: new Types.ObjectId(id) });
+    const userDoc = await db
+      .collection("user")
+      .findOne({ _id: new Types.ObjectId(id) });
 
     if (!userDoc) {
       throw ApiError.notFound("Пользователь не найден");
@@ -358,7 +403,7 @@ export const usersController = {
 
     // Получаем все уроки курса и сбрасываем прогресс
     const sections = await Section.find({ course_id: courseId }).lean();
-    
+
     for (const section of sections) {
       for (const lessonId of section.lessons) {
         await progressService.resetProgress(id, lessonId.toString(), courseId);
@@ -372,7 +417,11 @@ export const usersController = {
   },
 
   async enrollUser(
-    req: Request<EnrollUserRequest["params"], any, EnrollUserRequest["body"]>,
+    req: Request<
+      EnrollUserRequest["params"],
+      unknown,
+      EnrollUserRequest["body"]
+    >,
     res: Response<{ success: boolean; message: string }>,
   ): Promise<void> {
     const authReq = req as AuthRequest;
@@ -384,7 +433,9 @@ export const usersController = {
     const { courseId } = req.body;
 
     // Проверяем существование пользователя
-    const userDoc = await db.collection("user").findOne({ _id: new Types.ObjectId(id) });
+    const userDoc = await db
+      .collection("user")
+      .findOne({ _id: new Types.ObjectId(id) });
 
     if (!userDoc) {
       throw ApiError.notFound("Пользователь не найден");
@@ -428,7 +479,9 @@ export const usersController = {
     }
 
     // Проверяем существование пользователя
-    const userDoc = await db.collection("user").findOne({ _id: new Types.ObjectId(id) });
+    const userDoc = await db
+      .collection("user")
+      .findOne({ _id: new Types.ObjectId(id) });
 
     if (!userDoc) {
       throw ApiError.notFound("Пользователь не найден");
@@ -459,14 +512,16 @@ export const usersController = {
     }
 
     // Отладка: проверяем, что пришёл с запросом
-    console.log('=== Upload Avatar Debug ===');
-    console.log('req.file:', req.file);
-    console.log('req.body:', req.body);
-    console.log('req.headers.content-type:', req.headers['content-type']);
-    console.log('========================');
+    console.log("=== Upload Avatar Debug ===");
+    console.log("req.file:", req.file);
+    console.log("req.body:", req.body);
+    console.log("req.headers.content-type:", req.headers["content-type"]);
+    console.log("========================");
 
     if (!req.file) {
-      throw ApiError.badRequest("Файл не найден. Убедитесь, что файл отправляется в формате multipart/form-data с полем 'avatar'");
+      throw ApiError.badRequest(
+        "Файл не найден. Убедитесь, что файл отправляется в формате multipart/form-data с полем 'avatar'",
+      );
     }
 
     const headers = getHeadersForAuth(req.headers);
