@@ -43,6 +43,8 @@
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",
+    "fs-extra": "^11.3.4",
+    "glob": "^13.0.6",
     "helmet": "^8.1.0",
     "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
