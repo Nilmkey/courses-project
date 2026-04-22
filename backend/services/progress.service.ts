@@ -891,7 +891,7 @@ export const progressService = {
     const lessonObjId = new Types.ObjectId(lessonId);
     const courseObjId = new Types.ObjectId(courseId);
 
-    let progress = await Progress.findOne({
+    const progress = await Progress.findOne({
       user_id: studentId,
       course_id: courseObjId,
       "lessons.lesson_id": lessonObjId,

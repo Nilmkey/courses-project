@@ -7,6 +7,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "lint:errors": "eslint -- --quiet",
     "dev:back": "tsx watch backend/index.ts",
     "build:back": "tsc",
     "start:back": "node dist/index.js",

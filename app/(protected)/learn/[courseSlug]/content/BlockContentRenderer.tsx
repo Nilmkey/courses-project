@@ -20,25 +20,26 @@ export function BlockContentRenderer() {
   const block = getCurrentBlock;
   const lesson = getCurrentLesson;
   const section = getCurrentSection;
+  const blockId = block?._id || "";
+  const lessonId = lesson?._id;
 
   const isBlockCompleted = useMemo(() => {
-    if (!block || !lesson?._id) return false;
+    if (!blockId || !lessonId) return false;
 
-    const blockId = block.id || block._id || "";
-    const lessonProgress = getLessonProgress(lesson._id);
+    const lessonProgress = getLessonProgress(lessonId);
 
     return (
       lessonProgress?.blocks?.some(
         (b) => b.blockId === blockId && b.completed,
       ) || false
     );
-  }, [block, lesson?._id, getLessonProgress]);
+  }, [blockId, lessonId, getLessonProgress]);
 
   if (!block) {
     return <EmptyState />;
   }
 
-  const blockId = block.id || block._id || "";
+  // const blockId = block.id || block._id || "";
 
   return (
     <div>
@@ -65,6 +66,7 @@ export function BlockContentRenderer() {
       )}
       {block.type === "quiz" && (
         <QuizBlockView key={blockId} content={(block as IQuizBlock).content} />
+        
       )}
     </div>
   );

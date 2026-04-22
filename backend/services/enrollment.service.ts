@@ -119,7 +119,7 @@ export const enrollmentService = {
       const sections = await import('../models/Section').then(m => 
         m.Section.find({ course_id: enrollment.course_id._id }).sort({ order_index: 1 }).lean()
       );
-      (enrollment.course_id as any).sections = sections;
+      (enrollment.course_id as PopulatedEnrollment['course_id'] & { sections?: unknown }).sections = sections;
     }
 
     return filteredEnrollments;
@@ -163,7 +163,7 @@ export const enrollmentService = {
       );
 
       // Добавляем информацию о прогрессе в объект enrollment (как дополнительное поле)
-      (enrollment as any).progress = progress;
+      (enrollment as PopulatedEnrollment & { progress?: unknown }).progress = progress;
     }
 
     return enrollments;
