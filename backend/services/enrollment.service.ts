@@ -1,9 +1,10 @@
-import { Enrollment, Course, Progress } from '../models';
-import { ApiError } from '../utils/ApiError';
-import type { IEnrollment } from '../models';
-import type { Types } from 'mongoose';
-import mongoose from 'mongoose';
-import { progressService } from './progress.service';
+import { Enrollment, Course, Progress } from "../models";
+import { ApiError } from "../utils/ApiError";
+import type { IEnrollment } from "../models";
+import type { Types } from "mongoose";
+import mongoose from "mongoose";
+import { progressService } from "./progress.service";
+import { CourseBlock } from "@/types/types";
 
 export interface EnrollmentCreateInput {
   user_id: string | Types.ObjectId;
@@ -20,11 +21,11 @@ export interface PopulatedEnrollment extends Document {
     title: string;
     slug: string;
     thumbnail?: string;
-    level: 'beginner' | 'intermediate' | 'advanced';
+    level: "beginner" | "intermediate" | "advanced";
   };
   enrolledAt: Date;
   completedAt?: Date;
-  status: 'active' | 'completed' | 'cancelled';
+  status: "active" | "completed" | "cancelled";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,7 +45,7 @@ export const enrollmentService = {
         user_id: userId,
         course_id: courseId,
       }).session(session);
-      
+
       if (existing) {
         throw ApiError.conflict("Вы уже записаны на этот курс");
       }
@@ -54,10 +55,15 @@ export const enrollmentService = {
         throw ApiError.badRequest("Набор на этот курс закрыт");
       }
 
-      const enrollment = await Enrollment.create([{
-        user_id: userId,
-        course_id: courseId,
-      }], { session });
+      const enrollment = await Enrollment.create(
+        [
+          {
+            user_id: userId,
+            course_id: courseId,
+          },
+        ],
+        { session },
+      );
 
       // Инициализируем прогресс для нового курса внутри транзакции
       await progressService.initializeProgress(userId, courseId, session);
@@ -82,8 +88,11 @@ export const enrollmentService = {
         course_id: courseId,
       }).session(session);
 
-      await Enrollment.findOneAndDelete({ user_id: userId, course_id: courseId }).session(session);
-      
+      await Enrollment.findOneAndDelete({
+        user_id: userId,
+        course_id: courseId,
+      }).session(session);
+
       await session.commitTransaction();
     } catch (error) {
       await session.abortTransaction();
@@ -95,31 +104,41 @@ export const enrollmentService = {
 
   async getMyCourses(userId: string): Promise<PopulatedEnrollment[]> {
     const enrollments = await Enrollment.find({ user_id: userId })
-      .populate<{ course_id: PopulatedEnrollment['course_id'] }>('course_id')
+      .populate<{ course_id: PopulatedEnrollment["course_id"] }>("course_id")
       .lean();
 
     // Фильтруем записи, где курс не был найден (удалён)
     return enrollments
-      .filter((e): e is typeof e & { course_id: PopulatedEnrollment['course_id'] } => !!e.course_id)
+      .filter(
+        (e): e is typeof e & { course_id: PopulatedEnrollment["course_id"] } =>
+          !!e.course_id,
+      )
       .map((e) => e as unknown as PopulatedEnrollment);
   },
 
-  async getMyCoursesWithSections(userId: string): Promise<PopulatedEnrollment[]> {
+  async getMyCoursesWithSections(
+    userId: string,
+  ): Promise<PopulatedEnrollment[]> {
     const enrollments = await Enrollment.find({ user_id: userId })
-      .populate<{ course_id: PopulatedEnrollment['course_id'] }>('course_id')
+      .populate<{ course_id: PopulatedEnrollment["course_id"] }>("course_id")
       .lean();
 
     // Фильтруем записи, где курс не был найден (удалён)
     const filteredEnrollments = enrollments
-      .filter((e): e is typeof e & { course_id: PopulatedEnrollment['course_id'] } => !!e.course_id)
+      .filter(
+        (e): e is typeof e & { course_id: PopulatedEnrollment["course_id"] } =>
+          !!e.course_id,
+      )
       .map((e) => e as unknown as PopulatedEnrollment);
 
     // Для каждого курса отдельно получаем секции
     for (const enrollment of filteredEnrollments) {
-      const sections = await import('../models/Section').then(m => 
-        m.Section.find({ course_id: enrollment.course_id._id }).sort({ order_index: 1 }).lean()
+      const sections = await import("../models/Section").then((m) =>
+        m.Section.find({ course_id: enrollment.course_id._id })
+          .sort({ order_index: 1 })
+          .lean(),
       );
-      (enrollment.course_id as PopulatedEnrollment['course_id'] & { sections?: unknown }).sections = sections;
+      (enrollment.course_id as any).sections = sections;
     }
 
     return filteredEnrollments;
@@ -136,15 +155,15 @@ export const enrollmentService = {
   async updateStatus(
     userId: string,
     courseId: string,
-    status: EnrollmentStatus
+    status: EnrollmentStatus,
   ): Promise<PopulatedEnrollment | null> {
     const updated = await Enrollment.findOneAndUpdate(
       { user_id: userId, course_id: courseId },
       { status },
-      { returnDocument: 'after' }
+      { returnDocument: "after" },
     )
-    .populate<{ course_id: PopulatedEnrollment['course_id'] }>('course_id')
-    .lean();
+      .populate<{ course_id: PopulatedEnrollment["course_id"] }>("course_id")
+      .lean();
 
     return updated as PopulatedEnrollment | null;
   },
@@ -152,18 +171,20 @@ export const enrollmentService = {
   /**
    * Получить прогресс пользователя по всем курсам
    */
-  async getMyCoursesWithProgress(userId: string): Promise<PopulatedEnrollment[]> {
+  async getMyCoursesWithProgress(
+    userId: string,
+  ): Promise<PopulatedEnrollment[]> {
     const enrollments = await this.getMyCourses(userId);
 
     // Для каждого курса получаем прогресс
     for (const enrollment of enrollments) {
       const progress = await progressService.getCourseProgress(
         userId,
-        enrollment.course_id._id.toString()
+        enrollment.course_id._id.toString(),
       );
 
       // Добавляем информацию о прогрессе в объект enrollment (как дополнительное поле)
-      (enrollment as PopulatedEnrollment & { progress?: unknown }).progress = progress;
+      (enrollment as any).progress = progress;
     }
 
     return enrollments;
