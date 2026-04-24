@@ -1,4 +1,4 @@
-import { auth } from "@/backend/auth";
+import { auth } from "../../backend/auth";
 import { cookies, headers } from "next/headers";
 
 /**

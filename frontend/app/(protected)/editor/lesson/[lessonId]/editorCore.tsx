@@ -35,16 +35,16 @@ import {
 
 import DragItem from "@/components/ui/dragItem";
 import { AddItemButton } from "@/components/ui/addItemButton";
-import { useConstructor } from "@/frontend/hooks/useConstructor";
+import { useConstructor } from "@/hooks/useConstructor";
 import { EditorWindow } from "@/components/editor/EditorWindow";
 import {
   lessonsBlocksApi,
   toLessonBlockData,
-} from "@/frontend/lib/api/entities/api-lessons";
-import { useToast } from "@/frontend/hooks/useToast";
+} from "@/lib/api/entities/api-lessons";
+import { useToast } from "@/hooks/useToast";
 import { Toaster } from "react-hot-toast";
 import { infoLesson } from "@/types/types";
-import { useUnsavedChanges } from "@/frontend/hooks/useUnsavedChanges";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 
 export default function Editor() {
   const params = useParams();

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { BlockItem } from "./BlockItem";
-import { useLearning } from "@/frontend/hooks/useLearning";
+import { useLearning } from "@/hooks/useLearning";
 import type { ILesson } from "@/types/types";
 
 interface StatusConfig {

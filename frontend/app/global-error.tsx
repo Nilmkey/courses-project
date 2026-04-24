@@ -1,6 +1,6 @@
 "use client";
 
-import { useMounted } from "@/frontend/hooks/useMounted";
+import { useMounted } from "@/hooks/useMounted";
 
 export default function GlobalError({
   error,

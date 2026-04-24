@@ -1,9 +1,9 @@
 "use client";
 
-import { useMounted } from "@/frontend/hooks/useMounted";
+import { useMounted } from "@/hooks/useMounted";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useLearning } from "@/frontend/hooks/useLearning";
+import { useLearning } from "@/hooks/useLearning";
 import { SectionItem } from "./SectionItem";
 import { StreakFire } from "@/components/StreakFire";
 import { BookOpen, ArrowLeft, Sun, Moon, Trophy } from "lucide-react";

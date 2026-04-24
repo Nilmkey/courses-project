@@ -2,14 +2,14 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { useConstructor } from "@/frontend/hooks/useConstructor";
-import { db } from "@/frontend/lib/db";
+import { useConstructor } from "@/hooks/useConstructor";
+import { db } from "@/lib/db";
 import debounce from "lodash/debounce";
 import { infoLesson } from "@/types/types";
 import {
   lessonsBlocksApi,
   toCourseBlock,
-} from "@/frontend/lib/api/entities/api-lessons";
+} from "@/lib/api/entities/api-lessons";
 import { Loader2 } from "lucide-react";
 
 const DndEditor = dynamic(() => import("./editorCore"), {

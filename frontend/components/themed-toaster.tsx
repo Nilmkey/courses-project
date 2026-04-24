@@ -2,7 +2,7 @@
 
 import { Toaster } from "react-hot-toast";
 import { useTheme } from "next-themes";
-import { useMounted } from "@/frontend/hooks/useMounted";
+import { useMounted } from "@/hooks/useMounted";
 
 export function ThemedToaster() {
   const { theme, resolvedTheme } = useTheme();

@@ -34,7 +34,7 @@ export async function deleteAvatar(): Promise<void> {
 //   deleteAvatar,
 // };
 
-import { api } from "@/frontend/lib/api/api-client";
+import { api } from "@/lib/api/api-client";
 
 export interface User {
   id: string;

@@ -15,7 +15,7 @@ import {
   Minus,
   Image,
 } from "lucide-react";
-import { apiRequest } from "@/frontend/lib/api/api-client";
+import { apiRequest } from "@/lib/api/api-client";
 
 // Загрузка изображения на сервер
 async function uploadImageFile(file: File): Promise<string> {

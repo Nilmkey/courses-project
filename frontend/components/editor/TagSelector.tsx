@@ -5,9 +5,9 @@ import { X, Plus, Search, Loader2 } from "lucide-react";
 import {
   tagsApi,
   type TagResponse,
-} from "@/frontend/lib/api/entities/api-tags";
-import { slugify } from "@/frontend/lib/utils/slugify";
-import { useToast } from "@/frontend/hooks/useToast";
+} from "@/lib/api/entities/api-tags";
+import { slugify } from "@/lib/utils/slugify";
+import { useToast } from "@/hooks/useToast";
 
 interface TagSelectorProps {
   selectedTagIds: string[];

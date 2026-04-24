@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { auth } from "@/backend/auth";
+import { auth } from "../../../backend/auth";
 import { fromNodeHeaders } from "better-auth/node";
 
 export const adminOnly = async (

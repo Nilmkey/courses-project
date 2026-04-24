@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Code, ChevronRight, Loader2 } from "lucide-react";
-import { coursesApi } from "@/frontend/lib/api/entities/api-courses";
-import { tagsApi } from "@/frontend/lib/api/entities/api-tags";
+import { coursesApi } from "@/lib/api/entities/api-courses";
+import { tagsApi } from "@/lib/api/entities/api-tags";
 import { CourseApiResponse, CourseLevel, ITag } from "@/types/types";
 import HeaderNoCourses from "../../../components/ui/header-no-courses";
 import Footer from "@/components/ui/footer";

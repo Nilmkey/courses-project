@@ -20,7 +20,7 @@ import {
 import { Section, SectionLesson } from "@/types/types";
 import { SectionItem } from "./SectionItem";
 import { AddSectionButton } from "./AddSectionButton";
-import { useSection } from "@/frontend/hooks/useSection";
+import { useSection } from "@/hooks/useSection";
 import { useParams, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
@@ -36,9 +36,9 @@ import {
 import {
   sectionsApi,
   lessonsApi,
-} from "@/frontend/lib/api/entities/api-sections";
-import { useToast } from "@/frontend/hooks/useToast";
-import { useUnsavedChanges } from "@/frontend/hooks/useUnsavedChanges";
+} from "@/lib/api/entities/api-sections";
+import { useToast } from "@/hooks/useToast";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 
 interface CourseEditorCoreProps {
   courseId: string;

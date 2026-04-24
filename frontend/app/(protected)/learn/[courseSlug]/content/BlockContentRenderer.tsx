@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { useLearning } from "@/frontend/hooks/useLearning";
+import { useLearning } from "@/hooks/useLearning";
 import { TextBlockView } from "./TextBlockView";
 import { VideoBlockView } from "./VideoBlockView";
 import { QuizBlockView } from "./QuizBlockView";

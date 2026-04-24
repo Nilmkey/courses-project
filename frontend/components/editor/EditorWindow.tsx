@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { X } from "lucide-react";
-import { useConstructor } from "@/frontend/hooks/useConstructor";
+import { useConstructor } from "@/hooks/useConstructor";
 import { BlockContent } from "@/types/types";
 import { TipTapWrapper } from "./forms/TextForm";
 import { VideoForm } from "./forms/VideoForm";

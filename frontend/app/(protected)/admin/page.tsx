@@ -18,8 +18,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { coursesApi } from "@/frontend/lib/api/entities/api-courses";
-import { useToast } from "@/frontend/hooks/useToast";
+import { coursesApi } from "@/lib/api/entities/api-courses";
+import { useToast } from "@/hooks/useToast";
 import { handleCreate } from "./newCourse";
 
 interface AdminCourse {

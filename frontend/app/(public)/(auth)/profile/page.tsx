@@ -5,16 +5,16 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
-import { ExtendedUser } from "@/backend/auth";
-import { authClient } from "@/frontend/lib/auth-client";
-import { ApiError } from "@/frontend/lib/api/api-client";
-import { API_BASE_URL } from "@/frontend/config/config";
-import { useToast } from "@/frontend/hooks/useToast";
+import { ExtendedUser } from "../../../../../backend/auth";
+import { authClient } from "@/lib/auth-client";
+import { ApiError } from "@/lib/api/api-client";
+import { API_BASE_URL } from "@/config/config";
+import { useToast } from "@/hooks/useToast";
 import {
   enrollmentApi,
   EnrollmentWithProgress,
-} from "@/frontend/lib/api/entities/api-enrollment";
-import { useStreak } from "@/frontend/hooks/useStreak";
+} from "@/lib/api/entities/api-enrollment";
+import { useStreak } from "@/hooks/useStreak";
 import {
   Code,
   Flame,

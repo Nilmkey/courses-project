@@ -2,8 +2,8 @@ import { useEffect, useState, useMemo } from "react";
 import {
   streakApi,
   type StreakResponse,
-} from "@/frontend/lib/api/entities/api-streak";
-import { useToast } from "@/frontend/hooks/useToast";
+} from "@/lib/api/entities/api-streak";
+import { useToast } from "@/hooks/useToast";
 
 export interface UseStreakResult {
   count: number;

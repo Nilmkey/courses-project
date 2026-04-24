@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { ZoomContext } from "@/frontend/contexts/ZoomContext";
+import { ZoomContext } from "@/contexts/ZoomContext";
 
 export function useZoom() {
   const context = useContext(ZoomContext);

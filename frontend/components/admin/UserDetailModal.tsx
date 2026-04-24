@@ -15,13 +15,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Toaster } from "react-hot-toast";
-import { useToast } from "@/frontend/hooks/useToast";
+import { useToast } from "@/hooks/useToast";
 import {
   usersApi,
   type User,
   type UserEnrollment,
-} from "@/frontend/lib/api/entities/api-users";
-import { coursesApi } from "@/frontend/lib/api/entities/api-courses";
+} from "@/lib/api/entities/api-users";
+import { coursesApi } from "@/lib/api/entities/api-courses";
 import {
   AlertDialog,
   AlertDialogContent,

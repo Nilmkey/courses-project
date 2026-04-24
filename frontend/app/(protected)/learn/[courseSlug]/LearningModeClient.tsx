@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { LearningContextProvider } from "@/frontend/contexts/LearningContext";
+import { LearningContextProvider } from "@/contexts/LearningContext";
 import { CourseSidebar } from "./sidebar/CourseSidebar";
 import { BlockContentRenderer } from "./content/BlockContentRenderer";
 import { NavigationHeader } from "@/components/learning/NavigationHeader";
 import { MobileSidebar } from "./MobileSidebar";
-import { useCourseData } from "@/frontend/hooks/useCourseData";
+import { useCourseData } from "@/hooks/useCourseData";
 import type { ICourse, ISection } from "@/types/types";
 
 interface LearningModeClientProps {

@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, memo } from "react";
 import { CheckCircle2, Circle, XCircle } from "lucide-react";
 import { CompletionButton } from "@/components/learning/CompletionButton";
-import { useLearning } from "@/frontend/hooks/useLearning";
+import { useLearning } from "@/hooks/useLearning";
 import type { IQuizBlock, IQuizAnswer } from "@/types/types";
 
 const QUESTION_TYPE_BADGES = {

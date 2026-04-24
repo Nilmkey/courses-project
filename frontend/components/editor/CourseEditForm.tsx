@@ -10,7 +10,8 @@ import {
   Sparkles,
   Settings2,
   Info,
-} from "lucide-react";@/frontend/components/ui/button
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { CourseTitleInput } from "./CourseTitleInput";
 import { CourseDescriptionInput } from "./CourseDescriptionInput";
 import { CourseLevelSelect, type CourseLevel } from "./CourseLevelSelect";
@@ -18,9 +19,8 @@ import { CoursePriceSlider } from "./CoursePriceSlider";
 import { CoursePublishToggle } from "./CoursePublishToggle";
 import { CourseEnrollmentToggle } from "./CourseEnrollmentToggle";
 import { TagSelector } from "./TagSelector";
-import { Button } from "@/components/ui/button";
-import { coursesApi } from "@/frontend/lib/api/entities/api-courses";
-import { useToast } from "@/frontend/hooks/useToast";
+import { coursesApi } from "@/lib/api/entities/api-courses";
+import { useToast } from "@/hooks/useToast";
 import type { CourseFormData } from "@/types/types";
 
 const defaultCourseData: CourseFormData = {

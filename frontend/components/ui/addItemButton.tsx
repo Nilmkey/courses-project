@@ -2,8 +2,8 @@
 
 import { Plus, Type, Video, HelpCircle } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useConstructor } from "@/frontend/hooks/useConstructor";
-import { createNewBlock } from "@/frontend/lib/makeBlock";
+import { useConstructor } from "@/hooks/useConstructor";
+import { createNewBlock } from "@/lib/makeBlock";
 import { BlockType } from "@/types/types";
 
 interface MenuLinkProps {

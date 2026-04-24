@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useToast } from "@/frontend/hooks/useToast";
+import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { ICourse, ITag } from "@/types/types";
-import { coursesApi } from "@/frontend/lib/api/entities/api-courses";
-import { tagsApi } from "@/frontend/lib/api/entities/api-tags";
-import { enrollmentApi } from "@/frontend/lib/api/entities/api-enrollment";
-import { authClient } from "@/frontend/lib/auth-client";
+import { coursesApi } from "@/lib/api/entities/api-courses";
+import { tagsApi } from "@/lib/api/entities/api-tags";
+import { enrollmentApi } from "@/lib/api/entities/api-enrollment";
+import { authClient } from "@/lib/auth-client";
 import Header from "@/components/ui/header";
 import {
   Code,

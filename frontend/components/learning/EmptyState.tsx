@@ -1,7 +1,7 @@
 "use client";
 
 import { BookOpen, ArrowLeft } from "lucide-react";
-import { useLearning } from "@/frontend/hooks/useLearning";
+import { useLearning } from "@/hooks/useLearning";
 
 export function EmptyState() {
   const { sections, navigateToBlock } = useLearning();

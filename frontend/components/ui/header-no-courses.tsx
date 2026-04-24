@@ -4,10 +4,10 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { authClient } from "@/frontend/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { StreakFire } from "@/components/StreakFire";
-import { useToast } from "@/frontend/hooks/useToast";
+import { useToast } from "@/hooks/useToast";
 
 interface SessionUser {
   id: string;

@@ -1,4 +1,4 @@
-import { api } from "@/frontend/lib/api/api-client";
+import { api } from "@/lib/api/api-client";
 import type { IQuizAnswer } from "@/types/types";
 
 /**

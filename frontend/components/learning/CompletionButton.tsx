@@ -3,8 +3,8 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle, Loader2, ArrowRight } from "lucide-react";
-import { useLearning } from "@/frontend/hooks/useLearning";
-import { authClient } from "@/frontend/lib/auth-client";
+import { useLearning } from "@/hooks/useLearning";
+import { authClient } from "@/lib/auth-client";
 
 interface SessionUser {
   id: string;

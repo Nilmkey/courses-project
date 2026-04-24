@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { ConstructorContext } from "@/frontend/contexts/ConstructorContext";
+import { ConstructorContext } from "@/contexts/ConstructorContext";
 import { CourseBlock, Section, SectionLesson, infoLesson } from "@/types/types";
-import { SectionContext } from "@/frontend/contexts/SectionContext";
-import { addErrorObserver } from "@/frontend/lib/api/api-client";
+import { SectionContext } from "@/contexts/SectionContext";
+import { addErrorObserver } from "@/lib/api/api-client";
 import { useRouter } from "next/navigation";
 
 export default function Provider({ children }: { children: React.ReactNode }) {

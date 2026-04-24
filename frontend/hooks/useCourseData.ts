@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { coursesApi } from "@/frontend/lib/api/entities/api-courses";
-import { api } from "@/frontend/lib/api/api-client";
+import { coursesApi } from "@/lib/api/entities/api-courses";
+import { api } from "@/lib/api/api-client";
 import type { ICourse, ISection } from "@/types/types";
 
 interface ProgressData {

@@ -19,8 +19,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/frontend/hooks/useToast";
-import { usersApi, type User } from "@/frontend/lib/api/entities/api-users";
+import { useToast } from "@/hooks/useToast";
+import { usersApi, type User } from "@/lib/api/entities/api-users";
 import UserDetailModal from "@/components/admin/UserDetailModal";
 
 export default function AdminUsers() {

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { ConstructorContext } from "@/frontend/contexts/ConstructorContext";
+import { ConstructorContext } from "@/contexts/ConstructorContext";
 
 export function useConstructor() {
   const context = useContext(ConstructorContext);

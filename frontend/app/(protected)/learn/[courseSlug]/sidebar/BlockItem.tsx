@@ -1,7 +1,7 @@
 "use client";
 
 import { FileText, Video, HelpCircle, CheckCircle } from "lucide-react";
-import { useLearning } from "@/frontend/hooks/useLearning";
+import { useLearning } from "@/hooks/useLearning";
 import type { IBlock } from "@/types/types";
 
 const BLOCK_ICONS = {

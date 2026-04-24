@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/frontend/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { Sparkles, ArrowRight } from "lucide-react";
 
 export default function End() {

@@ -1,7 +1,7 @@
 "use client";
 
 import { Flame } from "lucide-react";
-import { useStreak } from "@/frontend/hooks/useStreak";
+import { useStreak } from "@/hooks/useStreak";
 
 interface StreakFireProps {
   showCount?: boolean;

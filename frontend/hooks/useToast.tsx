@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import { useTheme } from "next-themes";
 import { useCallback } from "react";
-import { useMounted } from "@/frontend/hooks/useMounted";
+import { useMounted } from "@/hooks/useMounted";
 
 export const useToast = () => {
   const { theme, resolvedTheme } = useTheme();

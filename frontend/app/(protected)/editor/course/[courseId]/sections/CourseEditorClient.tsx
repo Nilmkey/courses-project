@@ -4,9 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Section } from "@/types/types";
 import { CourseEditorCore } from "./CourseEditorCore";
-import { useSection } from "@/frontend/hooks/useSection";
-import { sectionsApi } from "@/frontend/lib/api/entities/api-sections";
-import { useToast } from "@/frontend/hooks/useToast";
+import { useSection } from "@/hooks/useSection";
+import { sectionsApi } from "@/lib/api/entities/api-sections";
+import { useToast } from "@/hooks/useToast";
 import { Loader2 } from "lucide-react";
 
 export function CourseEditorClient() {

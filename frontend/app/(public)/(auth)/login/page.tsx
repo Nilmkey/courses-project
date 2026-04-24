@@ -4,11 +4,11 @@ import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { authClient } from "@/frontend/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/frontend/hooks/useToast";
+import { useToast } from "@/hooks/useToast";
 import {
   Code,
   AlertCircle,

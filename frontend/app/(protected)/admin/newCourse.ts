@@ -1,9 +1,9 @@
 "use server";
 
-import { api } from "@/frontend/lib/api/api-client";
+import { api } from "@/lib/api/api-client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import type { CourseResponse } from "@/backend/api/v1/courses/courses.types";
+import type { CourseResponse } from "../../../../backend/api/v1/courses/courses.types";
 
 export async function handleCreate() {
   const cookieStore = await cookies();

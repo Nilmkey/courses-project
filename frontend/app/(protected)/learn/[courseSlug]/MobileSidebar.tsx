@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { useMounted } from "@/frontend/hooks/useMounted";
+import { useMounted } from "@/hooks/useMounted";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useLearning } from "@/frontend/hooks/useLearning";
+import { useLearning } from "@/hooks/useLearning";
 import { SectionItem } from "./sidebar/SectionItem";
 import { BookOpen, X, Sun, Moon, Trophy, Menu } from "lucide-react";
 

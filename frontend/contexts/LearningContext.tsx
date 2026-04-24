@@ -18,8 +18,8 @@ import type {
 import {
   progressApi,
   type BlockProgressResponse,
-} from "@/frontend/lib/api/entities/api-progress";
-import { useToast } from "@/frontend/hooks/useToast";
+} from "@/lib/api/entities/api-progress";
+import { useToast } from "@/hooks/useToast";
 
 export type LessonStatus = "not-started" | "in-progress" | "completed";
 

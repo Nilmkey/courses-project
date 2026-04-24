@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
-import { useLearning } from "@/frontend/hooks/useLearning";
+import { useLearning } from "@/hooks/useLearning";
 import { ProgressBar } from "./ProgressBar";
 
 interface NavigationHeaderProps {
