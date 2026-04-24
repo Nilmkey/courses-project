@@ -6,10 +6,12 @@ import type {
   ILessonProgress,
   ISectionProgress,
 } from "../models";
-import { Types, Document } from "mongoose";
+import { Types, AnyBulkWriteOperation } from "mongoose";
 import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiError";
 import { streakService } from "./streak.service";
+
+type IProgressWithTimestamps = IProgress & { createdAt?: Date; updatedAt?: Date };
 
 export interface QuizAnswerInput {
   questionId: string;
@@ -607,10 +609,10 @@ export const progressService = {
       overallProgress: progressDoc.overallProgress || 0,
       stats,
       createdAt:
-        (progressDoc as any).createdAt?.toISOString() ||
+        (progressDoc as IProgressWithTimestamps).createdAt?.toISOString() ||
         new Date().toISOString(),
       updatedAt:
-        (progressDoc as any).updatedAt?.toISOString() ||
+        (progressDoc as IProgressWithTimestamps).updatedAt?.toISOString() ||
         new Date().toISOString(),
     };
   },
@@ -1026,7 +1028,7 @@ export const progressService = {
       return { updatedUsers: 0, message: "Нет активных пользователей" };
     }
 
-    const progressBulkOps: any[] = [];
+    const progressBulkOps: AnyBulkWriteOperation[] = [];
     const completedUserIds: Types.ObjectId[] = [];
     const activeUserIds: Types.ObjectId[] = [];
 

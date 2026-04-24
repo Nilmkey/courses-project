@@ -14,6 +14,7 @@ import {
   enrollmentApi,
   EnrollmentWithProgress,
 } from "@/lib/api/entities/api-enrollment";
+import { ICourse, ISection } from "@/types/types";
 import { useStreak } from "@/hooks/useStreak";
 import {
   Code,
@@ -84,7 +85,7 @@ const coursesInfo: Record<string, CourseInfo> = {
     text: "text-indigo-600",
     shadow: "shadow-indigo-500/20",
     icon: "⚙️",
-  },
+  },  
 };
 
 export default function ProfilePage() {
@@ -94,9 +95,7 @@ export default function ProfilePage() {
 
   const [mounted, setMounted] = useState(false);
   const { data: session, isPending } = authClient.useSession();
-  const [enrolledCourses, setEnrolledCourses] = useState<
-    EnrollmentWithProgress[]
-  >([]);
+  const [enrolledCourses, setEnrolledCourses] = useState<EnrollmentWithProgress[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [_isUploading, setIsUploading] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
@@ -105,36 +104,10 @@ export default function ProfilePage() {
 
   const user = session?.user as unknown as ExtendedUser | undefined;
 
-  useEffect(() => {
-    if (session?.user) {
-      const extendedUser = session.user as unknown as ExtendedUser;
-      setCurrentAvatar(extendedUser.image ?? null);
-    }
-  }, [session]);
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      setMounted(true);
-    });
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
-  useEffect(() => {
-    if (!isPending && !session) {
-      router.push("/login");
-      return;
-    }
-
-    if (session?.user && !loadingCourses && !hasLoadedCourses) {
-      loadEnrolledCourses();
-    }
-  }, [session, isPending, router, loadingCourses, hasLoadedCourses]);
-
   const loadEnrolledCourses = useCallback(async () => {
     try {
       setLoadingCourses(true);
       const enrollments = await enrollmentApi.getMyCoursesWithProgress();
-      console.log("=== Enrolled Courses Debug ===", enrollments);
       setEnrolledCourses(enrollments || []);
       setHasLoadedCourses(true);
     } catch (error) {
@@ -146,40 +119,29 @@ export default function ProfilePage() {
     }
   }, []);
 
-  if (!mounted || isPending) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative">
-            <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-20 animate-pulse" />
-            <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl flex items-center justify-center relative z-10 border border-slate-100 dark:border-slate-800">
-               <Loader2 className="w-8 h-8 animate-spin text-indigo-600 dark:text-indigo-400" />
-            </div>
-          </div>
-          <p className="text-sm font-bold text-slate-500 dark:text-slate-400 tracking-[0.2em] uppercase animate-pulse">
-            Загрузка профиля
-          </p>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  if (!session) return null;
+  useEffect(() => {
+    if (session?.user) {
+      const extendedUser = session.user as unknown as ExtendedUser;
+      setCurrentAvatar(extendedUser.image ?? null);
+    }
+  }, [session]);
 
-  const userRole = (session.user as { role?: string }).role || "user";
-  const startedCourses = enrolledCourses.length;
-  const completedCourses = enrolledCourses.filter(
-    (e) => e.status === "completed",
-  ).length;
-  const totalPercentage =
-    startedCourses > 0
-      ? Math.round(
-          enrolledCourses.reduce(
-            (sum, e) => sum + (e.status === "completed" ? 100 : 0),
-            0,
-          ) / startedCourses,
-        )
-      : 0;
+  useEffect(() => {
+    if (isPending) return;
+
+    if (!session) {
+      router.push("/login");
+      return;
+    }
+
+    if (!hasLoadedCourses && !loadingCourses) {
+      loadEnrolledCourses();
+    }
+  }, [session, isPending, router, hasLoadedCourses, loadingCourses, loadEnrolledCourses]);
 
   const handleLogout = () => {
     toast.confirm(
@@ -220,7 +182,6 @@ export default function ProfilePage() {
 
   const handleUploadAvatar = async (file: File) => {
     setIsUploading(true);
-
     try {
       const formData = new FormData();
       formData.append("avatar", file);
@@ -239,16 +200,11 @@ export default function ProfilePage() {
       }
 
       const data = await response.json();
-
       setCurrentAvatar(data.avatar);
       if (fileInputRef.current) fileInputRef.current.value = "";
-
       toast.success("Аватар успешно загружен");
     } catch (error) {
-      const message =
-        error instanceof ApiError
-          ? error.message
-          : "Ошибка при загрузке аватара";
+      const message = error instanceof ApiError ? error.message : "Ошибка при загрузке аватара";
       toast.error(message);
     } finally {
       setIsUploading(false);
@@ -273,13 +229,9 @@ export default function ProfilePage() {
           }
 
           setCurrentAvatar(null);
-
           toast.success("Аватар успешно удалён");
         } catch (error) {
-          const message =
-            error instanceof ApiError
-              ? error.message
-              : "Ошибка при удалении аватара";
+          const message = error instanceof ApiError ? error.message : "Ошибка при удалении аватара";
           toast.error(message);
         }
       },
@@ -289,6 +241,38 @@ export default function ProfilePage() {
       },
     );
   };
+
+  if (!mounted || isPending) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-20 animate-pulse" />
+            <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl flex items-center justify-center relative z-10 border border-slate-100 dark:border-slate-800">
+              <Loader2 className="w-8 h-8 animate-spin text-indigo-600 dark:text-indigo-400" />
+            </div>
+          </div>
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400 tracking-[0.2em] uppercase animate-pulse">
+            Загрузка профиля
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) return null;
+
+  const userRole = (session.user as { role?: string }).role || "user";
+  const typedEnrolledCourses = enrolledCourses.map(enrollment => ({
+    ...enrollment,
+    course: enrollment.course as unknown as (ICourse & { sections?: ISection[] })
+  }));
+
+  const startedCourses = typedEnrolledCourses.length;
+  const completedCourses = typedEnrolledCourses.filter((e) => e.status === "completed").length;
+  const totalPercentage = startedCourses > 0
+    ? Math.round(typedEnrolledCourses.reduce((sum, e) => sum + (e.status === "completed" ? 100 : 0), 0) / startedCourses)
+    : 0;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 font-sans transition-colors duration-300 flex flex-col selection:bg-indigo-500/30">
@@ -492,18 +476,21 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 enrolledCourses.map((enrollment) => {
-                  const course = enrollment.course;
-                  if (!course) return null;
+                const course = enrollment.course as ICourse & { sections?: ISection[] };
+  
+                if (!course) return null;
 
-                  const courseId = course.slug || course._id;
-                  const info = coursesInfo[courseId] || coursesInfo.html;
-                  const isCompleted = enrollment.status === "completed";
-                  const progress = enrollment.progress?.progress || 0;
+                const courseId = course.slug || course._id;
+                const info = coursesInfo[courseId] || coursesInfo.html;
+                const isCompleted = enrollment.status === "completed";
+                const progress = enrollment.progress?.progress || 0;
 
-                  const totalSections = (course as any).sections?.length || 0;
-                  const completedSections = isCompleted
-                    ? totalSections
-                    : Math.floor((progress / 100) * totalSections);
+                const totalSections = course.sections?.length || 0;
+  
+                const completedSections = isCompleted
+                ? totalSections
+                : Math.floor((progress / 100) * totalSections);
+
 
                   return (
                     <div

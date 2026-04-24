@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo, useMemo } from "react";
 import { CompletionButton } from "@/components/learning/CompletionButton";
 import type { ITextBlock } from "@/types/types";
 import DOMPurify from "dompurify";
@@ -105,15 +105,16 @@ interface ReadonlyEditorProps {
 }
 
 // Оптимизированный компонент для отображения (без TipTap)
+
 const ReadonlyEditor = memo<ReadonlyEditorProps>(function ReadonlyEditor({
   content,
 }) {
-  const [htmlContent, setHtmlContent] = useState("");
-
-  useEffect(() => {
+  const htmlContent = useMemo(() => {
     const converted = markdownToHtml(content);
-    const cleanHtml = DOMPurify.sanitize(converted);
-    setHtmlContent(cleanHtml);
+    if (typeof window !== "undefined") {
+      return DOMPurify.sanitize(converted);
+    }
+    return converted;
   }, [content]);
 
   return (

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { X, Loader2, Trash2, RotateCcw, UserCog, BookOpen, AlertTriangle, UserPlus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import Image from "next/image";
 import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 import { usersApi, type User, type UserEnrollment } from "@/lib/api/entities/api-users";
@@ -19,6 +19,12 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
+interface Course {
+  _id: string;
+  title: string;
+  level: string;
+}
+
 interface UserDetailModalProps {
   user: User;
   isOpen: boolean;
@@ -32,7 +38,7 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
   const [enrollments, setEnrollments] = useState<UserEnrollment[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
   const [selectedRole, setSelectedRole] = useState<User["role"]>(user.role);
-  const [availableCourses, setAvailableCourses] = useState<any[]>([]);
+  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [courseSearch, setCourseSearch] = useState("");
@@ -45,18 +51,7 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
     variant?: "default" | "destructive";
   }>({ isOpen: false, title: "", description: "", onConfirm: async () => {} });
 
-  useEffect(() => {
-    if (isOpen && user) {
-      setSelectedRole(user.role);
-      setSelectedCourseId("");
-      setCourseSearch("");
-      setShowCourseDropdown(false);
-      loadEnrollments();
-      loadAvailableCourses();
-    }
-  }, [isOpen, user]);
-
-  const loadAvailableCourses = async () => {
+  const loadAvailableCourses = useCallback(async () => {
     try {
       setLoadingCourses(true);
       const response = await coursesApi.getAll();
@@ -66,9 +61,9 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
     } finally {
       setLoadingCourses(false);
     }
-  };
+  }, []);
 
-  const loadEnrollments = async () => {
+  const loadEnrollments = useCallback(async () => {
     try {
       setLoadingEnrollments(true);
       const data = await usersApi.getEnrollments(user.id);
@@ -79,7 +74,18 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
     } finally {
       setLoadingEnrollments(false);
     }
-  };
+  }, [user.id, toast]);
+
+  useEffect(() => {
+    if (isOpen && user) {
+      setSelectedRole(user.role);
+      setSelectedCourseId("");
+      setCourseSearch("");
+      setShowCourseDropdown(false);
+      loadEnrollments();
+      loadAvailableCourses();
+    }
+  }, [isOpen, user, loadEnrollments, loadAvailableCourses]);
 
   const handleUpdateRole = async () => {
     if (selectedRole === user.role) {
@@ -158,9 +164,9 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
           setShowCourseDropdown(false);
           loadEnrollments();
           toast.success("Пользователь записан на курс");
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error("Ошибка записи на курс:", err);
-          toast.error(err?.message || "Не удалось записать на курс");
+          toast.error(err instanceof Error ? err.message : "Не удалось записать на курс");
         }
       },
     });
@@ -178,9 +184,9 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
           toast.success("Аккаунт пользователя удалён");
           onClose();
           onUpdateUserRole?.();
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error("Ошибка удаления аккаунта:", err);
-          toast.error(err?.message || "Не удалось удалить аккаунт");
+          toast.error(err instanceof Error ? err.message : "Не удалось удалить аккаунт");
         }
       },
     });
@@ -246,8 +252,8 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
                     <div className="relative">
                       <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full scale-125" />
                       {user.avatar ? (
-                        <img
-                          src={user.avatar}
+                        <Image
+                        src={user.avatar}
                           alt={user.name}
                           className="w-32 h-32 rounded-3xl object-cover relative z-10 shadow-lg border-2 border-white dark:border-slate-800"
                         />
