@@ -1,0 +1,129 @@
+.milkdown .crepe-block-handle,
+.milkdown [draggable="true"],
+.milkdown .block-handler {
+  display: none !important;
+}
+
+.milkdown .block-provider {
+  display: none !important;
+}
+
+.milkdown .editor {
+  line-height: 0.2;
+}
+
+.dark .milkdown .editor {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .milkdown .editor p,
+.dark .milkdown .editor span,
+.dark .milkdown .editor div {
+  color: #f1f5f9 !important;
+}
+
+.dark .milkdown .editor h1,
+.dark .milkdown .editor h2,
+.dark .milkdown .editor h3,
+.dark .milkdown .editor h4,
+.dark .milkdown .editor h5,
+.dark .milkdown .editor h6 {
+  color: #f1f5f9 !important;
+}
+
+.dark .milkdown .editor {
+  border: 1px solid #334155 !important;
+  box-shadow: none !important;
+}
+
+.dark .milkdown .editor-focused {
+  border-color: #475569 !important;
+}
+
+.dark .milkdown .editor .cm-editor,
+.dark .milkdown .editor .ProseMirror {
+  border: none !important;
+}
+
+.dark .milkdown .editor [data-placeholder]::before,
+.dark .milkdown .editor .placeholder::before,
+.dark .milkdown .editor ::placeholder {
+  color: #cbd5e1 !important;
+  opacity: 1 !important;
+}
+
+.dark .milkdown .editor p.is-editor-empty:first-child::before,
+.dark .milkdown .editor > p:first-child:empty::before {
+  color: #cbd5e1 !important;
+  content: attr(data-placeholder);
+  opacity: 1 !important;
+  pointer-events: none;
+}
+
+.milkdown-crepe {
+  --crepe-color-placeholder: transparent;
+}
+
+.dark .milkdown {
+  --crepe-color-background: #1b1c1d;
+  --crepe-color-on-background: #f8f9ff;
+  --crepe-color-surface: #111418;
+  --crepe-color-surface-low: #191c20;
+  --crepe-color-on-surface: #e1e2e8;
+  --crepe-color-on-surface-variant: #c3c6cf;
+  --crepe-color-outline: #8d9199;
+  --crepe-color-primary: #a1c9fd;
+  --crepe-color-secondary: #3c4858;
+  --crepe-color-on-secondary: #d7e3f8;
+  --crepe-color-inverse: #e1e2e8;
+  --crepe-color-on-inverse: #2e3135;
+  --crepe-color-inline-code: #ffb4ab;
+  --crepe-color-error: #ffb4ab;
+  --crepe-color-hover: #1d2024;
+  --crepe-color-selected: #32353a;
+  --crepe-color-inline-area: #111418;
+}
+
+/* ===== Code blocks в dark mode ===== */
+/* Переопределяем слишком общие правила и Nord тему */
+
+.dark .milkdown .editor pre,
+.dark .milkdown .editor .crepe-code-block,
+.dark .milkdown .editor [data-node-name="codeBlock"],
+.dark .milkdown .editor .code-block,
+.dark .milkdown .editor pre[class*="language-"],
+.dark .milkdown .editor .ProseMirror pre,
+.dark .milkdown .milkdown-code-block {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-radius: 0.5rem;
+  border: 1px solid #334155 !important;
+}
+
+.dark .milkdown .editor pre code,
+.dark .milkdown .editor .crepe-code-block code,
+.dark .milkdown .editor [data-node-name="codeBlock"] code,
+.dark .milkdown .milkdown-code-block code {
+  background: transparent !important;
+  padding: 0;
+}
+
+.dark .milkdown .editor :not(pre) > code,
+.dark .milkdown .editor p > code,
+.dark .milkdown .editor span > code {
+  background: #334155 !important;
+  color: #f59e0b !important;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.milkdown img {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 50px !important;
+  background: #eee; /* Если картинка прозрачная или битая, увидим серый блок */
+  border: 2px solid red; /* Временная рамка для отладки */
+}
