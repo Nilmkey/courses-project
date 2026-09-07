@@ -4,5 +4,5 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
-EXPOSE 7777
-CMD ["pnpm", "dev:back"]
+EXPOSE 3000
+CMD ["pnpm", "dev"]
