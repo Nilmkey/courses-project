@@ -1,6 +1,8 @@
 import { api } from "@/lib/api/api-client";
 import type { ITag } from "@/types/types";
 
+export type TagResponse = ITag;
+
 export interface TagsListResponse {
   tags: ITag[];
 }

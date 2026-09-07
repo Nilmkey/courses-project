@@ -47,19 +47,30 @@
 - Менеджер пакетов **pnpm** (рекомендуется) или npm.
 
 ### 2. Настройка окружения
-В папках `frontend` и `backend` создайте файлы `.env` на основе примера. **Важно:** не выкладывайте реальные ключи в репозиторий!
+В корне проекта создайте единый файл `.env` на основе примера `.env.example`. **Важно:** не выкладывайте реальные ключи в репозиторий!
 
-**Backend (`backend/.env`):**
+**Корень проекта (`.env`):**
 ```env
+# Backend
+PORT=7777
+HOST=0.0.0.0
+NODE_ENV=development
+
+# Database
 DB_URL=mongodb://localhost:27017/courses-project
 BETTER_AUTH_SECRET=ваш_секрет
-PORT=7777
-```
 
-**Frontend (`frontend/.env`):**
-```env
+# CORS
+CORS_ORIGIN=http://localhost:3000
+
+# Frontend
 NEXT_PUBLIC_API_URL=http://localhost:7777/api
 NEXT_PUBLIC_BACKEND_URL=http://localhost:7777
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 ### 3. Установка зависимостей

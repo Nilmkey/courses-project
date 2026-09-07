@@ -60,7 +60,12 @@ export const createApp = () => {
     }),
   );
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+      contentSecurityPolicy: false,
+    }),
+  );
 
   // 2. Session endpoint rate limiter (высокий лимит, применяется ДО общего auth limiter)
   app.use("/api/auth/get-session", sessionRateLimiter);

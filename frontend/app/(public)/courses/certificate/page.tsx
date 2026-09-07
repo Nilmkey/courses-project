@@ -10,6 +10,6 @@ export const metadata: Metadata = {
 };
 
 export default async function CertificatePage() {
-  const nonce = (await headers()).get("x-nonce");
-  return <CertificateClient nonce={nonce}/>;
+  const nonce = (await headers()).get("x-nonce") || "";
+  return <CertificateClient nonce={nonce} />;
 }

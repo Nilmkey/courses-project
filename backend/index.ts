@@ -1,11 +1,9 @@
 // backend/index.ts
-import dotenv from "dotenv";
+import "./config/loadEnv";
 
 import { createApp } from "./app";
 import { connectDatabase } from "./config/database";
 import { appConfig } from "./config/app.config";
-
-dotenv.config();
 
 const DB_URL: string = process.env.DB_URL || "";
 const PORT: number = appConfig.server.port;

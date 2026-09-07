@@ -1,8 +1,9 @@
 import { MongoClient, Db, UpdateFilter } from "mongodb";
+import path from "path";
 import * as dotenv from "dotenv";
 
-// Загрузка переменных окружения
-dotenv.config();
+// Загрузка переменных окружения из корня проекта
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const MONGODB_URI = process.env.DB_URL || "mongodb://localhost:27017";
 const DATABASE_NAME = process.env.DATABASE_NAME || "test";

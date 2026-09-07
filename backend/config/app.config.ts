@@ -6,7 +6,7 @@ export interface ServerConfig {
 }
 
 export interface CorsConfig {
-  origin: string | string[];
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => void;
   credentials: boolean;
   methods: string[];
   allowedHeaders: string[];
@@ -29,6 +29,25 @@ const getEnvNumber = (key: string, defaultValue: number): number => {
   return Number.isNaN(parsed) ? defaultValue : parsed;
 };
 
+const isAllowedOrigin = (origin: string | undefined): boolean => {
+  if (!origin) return true;
+  const configuredOrigin = getEnv('CORS_ORIGIN', 'http://localhost:3000');
+  const frontendUrl = getEnv('FRONTEND_URL', 'http://localhost:3000');
+  const allowed = [
+    configuredOrigin,
+    frontendUrl,
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:7777',
+    'http://127.0.0.1:7777',
+  ];
+  return (
+    allowed.includes(origin) ||
+    /^https?:\/\/localhost(:\d+)?$/.test(origin) ||
+    /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)
+  );
+};
+
 export const appConfig: AppConfig = {
   server: {
     port: getEnvNumber('PORT', 7777),
@@ -36,10 +55,27 @@ export const appConfig: AppConfig = {
     env: (getEnv('NODE_ENV', 'development') as 'development' | 'production' | 'test'),
   },
   cors: {
-    origin: getEnv('CORS_ORIGIN', 'http://localhost:3000'),
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked for origin: ${origin}`));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Cookie',
+      'X-Requested-With',
+      'better-auth-agent',
+      'x-better-auth-version',
+      'x-csrf-token',
+      'baggage',
+      'sentry-trace',
+      'traceparent',
+    ],
   },
   apiPrefix: '/api',
 };
