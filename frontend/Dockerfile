@@ -8,5 +8,5 @@ RUN pnpm install
 
 COPY . .
 
-EXPOSE 7777
-CMD ["pnpm", "dev:back"]
+EXPOSE 3000
+CMD ["pnpm", "dev"]

@@ -74,7 +74,7 @@ export async function apiRequest<T>(
     ...options,
     credentials: withCredentials ? "include" : "same-origin", // "include" для cross-origin, "same-origin" для local
     headers,
-    body: isFormData
+    body: options.body instanceof FormData
       ? options.body
       : options.body !== undefined
         ? JSON.stringify(options.body)

@@ -4,7 +4,6 @@ import type { IEnrollment } from "../models";
 import type { Types } from "mongoose";
 import mongoose from "mongoose";
 import { progressService } from "./progress.service";
-import { CourseBlock } from "@/types/types";
 
 export interface EnrollmentCreateInput {
   user_id: string | Types.ObjectId;

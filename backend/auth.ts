@@ -6,6 +6,19 @@ import type { StreakObj, ExtendedUser } from "./types";
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:7777";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
+const trustedOrigins = Array.from(
+  new Set(
+    [
+      FRONTEND_URL,
+      BACKEND_URL,
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "http://localhost:7777",
+      "http://127.0.0.1:7777",
+    ].filter(Boolean) as string[],
+  ),
+);
+
 async function createIndexes() {
   await db.collection("user").createIndex({ email: 1 }, { unique: true });
   await db.collection("user").createIndex({ role: 1 });
@@ -20,7 +33,7 @@ async function initAuth() {
 export const auth = betterAuth({
   database: mongodbAdapter(db),
   baseURL: BACKEND_URL,
-  trustedOrigins: [FRONTEND_URL, BACKEND_URL],
+  trustedOrigins,
   emailAndPassword: {
     enabled: true,
   },

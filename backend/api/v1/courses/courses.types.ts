@@ -1,6 +1,6 @@
 // api/v1/courses/courses.types.ts
 
-import { ILessonBlock } from "@/backend/models/Lesson";
+import { ILessonBlock } from "../../../models/Lesson";
 
 // ==================== REQUEST ====================
 export interface CreateCourseRequest {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:7777";
+const NEXT_PUBLIC_BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:7777";
 const IS_DEV = process.env.NODE_ENV === "development";
 
 // Утилита для редиректа
@@ -38,18 +39,39 @@ export async function proxy(request: NextRequest) {
     ? `'self' 'unsafe-inline' 'unsafe-eval'`
     : `'self' 'nonce-${nonce}' 'strict-dynamic'`;
 
+  const connectOrigins = Array.from(
+    new Set([
+      "'self'",
+      "http://localhost:7777",
+      "http://127.0.0.1:7777",
+      "http://backend:7777",
+      BACKEND_URL,
+      NEXT_PUBLIC_BACKEND_URL,
+      "ws://localhost:3000",
+      "ws://127.0.0.1:3000",
+      "https://res.cloudinary.com",
+      "data:",
+      "blob:",
+    ].filter(Boolean))
+  ).join(" ");
+
+  const upgradeInsecure =
+    !IS_DEV && !BACKEND_URL.startsWith("http://")
+      ? "upgrade-insecure-requests;"
+      : "";
+
   const cspHeader = `
     default-src 'self';
     script-src ${scriptSrc};
     style-src 'self' 'unsafe-inline';
     img-src 'self' https://res.cloudinary.com data: blob:;
     font-src 'self' data:;
-    connect-src 'self' ${BACKEND_URL} https://res.cloudinary.com data:;
+    connect-src ${connectOrigins};
     base-uri 'self';
     form-action 'self';
     frame-src 'self' https://www.youtube.com https://player.vimeo.com;
     frame-ancestors 'none';
-    upgrade-insecure-requests;
+    ${upgradeInsecure}
   `
     .replace(/\s{2,}/g, " ")
     .trim();

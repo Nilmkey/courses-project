@@ -1,4 +1,5 @@
 import { Extension } from "@tiptap/core";
+import { PluginKey } from "@tiptap/pm/state";
 import Suggestion from "@tiptap/suggestion";
 import { ReactRenderer } from "@tiptap/react";
 import tippy, { Instance } from "tippy.js";
@@ -28,7 +29,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
       Suggestion({
         editor: this.editor,
         char: this.options.suggestion.char,
-        pluginKey: "slashCommand",
+        pluginKey: new PluginKey("slashCommand"),
         command: this.options.suggestion.command,
         allow: ({ state, range }) => {
           const $from = state.doc.resolve(range.from);
@@ -40,7 +41,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
         },
         render: () => {
           let component: ReactRenderer;
-          let popup: Instance | null = null;
+          let popup: Instance[] | null = null;
 
           return {
             onStart: (props) => {
@@ -54,7 +55,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
               }
 
               popup = tippy("body", {
-                getReferenceClientRect: props.clientRect,
+                getReferenceClientRect: props.clientRect as any,
                 appendTo: () => document.body,
                 content: component.element,
                 showOnCreate: true,
@@ -72,7 +73,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
               }
 
               popup?.[0]?.setProps({
-                getReferenceClientRect: props.clientRect,
+                getReferenceClientRect: props.clientRect as any,
               });
             },
 
@@ -82,7 +83,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
                 return true;
               }
 
-              return component.ref?.onKeyDown(props);
+              return (component.ref as any)?.onKeyDown?.(props);
             },
 
             onExit() {
