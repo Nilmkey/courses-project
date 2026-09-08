@@ -1,4 +1,4 @@
-import { MongoClient, Db, UpdateFilter } from "mongodb";
+import { MongoClient, Db, UpdateFilter, AnyBulkWriteOperation } from "mongodb";
 import path from "path";
 import * as dotenv from "dotenv";
 
@@ -16,9 +16,9 @@ interface StreakObject {
 }
 
 interface UserDocument {
-  _id: any;
+  _id: import("mongodb").ObjectId;
   streak: number | StreakObject;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface MigrationStats {
@@ -55,14 +55,14 @@ class StreakMigration {
   /**
    * Проверка: является ли значение числом
    */
-  private isNumberStreak(value: any): value is number {
+  private isNumberStreak(value: unknown): value is number {
     return typeof value === "number" && !isNaN(value);
   }
 
   /**
    * Проверка: является ли значение уже объектом streak
    */
-  private isObjectStreak(value: any): value is StreakObject {
+  private isObjectStreak(value: unknown): value is StreakObject {
     return (
       typeof value === "object" &&
       value !== null &&
@@ -98,7 +98,7 @@ class StreakMigration {
       console.log(`📋 Найдено документов: ${stats.total}`);
 
       // Обновляем документы в пакетном режиме
-      const updateOperations = [];
+      const updateOperations: AnyBulkWriteOperation<UserDocument>[] = [];
 
       for (const user of allUsers) {
         try {
@@ -181,7 +181,7 @@ class StreakMigration {
 
       console.log(`📋 Найдено документов: ${stats.total}`);
 
-      const updateOperations = [];
+      const updateOperations: AnyBulkWriteOperation<UserDocument>[] = [];
 
       for (const user of allUsers) {
         try {

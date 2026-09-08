@@ -1,5 +1,5 @@
 import { api } from "../api-client";
-import { progressApi } from "./api-progress";
+import { progressApi, type CourseProgressResponse } from "./api-progress";
 
 export interface EnrollmentResponse {
   _id: string;
@@ -18,11 +18,7 @@ export interface EnrollmentResponse {
 }
 
 export interface EnrollmentWithProgress extends EnrollmentResponse {
-  progress?: {
-    totalLessons: number;
-    completedLessons: number;
-    progress: number;
-  };
+  progress?: CourseProgressResponse;
 }
 
 export interface EnrollmentsListResponse {
@@ -95,6 +91,10 @@ export const enrollmentApi = {
           progress: {
             totalLessons: 0,
             completedLessons: 0,
+            totalBlocks: 0,
+            completedBlocks: 0,
+            totalSections: 0,
+            completedSections: 0,
             progress: 0,
           },
         });

@@ -4,6 +4,8 @@ import type { StreakObj } from "../types";
 import { db } from "../lib/db";
 import { ObjectId } from "mongodb";
 
+type AuthSession = Awaited<ReturnType<typeof auth.api.getSession>>;
+
 /**
  * Константы для логики стриков (в миллисекундах)
  */
@@ -31,7 +33,7 @@ export const streakService = {
       const now = new Date();
 
       // Получаем сессию для доступа к данным пользователя
-      let session: any = null;
+      let session: AuthSession = null;
 
       if (headers) {
         session = await auth.api.getSession({ headers });
@@ -39,7 +41,7 @@ export const streakService = {
 
       // Если нет сессии, используем userId для получения данных
       // В будущем можно реализовать кэширование стрика
-      const currentStreak: StreakObj = session?.user?.streak || { count: 0, isFire: false, updatedAt: new Date(0) };
+      const currentStreak: StreakObj = (session?.user?.streak as StreakObj) || { count: 0, isFire: false, updatedAt: new Date(0) };
       const lastUpdate = currentStreak.updatedAt
         ? new Date(currentStreak.updatedAt)
         : new Date(0);
@@ -48,8 +50,15 @@ export const streakService = {
 
       let newStreak: StreakObj;
 
-      if (hoursSinceUpdate < FORTY_EIGHT_HOURS / MS_PER_HOUR) {
-        // Прошло < 48 часов — увеличиваем count на 1 (стрик активен)
+      if (hoursSinceUpdate < TWENTY_FOUR_HOURS / MS_PER_HOUR) {
+        // Прошло < 24 часов — стрик уже обновлялся сегодня, count не меняем
+        newStreak = {
+          count: currentStreak.count,
+          isFire: true,
+          updatedAt: currentStreak.updatedAt,
+        };
+      } else if (hoursSinceUpdate < FORTY_EIGHT_HOURS / MS_PER_HOUR) {
+        // Прошло от 24 до 48 часов — стрик активен, увеличиваем count на 1
         newStreak = {
           count: currentStreak.count + 1,
           isFire: true,
@@ -79,9 +88,9 @@ export const streakService = {
           : new Date(0);
         
         // Проверяем, обновляли ли стрик уже сегодня (по календарному дню в UTC)
-        const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const actualLastUpdateMidnight = new Date(actualLastUpdate.getFullYear(), actualLastUpdate.getMonth(), actualLastUpdate.getDate());
-        const daysDiff = (nowMidnight.getTime() - actualLastUpdateMidnight.getTime()) / (24 * MS_PER_HOUR);
+        const nowMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+        const actualLastUpdateMidnight = Date.UTC(actualLastUpdate.getUTCFullYear(), actualLastUpdate.getUTCMonth(), actualLastUpdate.getUTCDate());
+        const daysDiff = (nowMidnight - actualLastUpdateMidnight) / (24 * MS_PER_HOUR);
         
         // Если стрик уже обновлялся сегодня (в тот же календарный день) — пропускаем
         if (daysDiff === 0 && actualStreak.count > 0) {
@@ -89,7 +98,7 @@ export const streakService = {
         }
         
         // Прямое обновление MongoDB
-        const result = await db.collection('user').updateOne(
+        await db.collection('user').updateOne(
           { _id: new ObjectId(userId) },
           { $set: { streak: newStreak } }
         );
@@ -116,13 +125,13 @@ export const streakService = {
   async getStreak(userId: string, headers?: Headers): Promise<StreakObj> {
     try {
       // Получаем сессию для доступа к данным пользователя
-      let session: any = null;
+      let session: AuthSession = null;
 
       if (headers) {
         session = await auth.api.getSession({ headers });
       }
 
-      const streak: StreakObj = session?.user?.streak || { count: 0, isFire: false, updatedAt: new Date(0) };
+      const streak: StreakObj = (session?.user?.streak as StreakObj) || { count: 0, isFire: false, updatedAt: new Date(0) };
 
       // Вычисляем визуальное состояние на основе updatedAt
       const now = new Date();
