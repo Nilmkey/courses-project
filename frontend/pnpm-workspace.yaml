@@ -1,7 +1,13 @@
-ignoredBuiltDependencies:
+onlyBuiltDependencies:
+  - bcrypt
+  - core-js
   - esbuild
   - sharp
   - unrs-resolver
 
-onlyBuiltDependencies:
-  - bcrypt
+allowBuilds:
+  bcrypt: true
+  core-js: true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
