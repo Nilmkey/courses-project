@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect, memo } from "react";
-import { CheckCircle2, Circle, XCircle } from "lucide-react";
-import { CompletionButton } from "@/components/learning/CompletionButton";
+import { useState, useCallback, memo } from "react";
+import { CheckCircle2, Circle, XCircle, RefreshCw } from "lucide-react";
 import { useLearning } from "@/hooks/useLearning";
 import type { IQuizBlock, IQuizAnswer } from "@/types/types";
 
@@ -24,8 +23,14 @@ const QUESTION_TYPE_BADGES = {
   },
 } as const;
 
-export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
-  const { currentLessonId, updateQuizAnswers } = useLearning();
+interface QuizBlockViewProps {
+  content: IQuizBlock["content"];
+  onQuizPassed?: () => void;
+}
+
+export function QuizBlockView({ content, onQuizPassed }: QuizBlockViewProps) {
+  const { currentLessonId, updateQuizAnswers, isCurrentBlockCompleted } =
+    useLearning();
 
   const [answers, setAnswers] = useState<
     Record<string, number | number[] | string>
@@ -109,9 +114,14 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
       if (isCorrect) correct++;
     }
 
+    const isAllCorrect = correct === content.questions.length;
     setScore({ correct, total: content.questions.length });
     setSubmitted(true);
     setIsChecking(false);
+
+    if (isAllCorrect && onQuizPassed) {
+      onQuizPassed();
+    }
 
     updateQuizAnswers(currentLessonId, quizAnswers).catch((error) => {
       console.error("Ошибка при сохранении ответов:", error);
@@ -121,6 +131,7 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
     content.questions,
     currentLessonId,
     isChecking,
+    onQuizPassed,
     updateQuizAnswers,
   ]);
 
@@ -135,6 +146,32 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
 
   return (
     <div>
+      {/* Баннер, если блок уже успешно пройден */}
+      {isCurrentBlockCompleted && (
+        <div className="mb-6 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 size={22} />
+            </div>
+            <div>
+              <p className="font-bold text-emerald-900 dark:text-emerald-200 text-sm">
+                Этот тест уже успешно пройден
+              </p>
+              <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80">
+                Вы можете перейти к следующему материалу или повторить тест для закрепления.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={resetQuiz}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded-xl transition-colors border border-emerald-300/50 dark:border-emerald-700/50 flex-shrink-0 shadow-sm"
+          >
+            <RefreshCw size={14} />
+            <span>Пройти заново</span>
+          </button>
+        </div>
+      )}
+
       <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
         Викторина
       </h2>
@@ -157,33 +194,46 @@ export function QuizBlockView({ content }: { content: IQuizBlock["content"] }) {
         ))}
       </div>
 
-      <div className="mt-8 flex items-center gap-4">
+      <div className="mt-8 flex flex-wrap items-center gap-4">
         {!submitted ? (
           <button
             onClick={checkAnswers}
             disabled={!hasAnsweredAll || isChecking}
-            className="px-8 py-4 bg-[#3b5bdb] text-white rounded-xl font-bold hover:bg-[#2f4a9e] transition-colors disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25"
+            className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/25 active:scale-95"
           >
             {isChecking ? "Проверка..." : "Проверить ответы"}
           </button>
         ) : (
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-4 w-full">
             <div
-              className={`px-6 py-3 rounded-xl font-bold ${
+              className={`flex-1 min-w-[240px] px-5 py-3.5 rounded-xl font-bold flex items-center gap-3 ${
                 score && score.correct === score.total
-                  ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200"
+                  ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800"
+                  : "bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-900/60"
               }`}
             >
-              Ваш результат: {score?.correct} из {score?.total}
+              {score && score.correct === score.total ? (
+                <CheckCircle2 className="text-emerald-500 flex-shrink-0" size={22} />
+              ) : (
+                <XCircle className="text-red-500 flex-shrink-0" size={22} />
+              )}
+              <div className="text-sm">
+                <div>Ваш результат: {score?.correct} из {score?.total}</div>
+                {score && score.correct < score.total && (
+                  <div className="text-xs font-normal opacity-90 mt-0.5">
+                    Ошибочные ответы подсвечены красным. Попробуйте ещё раз!
+                  </div>
+                )}
+              </div>
             </div>
+
             <button
               onClick={resetQuiz}
-              className="px-6 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="flex items-center gap-2 px-5 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 active:scale-95"
             >
-              Попробовать снова
+              <RefreshCw size={16} />
+              <span>Попробовать снова</span>
             </button>
-            {score && score.correct === score.total && <CompletionButton />}
           </div>
         )}
       </div>
@@ -211,9 +261,9 @@ const QuestionCard = memo<QuestionCardProps>(function QuestionCard({
   onTextAnswer,
 }) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm">
       <div className="flex items-start gap-3 mb-4">
-        <span className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center font-bold text-sm">
+        <span className="flex-shrink-0 w-8 h-8 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center font-bold text-sm">
           {index + 1}
         </span>
         <div className="flex-1">
@@ -285,22 +335,25 @@ const SingleChoiceOptions = memo<SingleChoiceOptionsProps>(
           const isSelected = answer === optIdx;
           const isCorrect = optIdx === correctIndex;
           let buttonStyle =
-            "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700";
+            "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/80 hover:bg-slate-100 dark:hover:bg-slate-800";
 
           if (submitted) {
-            if (isCorrect) {
+            if (isSelected && isCorrect) {
+              // Пользователь выбрал верный ответ -> зелёный
               buttonStyle =
-                "bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-400";
+                "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500 dark:border-emerald-500 text-emerald-900 dark:text-emerald-200";
             } else if (isSelected && !isCorrect) {
+              // Пользователь выбрал неверный ответ -> красный
               buttonStyle =
-                "bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-400";
+                "bg-red-50 dark:bg-red-950/30 border-red-500 dark:border-red-500 text-red-900 dark:text-red-200";
             } else {
+              // Невыбранные ответы остаются нейтральными (не раскрываем верный ответ!)
               buttonStyle =
-                "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60";
+                "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 opacity-60";
             }
           } else if (isSelected) {
             buttonStyle =
-              "bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400";
+              "bg-indigo-50 dark:bg-indigo-950/30 border-indigo-500 dark:border-indigo-400";
           }
 
           return (
@@ -308,15 +361,15 @@ const SingleChoiceOptions = memo<SingleChoiceOptionsProps>(
               key={optIdx}
               onClick={() => onSelect(question.id, optIdx)}
               disabled={submitted}
-              className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors disabled:cursor-not-allowed ${buttonStyle}`}
+              className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-colors disabled:cursor-not-allowed ${buttonStyle}`}
             >
               {submitted ? (
-                isCorrect ? (
+                isSelected && isCorrect ? (
                   <CheckCircle2
-                    className="text-green-500 flex-shrink-0"
+                    className="text-emerald-500 flex-shrink-0"
                     size={20}
                   />
-                ) : isSelected ? (
+                ) : isSelected && !isCorrect ? (
                   <XCircle className="text-red-500 flex-shrink-0" size={20} />
                 ) : (
                   <Circle
@@ -326,7 +379,7 @@ const SingleChoiceOptions = memo<SingleChoiceOptionsProps>(
                 )
               ) : isSelected ? (
                 <CheckCircle2
-                  className="text-blue-500 flex-shrink-0"
+                  className="text-indigo-600 dark:text-indigo-400 flex-shrink-0"
                   size={20}
                 />
               ) : (
@@ -335,7 +388,7 @@ const SingleChoiceOptions = memo<SingleChoiceOptionsProps>(
                   size={20}
                 />
               )}
-              <span className="text-left text-slate-900 dark:text-white">
+              <span className="text-left text-slate-900 dark:text-white font-medium">
                 {option}
               </span>
             </button>
@@ -364,22 +417,25 @@ const MultipleChoiceOptions = memo<MultipleChoiceOptionsProps>(
           const isSelected = answers.includes(optIdx);
           const isCorrect = correctIndices.includes(optIdx);
           let buttonStyle =
-            "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700";
+            "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/80 hover:bg-slate-100 dark:hover:bg-slate-800";
 
           if (submitted) {
-            if (isCorrect) {
+            if (isSelected && isCorrect) {
+              // Пользователь выбрал верный вариант -> зелёный
               buttonStyle =
-                "bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-400";
+                "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500 dark:border-emerald-500 text-emerald-900 dark:text-emerald-200";
             } else if (isSelected && !isCorrect) {
+              // Пользователь выбрал неверный вариант -> красный
               buttonStyle =
-                "bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-400";
+                "bg-red-50 dark:bg-red-950/30 border-red-500 dark:border-red-500 text-red-900 dark:text-red-200";
             } else {
+              // Невыбранные варианты остаются нейтральными (не раскрываем верный ответ!)
               buttonStyle =
-                "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60";
+                "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 opacity-60";
             }
           } else if (isSelected) {
             buttonStyle =
-              "bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400";
+              "bg-indigo-50 dark:bg-indigo-950/30 border-indigo-500 dark:border-indigo-400";
           }
 
           return (
@@ -387,15 +443,15 @@ const MultipleChoiceOptions = memo<MultipleChoiceOptionsProps>(
               key={optIdx}
               onClick={() => onSelect(question.id, optIdx)}
               disabled={submitted}
-              className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors disabled:cursor-not-allowed ${buttonStyle}`}
+              className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-colors disabled:cursor-not-allowed ${buttonStyle}`}
             >
               {submitted ? (
-                isCorrect ? (
+                isSelected && isCorrect ? (
                   <CheckCircle2
-                    className="text-green-500 flex-shrink-0"
+                    className="text-emerald-500 flex-shrink-0"
                     size={20}
                   />
-                ) : isSelected ? (
+                ) : isSelected && !isCorrect ? (
                   <XCircle className="text-red-500 flex-shrink-0" size={20} />
                 ) : (
                   <Circle
@@ -405,7 +461,7 @@ const MultipleChoiceOptions = memo<MultipleChoiceOptionsProps>(
                 )
               ) : isSelected ? (
                 <CheckCircle2
-                  className="text-blue-500 flex-shrink-0"
+                  className="text-indigo-600 dark:text-indigo-400 flex-shrink-0"
                   size={20}
                 />
               ) : (
@@ -414,7 +470,7 @@ const MultipleChoiceOptions = memo<MultipleChoiceOptionsProps>(
                   size={20}
                 />
               )}
-              <span className="text-left text-slate-900 dark:text-white">
+              <span className="text-left text-slate-900 dark:text-white font-medium">
                 {option}
               </span>
             </button>
@@ -438,18 +494,44 @@ const TextAnswerInput = memo<TextAnswerInputProps>(function TextAnswerInput({
   submitted,
   onChange,
 }) {
+  const isCorrect =
+    submitted &&
+    (answer || "").toLowerCase().trim() ===
+      (question.correctAnswerText || "").toLowerCase().trim();
+  const isWrong = submitted && !isCorrect;
+
   return (
-    <input
-      type="text"
-      value={answer || ""}
-      onChange={(e) => onChange(question.id, e.target.value)}
-      disabled={submitted}
-      placeholder="Введите ваш ответ..."
-      className={`w-full px-4 py-3 rounded-lg border-2 text-slate-900 dark:text-white transition-colors disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:cursor-not-allowed ${
-        submitted
-          ? "border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800"
-          : "border-slate-500 dark:border-slate-600 focus:border-blue-500 dark:focus:border-blue-400"
-      }`}
-    />
+    <div className="space-y-1.5">
+      <div className="relative">
+        <input
+          type="text"
+          value={answer || ""}
+          onChange={(e) => onChange(question.id, e.target.value)}
+          disabled={submitted}
+          placeholder="Введите ваш ответ..."
+          className={`w-full px-4 py-3.5 rounded-xl border-2 text-slate-900 dark:text-white transition-colors disabled:cursor-not-allowed ${
+            submitted
+              ? isCorrect
+                ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-200"
+                : "border-red-500 bg-red-50/50 dark:bg-red-950/20 text-red-900 dark:text-red-200"
+              : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 focus:border-indigo-500 dark:focus:border-indigo-400"
+          }`}
+        />
+        {submitted && (
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+            {isCorrect ? (
+              <CheckCircle2 className="text-emerald-500" size={20} />
+            ) : (
+              <XCircle className="text-red-500" size={20} />
+            )}
+          </div>
+        )}
+      </div>
+      {isWrong && (
+        <p className="text-xs text-red-500 font-medium">
+          Неверный ответ. Попробуйте ещё раз.
+        </p>
+      )}
+    </div>
   );
 });
