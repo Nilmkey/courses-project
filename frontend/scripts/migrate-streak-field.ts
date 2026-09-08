@@ -1,4 +1,4 @@
-import { MongoClient, Db, UpdateFilter } from "mongodb";
+import { MongoClient, Db, UpdateFilter, AnyBulkWriteOperation } from "mongodb";
 import path from "path";
 import * as dotenv from "dotenv";
 

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
-import { ExtendedUser } from "../../../../../backend/auth";
 import { authClient } from "@/lib/auth-client";
 import { ApiError } from "@/lib/api/api-client";
 import { API_BASE_URL } from "@/config/config";
@@ -33,6 +32,7 @@ import {
   Moon,
   Camera,
   Trash2,
+  Award,
 } from "lucide-react";
 
 interface CourseInfo {
@@ -88,6 +88,18 @@ const coursesInfo: Record<string, CourseInfo> = {
   },  
 };
 
+const getCourseInfo = (slugOrId: string = ""): CourseInfo => {
+  const normalized = slugOrId.toLowerCase();
+  if (coursesInfo[normalized]) return coursesInfo[normalized];
+  if (normalized.includes("javascript") || normalized.includes("js")) return coursesInfo.javascript;
+  if (normalized.includes("python")) return coursesInfo.python;
+  if (normalized.includes("css")) return coursesInfo.css;
+  if (normalized.includes("html")) return coursesInfo.html;
+  if (normalized.includes("csharp") || normalized.includes("c#")) return coursesInfo.csharp;
+  if (normalized.includes("cpp") || normalized.includes("c++")) return coursesInfo.cpp;
+  return coursesInfo.html;
+};
+
 export default function ProfilePage() {
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
@@ -97,62 +109,44 @@ export default function ProfilePage() {
   const { data: session, isPending } = authClient.useSession();
   const [enrolledCourses, setEnrolledCourses] = useState<EnrollmentWithProgress[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
-  const [_isUploading, setIsUploading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
-  const [hasLoadedCourses, setHasLoadedCourses] = useState(false);
   const toast = useToast();
 
-  const user = session?.user as unknown as ExtendedUser | undefined;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (session?.user?.image) {
+      setCurrentAvatar(session.user.image);
+    }
+  }, [session?.user?.image]);
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push("/login");
+    }
+  }, [isPending, session, router]);
 
   const loadEnrolledCourses = useCallback(async () => {
     try {
       setLoadingCourses(true);
       const enrollments = await enrollmentApi.getMyCoursesWithProgress();
       setEnrolledCourses(enrollments || []);
-      setHasLoadedCourses(true);
     } catch (error) {
       console.error("Ошибка загрузки курсов:", error);
       setEnrolledCourses([]);
-      setHasLoadedCourses(true);
     } finally {
       setLoadingCourses(false);
     }
   }, []);
 
-  if (!mounted || isPending) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative">
-            <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-20 animate-pulse" />
-            <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl flex items-center justify-center relative z-10 border border-slate-100 dark:border-slate-800">
-              <Loader2 className="w-8 h-8 animate-spin text-indigo-600 dark:text-indigo-400" />
-            </div>
-          </div>
-          <p className="text-sm font-bold text-slate-500 dark:text-slate-400 tracking-[0.2em] uppercase animate-pulse">
-            Загрузка профиля
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) return null;
-
-  const userRole = (session.user as { role?: string }).role || "user";
-  const startedCourses = enrolledCourses.length;
-  const completedCourses = enrolledCourses.filter(
-    (e) => e.status === "completed",
-  ).length;
-  const totalPercentage =
-    startedCourses > 0
-      ? Math.round(
-          enrolledCourses.reduce(
-            (sum, e) => sum + (e.status === "completed" ? 100 : 0),
-            0,
-          ) / startedCourses,
-        )
-      : 0;
+  useEffect(() => {
+    if (session) {
+      loadEnrolledCourses();
+    }
+  }, [session, loadEnrolledCourses]);
 
   const handleLogout = () => {
     toast.confirm(
@@ -274,15 +268,20 @@ export default function ProfilePage() {
   if (!session) return null;
 
   const userRole = (session.user as { role?: string }).role || "user";
-  const typedEnrolledCourses = enrolledCourses.map(enrollment => ({
+  const typedEnrolledCourses = enrolledCourses.map((enrollment) => ({
     ...enrollment,
-    course: enrollment.course as unknown as (ICourse & { sections?: ISection[] })
+    course: enrollment.course as unknown as (ICourse & { sections?: ISection[] }),
   }));
 
   const startedCourses = typedEnrolledCourses.length;
   const completedCourses = typedEnrolledCourses.filter((e) => e.status === "completed").length;
   const totalPercentage = startedCourses > 0
-    ? Math.round(typedEnrolledCourses.reduce((sum, e) => sum + (e.status === "completed" ? 100 : 0), 0) / startedCourses)
+    ? Math.round(
+        typedEnrolledCourses.reduce(
+          (sum, e) => sum + (e.status === "completed" ? 100 : (e.progress?.progress || 0)),
+          0
+        ) / startedCourses
+      )
     : 0;
 
   return (
@@ -364,17 +363,22 @@ export default function ProfilePage() {
                         alt="User"
                         width={160}
                         height={160}
+                        unoptimized
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     ) : (
                       <User size={64} className="text-slate-400" />
                     )}
                     <div
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => !isUploading && fileInputRef.current?.click()}
                       className="absolute inset-0 bg-indigo-900/40 dark:bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center cursor-pointer backdrop-blur-sm"
                     >
                       <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white backdrop-blur-md shadow-lg transition-transform hover:scale-110">
-                        <Camera size={24} />
+                        {isUploading ? (
+                          <Loader2 className="w-6 h-6 animate-spin text-white" />
+                        ) : (
+                          <Camera size={24} />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -523,21 +527,25 @@ export default function ProfilePage() {
                   </Link>
                 </div>
               ) : (
-                enrolledCourses.map((enrollment) => {
-                const course = enrollment.course as ICourse & { sections?: ISection[] };
-  
-                if (!course) return null;
+                typedEnrolledCourses.map((enrollment) => {
+                  const course = enrollment.course;
 
-                const courseId = course.slug || course._id;
-                const info = coursesInfo[courseId] || coursesInfo.html;
-                const isCompleted = enrollment.status === "completed";
-                const progress = enrollment.progress?.progress || 0;
+                  if (!course) return null;
 
-                const totalSections = course.sections?.length || 0;
-  
-                const completedSections = isCompleted
-                ? totalSections
-                : Math.floor((progress / 100) * totalSections);
+                  const courseId = course.slug || course._id;
+                  const info = getCourseInfo(courseId);
+                  const isCompleted = enrollment.status === "completed";
+                  const progress = enrollment.progress?.progress || 0;
+
+                  const totalSections =
+                    enrollment.progress?.totalSections ||
+                    course.sections?.length ||
+                    0;
+
+                  const completedSections = isCompleted
+                    ? totalSections
+                    : (enrollment.progress?.completedSections ??
+                      (totalSections > 0 ? Math.floor((progress / 100) * totalSections) : 0));
 
 
                   return (
@@ -577,21 +585,6 @@ export default function ProfilePage() {
                                     уроков
                                   </span>
                                 </span>
-                                {totalSections > 0 && (
-                                  <>
-                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 hidden sm:block" />
-                                    <span className="flex items-center gap-1.5">
-                                      <Target
-                                        size={16}
-                                        className="text-slate-400 dark:text-slate-500"
-                                      />
-                                      <span>
-                                        {completedSections} / {totalSections}{" "}
-                                        секций
-                                      </span>
-                                    </span>
-                                  </>
-                                )}
                               </div>
                             </div>
 
@@ -610,7 +603,7 @@ export default function ProfilePage() {
                           </div>
                         </div>
 
-                        <div className="w-full sm:w-auto shrink-0 pt-2 sm:pt-0">
+                        <div className="w-full sm:w-auto shrink-0 pt-2 sm:pt-0 flex flex-wrap items-center gap-2">
                           <Link
                             href={`/learn/${course.slug || course._id}`}
                             className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 font-bold text-sm uppercase tracking-wide rounded-2xl transition-all duration-300 active:scale-95 ${

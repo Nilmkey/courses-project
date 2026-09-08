@@ -31,46 +31,47 @@ export default function CertificatePage({ nonce }: CertificatePageProps) {
     try {
       await document.fonts.ready;
 
-      const loadScript = (src: string) =>
-        new Promise((resolve, reject) => {
-          if (document.querySelector(`script[src="${src}"]`))
-            return resolve(true);
-          const script = document.createElement("script");
-          script.src = src;
-          script.onload = resolve;
-          script.onerror = reject;
-          script.nonce = nonce;
-          document.head.appendChild(script);
-        });
-
-      await loadScript(
-        "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
-      );
-
       const element = certificateRef.current;
-      
       const originalBoxShadow = element.style.boxShadow;
       element.style.boxShadow = "none";
 
-      const dataUrl = await toPng(element, {
-        quality: 1.0,
-        backgroundColor: "#ffffff",
-        cacheBust: true,
-        pixelRatio: 2,
-        fontEmbedCSS: "",
-      });
+      let dataUrl: string;
+      try {
+        dataUrl = await toPng(element, {
+          quality: 1.0,
+          backgroundColor: "#ffffff",
+          cacheBust: true,
+          pixelRatio: 2,
+          fontEmbedCSS: "",
+          skipFonts: true,
+        });
+      } catch (toPngErr) {
+        console.warn("toPng failed, falling back to html2canvas:", toPngErr);
+        const html2canvas = (await import("html2canvas")).default;
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+        });
+        dataUrl = canvas.toDataURL("image/png");
+      } finally {
+        element.style.boxShadow = originalBoxShadow;
+      }
 
-      const pdf = new (
-        window as Window &
-          typeof globalThis & {
-            jspdf: typeof import("jspdf");
-          }
-      ).jspdf.jsPDF("landscape", "mm", "a4");
+      const { jsPDF } = await import("jspdf");
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4",
+      });
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
       pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Сертификат_${userName.replace(/\s+/g, "_")}.pdf`);
+
+      const safeUserName = userName.replace(/[/\\?%*:|"<>]/g, "_").trim() || "Пользователь";
+      pdf.save(`Сертификат_${safeUserName}.pdf`);
     } catch (error) {
       console.error("Ошибка при генерации PDF:", error);
       alert("Произошла ошибка при скачивании сертификата.");
