@@ -18,3 +18,5 @@ export const COURSE_LEVEL_ORDER: Record<CourseLevel, number> = {
   intermediate: 2,
   advanced: 3,
 };
+
+
