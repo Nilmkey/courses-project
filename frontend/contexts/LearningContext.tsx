@@ -33,6 +33,12 @@ export interface LessonProgressData {
   isCompleted?: boolean;
 }
 
+export interface StepTargetInfo {
+  title: string;
+  isNewLesson: boolean;
+  isCourseEnd: boolean;
+}
+
 export interface LearningContextType {
   // Данные курса
   course: ICourse;
@@ -66,6 +72,17 @@ export interface LearningContextType {
   ) => void;
   navigateToNextBlock: () => void;
   navigateToPreviousBlock: () => void;
+
+  // Навигационная информация
+  hasPreviousBlock: boolean;
+  hasNextBlock: boolean;
+  isLastBlockInLesson: boolean;
+  isLastBlockInCourse: boolean;
+  nextStepInfo: StepTargetInfo | null;
+  prevStepInfo: { title: string } | null;
+  isCurrentBlockCompleted: boolean;
+  currentBlockIndex: number;
+  totalBlocksInCurrentLesson: number;
 
   // Методы прогресса
   markLessonComplete: (lessonId: string) => Promise<void>;
@@ -301,6 +318,111 @@ export function LearningContextProvider({
     };
   }, [sections, currentSectionId, currentLessonId, currentBlockId]);
 
+  // Вычисление детальной навигационной информации
+  const navigationInfo = useMemo(() => {
+    if (!findBlockLocation) {
+      return {
+        hasPreviousBlock: false,
+        hasNextBlock: false,
+        isLastBlockInLesson: false,
+        isLastBlockInCourse: false,
+        nextStepInfo: null,
+        prevStepInfo: null,
+        isCurrentBlockCompleted: false,
+        currentBlockIndex: 0,
+        totalBlocksInCurrentLesson: 0,
+      };
+    }
+
+    const { sectionIndex, lessonIndex, blockIndex, section, lesson, block } =
+      findBlockLocation;
+    const totalBlocks = lesson.content_blocks.length;
+    const isLastBlockInLesson = blockIndex === totalBlocks - 1;
+    const isFirstBlockInLesson = blockIndex === 0;
+
+    const isFirstSection = sectionIndex === 0;
+    const isLastSection = sectionIndex === sections.length - 1;
+    const isFirstLesson = lessonIndex === 0;
+    const isLastLesson = lessonIndex === section.lessons.length - 1;
+
+    const hasPreviousBlock =
+      !(isFirstSection && isFirstLesson && isFirstBlockInLesson);
+    const isLastBlockInCourse =
+      isLastSection && isLastLesson && isLastBlockInLesson;
+    const hasNextBlock = !isLastBlockInCourse;
+
+    // Название предыдущего шага
+    let prevStepTitle = "";
+    if (blockIndex > 0) {
+      prevStepTitle =
+        lesson.content_blocks[blockIndex - 1]?.title || "Предыдущий шаг";
+    } else if (lessonIndex > 0) {
+      const prevLesson = section.lessons[lessonIndex - 1];
+      prevStepTitle = prevLesson.title;
+    } else if (sectionIndex > 0) {
+      const prevSection = sections[sectionIndex - 1];
+      const prevLesson = prevSection.lessons[prevSection.lessons.length - 1];
+      prevStepTitle = prevLesson?.title || prevSection.title;
+    }
+
+    // Информация о следующем шаге
+    let nextStepInfo: StepTargetInfo | null = null;
+    if (blockIndex < totalBlocks - 1) {
+      const nextBlock = lesson.content_blocks[blockIndex + 1];
+      nextStepInfo = {
+        title: nextBlock?.title || "Следующий шаг",
+        isNewLesson: false,
+        isCourseEnd: false,
+      };
+    } else if (lessonIndex < section.lessons.length - 1) {
+      const nextLesson = section.lessons[lessonIndex + 1];
+      nextStepInfo = {
+        title: nextLesson.title,
+        isNewLesson: true,
+        isCourseEnd: false,
+      };
+    } else if (sectionIndex < sections.length - 1) {
+      const nextSection = sections[sectionIndex + 1];
+      const nextLesson = nextSection.lessons[0];
+      nextStepInfo = {
+        title: nextLesson ? nextLesson.title : nextSection.title,
+        isNewLesson: true,
+        isCourseEnd: false,
+      };
+    } else {
+      nextStepInfo = {
+        title: "Завершение курса",
+        isNewLesson: false,
+        isCourseEnd: true,
+      };
+    }
+
+    // Статус завершенности текущего блока
+    const currentLessonProg = currentLessonId
+      ? lessonProgress[currentLessonId]
+      : undefined;
+    const blockId = block.id || block._id;
+    const isCurrentBlockCompleted =
+      Boolean(currentLessonProg?.isCompleted) ||
+      Boolean(
+        currentLessonProg?.blocks?.some(
+          (b) => b.blockId === blockId && b.completed,
+        ),
+      );
+
+    return {
+      hasPreviousBlock,
+      hasNextBlock,
+      isLastBlockInLesson,
+      isLastBlockInCourse,
+      nextStepInfo,
+      prevStepInfo: prevStepTitle ? { title: prevStepTitle } : null,
+      isCurrentBlockCompleted,
+      currentBlockIndex: blockIndex,
+      totalBlocksInCurrentLesson: totalBlocks,
+    };
+  }, [findBlockLocation, sections, currentLessonId, lessonProgress]);
+
   // Переход к следующему блоку
   const navigateToNextBlock = useCallback(() => {
     const location = findBlockLocation;
@@ -389,6 +511,12 @@ export function LearningContextProvider({
       try {
         const courseId = course._id;
 
+        // Если урок уже завершен, НЕ вызываем API и НЕ триггерим стрик!
+        if (lessonProgress[lessonId]?.isCompleted) {
+          navigateToNextBlock();
+          return;
+        }
+
         // Обновляем локальное состояние СРАЗУ (оптимистичное обновление)
         setLessonProgress((prev) => {
           const current = prev[lessonId];
@@ -469,7 +597,7 @@ export function LearningContextProvider({
         toast.error("Не удалось сохранить прогресс");
       }
     },
-    [course._id, navigateToNextBlock, toast],
+    [course._id, lessonProgress, navigateToNextBlock, toast],
   );
 
   // Обновить ответы на quiz (с debounce для оптимизации)
@@ -572,6 +700,20 @@ export function LearningContextProvider({
     async (lessonId: string, blockId: string, quizAnswers?: IQuizAnswer[]) => {
       const courseId = course._id;
 
+      // Проверяем: если блок уже пройден (или весь урок завершен), НЕ вызываем API и НЕ триггерим стрик!
+      const currentProgress = lessonProgress[lessonId];
+      const isAlreadyCompleted =
+        Boolean(currentProgress?.isCompleted) ||
+        Boolean(
+          currentProgress?.blocks?.some(
+            (b) => b.blockId === blockId && b.completed,
+          ),
+        );
+
+      if (isAlreadyCompleted) {
+        return;
+      }
+
       // Обновляем локальное состояние СРАЗУ (без ожидания API)
       setLessonProgress((prev) => {
         const current = prev[lessonId];
@@ -636,7 +778,7 @@ export function LearningContextProvider({
           }
         });
     },
-    [course._id],
+    [course._id, lessonProgress],
   );
 
   // Пересчитать прогресс курса (при добавлении нового контента)
@@ -765,6 +907,7 @@ export function LearningContextProvider({
     navigateToBlock,
     navigateToNextBlock,
     navigateToPreviousBlock,
+    ...navigationInfo,
     markLessonComplete,
     updateQuizAnswers,
     resetLessonProgress,

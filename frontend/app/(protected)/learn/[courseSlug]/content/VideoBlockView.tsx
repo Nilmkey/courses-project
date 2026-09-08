@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { CompletionButton } from "@/components/learning/CompletionButton";
 import type { IVideoBlock } from "@/types/types";
 
 function getEmbedUrl(url: string): string | null {
@@ -99,12 +98,10 @@ export function VideoBlockView({
           </p>
         </div>
       ) : (
-        <div className="relative aspect-video bg-black rounded-xl overflow-hidden mb-6 shadow-lg">
+        <div className="relative aspect-video bg-black rounded-xl overflow-hidden shadow-lg">
           <VideoPreview embedUrl={embedUrl} isDirectVideo={isDirectVideo} />
         </div>
       )}
-
-      <CompletionButton />
     </div>
   );
 }
