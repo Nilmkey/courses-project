@@ -2,6 +2,8 @@ import type { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
 import { ApiError } from "../utils/ApiError";
 
+export { ApiError, ApiError as AppError };
+
 export const createError = {
   badRequest: ApiError.badRequest,
   unauthorized: ApiError.unauthorized,

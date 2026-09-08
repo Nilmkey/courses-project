@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎓 CodeLearn — Интерактивная платформа для обучения
 
-## Getting Started
+**CodeLearn** — это современная LMS (Learning Management System), предназначенная для создания и прохождения интерактивных IT-курсов. Сервис позволяет авторам гибко настраивать учебные программы, а студентам — эффективно учиться с отслеживанием прогресса.
 
-First, run the development server:
+## 🚀 Основные возможности
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev    
-# or
-bun dev
+### 🛠 Мощный редактор курсов
+- **Структура курса:** Создание секций и уроков с помощью интуитивного Drag-and-Drop интерфейса.
+- **Блочный конструктор конспекта:** Уроки собираются из различных блоков:
+    - **Текст (Markdown):** Удобный редактор TipTap с поддержкой форматирования и Slash-команд.
+    - **Видео:** Интеграция видео с YouTube, Vimeo или прямых ссылок.
+    - **Тесты:** Создание проверочных заданий с одиночным, множественным выбором или текстовым ответом.
+- **Управление доступом:** Возможность публиковать курсы, открывать набор и устанавливать стоимость.
+
+### 📈 Личный кабинет и прогресс
+- **Трекинг обучения:** Визуальное отображение прогресса по каждому курсу и блоку.
+- **Система "Стриков":** Мотивация студента через ежедневную активность (огненный индикатор).
+- **Сертификация:** Автоматическая генерация PDF-сертификата после успешного завершения курса.
+
+### 🛡 Админ-панель
+- Управление пользователями (назначение ролей: студент/админ).
+- Редактирование тегов для категоризации курсов.
+- Мониторинг записей на курсы.
+
+## 🛠 Технологический стек
+
+### Frontend
+- **Framework:** Next.js (App Router)
+- **Styling:** Tailwind CSS
+- **State:** React Context API + Lucide Icons
+- **Editor:** TipTap (Rich Text) + @dnd-kit (Drag & Drop)
+- **Local DB:** Dexie.js (IndexedDB) для черновиков
+
+### Backend
+- **Runtime:** Node.js + Express
+- **Language:** TypeScript
+- **Database:** MongoDB (Mongoose)
+- **Auth:** Better-Auth (Session-based)
+
+---
+
+## ⚙️ Запуск проекта
+
+### 1. Предварительные требования
+- Установленная **MongoDB** (локально или Atlas).
+- **Node.js** (версия 18+).
+- Менеджер пакетов **pnpm** (рекомендуется) или npm.
+
+### 2. Настройка окружения
+В корне проекта создайте единый файл `.env` на основе примера `.env.example`. **Важно:** не выкладывайте реальные ключи в репозиторий!
+
+**Корень проекта (`.env`):**
+```env
+# Backend
+PORT=7777
+HOST=0.0.0.0
+NODE_ENV=development
+
+# Database
+DB_URL=mongodb://localhost:27017/courses-project
+BETTER_AUTH_SECRET=ваш_секрет
+
+# CORS
+CORS_ORIGIN=http://localhost:3000
+
+# Frontend
+NEXT_PUBLIC_API_URL=http://localhost:7777/api
+NEXT_PUBLIC_BACKEND_URL=http://localhost:7777
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Установка зависимостей
+```bash
+# Из корня проекта
+cd backend && pnpm install
+cd ../frontend && pnpm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Запуск в режиме разработки
+**Запуск Backend:**
+```bash
+cd backend
+pnpm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Запуск Frontend:**
+```bash
+cd frontend
+pnpm run dev
+```
+После запуска фронтенд будет доступен по адресу `http://localhost:3000`.
 
-## Learn More
+- **sanek5648**
+- **AdrianoMajestic**
+- **Nilmkey**
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
