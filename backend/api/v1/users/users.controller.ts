@@ -189,10 +189,11 @@ export const usersController = {
 
     // Получаем пользователей напрямую из MongoDB
     const query: Record<string, unknown> = {};
-    if (search) {
+    if (search && search.trim()) {
+      const sanitized = search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
+        { name: { $regex: sanitized, $options: "i" } },
+        { email: { $regex: sanitized, $options: "i" } },
       ];
     }
 
@@ -244,6 +245,30 @@ export const usersController = {
 
     const { id } = req.params;
     const { role } = req.body;
+
+    // Защита: нельзя понизить самого себя
+    if (authReq.user.id === id && role !== "admin") {
+      throw ApiError.badRequest("Нельзя понизить свою собственную роль администратора");
+    }
+
+    // Проверяем существование пользователя
+    const targetUser = await db
+      .collection("user")
+      .findOne({ _id: new Types.ObjectId(id) });
+
+    if (!targetUser) {
+      throw ApiError.notFound("Пользователь не найден");
+    }
+
+    // Защита: нельзя понизить последнего администратора в системе
+    if (targetUser.role === "admin" && role !== "admin") {
+      const adminCount = await db
+        .collection("user")
+        .countDocuments({ role: "admin" });
+      if (adminCount <= 1) {
+        throw ApiError.badRequest("Нельзя понизить единственного администратора в системе");
+      }
+    }
 
     // Обновляем роль напрямую в MongoDB
     const result = await db
@@ -303,52 +328,58 @@ export const usersController = {
       .sort({ enrolledAt: -1 })
       .lean();
 
-    const result: UserEnrollmentResponse[] = [];
+    const enrollmentPromises: Promise<UserEnrollmentResponse | null>[] =
+      enrollments.map(async (enrollment) => {
+        const course = enrollment.course_id as unknown as {
+          _id: Types.ObjectId;
+          title: string;
+          slug: string;
+          thumbnail?: string;
+          level: "beginner" | "intermediate" | "advanced";
+          isPublished: boolean;
+        };
+        if (!course) return null;
 
-    for (const enrollment of enrollments) {
-      const course = enrollment.course_id as unknown as {
-        _id: Types.ObjectId;
-        title: string;
-        slug: string;
-        thumbnail?: string;
-        level: "beginner" | "intermediate" | "advanced";
-        isPublished: boolean;
-      };
-      if (!course) continue; // Курс мог быть удален
+        // Получаем прогресс параллельно
+        const progress = await progressService.getCourseProgress(
+          id,
+          course._id.toString(),
+        );
 
-      // Получаем прогресс
-      const progress = await progressService.getCourseProgress(
-        id,
-        course._id.toString(),
-      );
+        const item: UserEnrollmentResponse = {
+          _id: enrollment._id.toString(),
+          course_id: course._id.toString(),
+          enrolledAt: enrollment.enrolledAt.toISOString(),
+          completedAt: enrollment.completedAt?.toISOString(),
+          status: enrollment.status,
+          course: {
+            _id: course._id.toString(),
+            title: course.title,
+            slug: course.slug,
+            thumbnail: course.thumbnail,
+            level: course.level,
+            isPublished: course.isPublished,
+          },
+          progress: progress
+            ? {
+                overallProgress: progress.progress,
+                stats: {
+                  totalBlocks: progress.totalBlocks,
+                  completedBlocks: progress.completedBlocks,
+                  totalLessons: progress.totalLessons,
+                  completedLessons: progress.completedLessons,
+                },
+              }
+            : undefined,
+        };
 
-      result.push({
-        _id: enrollment._id.toString(),
-        course_id: course._id.toString(),
-        enrolledAt: enrollment.enrolledAt.toISOString(),
-        completedAt: enrollment.completedAt?.toISOString(),
-        status: enrollment.status,
-        course: {
-          _id: course._id.toString(),
-          title: course.title,
-          slug: course.slug,
-          thumbnail: course.thumbnail,
-          level: course.level,
-          isPublished: course.isPublished,
-        },
-        progress: progress
-          ? {
-              overallProgress: progress.progress,
-              stats: {
-                totalBlocks: progress.totalBlocks,
-                completedBlocks: progress.completedBlocks,
-                totalLessons: progress.totalLessons,
-                completedLessons: progress.completedLessons,
-              },
-            }
-          : undefined,
+        return item;
       });
-    }
+
+    const results = await Promise.all(enrollmentPromises);
+    const result: UserEnrollmentResponse[] = results.filter(
+      (item): item is UserEnrollmentResponse => item !== null,
+    );
 
     res.json(result);
   },
@@ -487,11 +518,25 @@ export const usersController = {
       throw ApiError.notFound("Пользователь не найден");
     }
 
+    // Защита: нельзя удалить последнего администратора в системе
+    if (userDoc.role === "admin") {
+      const adminCount = await db
+        .collection("user")
+        .countDocuments({ role: "admin" });
+      if (adminCount <= 1) {
+        throw ApiError.badRequest("Нельзя удалить единственного администратора в системе");
+      }
+    }
+
     // Удаляем все записи пользователя
     await Enrollment.deleteMany({ user_id: new Types.ObjectId(id) });
 
     // Удаляем весь прогресс пользователя
     await Progress.deleteMany({ user_id: new Types.ObjectId(id) });
+
+    // Очищаем связанные сессии и аккаунты Better-Auth
+    await db.collection("session").deleteMany({ userId: id });
+    await db.collection("account").deleteMany({ userId: id });
 
     // Удаляем пользователя из MongoDB
     await db.collection("user").deleteOne({ _id: new Types.ObjectId(id) });

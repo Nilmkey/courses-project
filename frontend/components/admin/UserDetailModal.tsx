@@ -4,10 +4,10 @@ import React, { useEffect, useState, useCallback } from "react";
 import { X, Loader2, Trash2, RotateCcw, UserCog, BookOpen, AlertTriangle, UserPlus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { Toaster } from "react-hot-toast";
 import { useToast } from "@/hooks/useToast";
 import { usersApi, type User, type UserEnrollment } from "@/lib/api/entities/api-users";
 import { coursesApi } from "@/lib/api/entities/api-courses";
+import { authClient } from "@/lib/auth-client";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -29,16 +29,29 @@ interface UserDetailModalProps {
   user: User;
   isOpen: boolean;
   onClose: () => void;
-  onUpdateUserRole?: () => void;
+  onUpdateUserRole?: (updatedUser: User) => void;
+  onDeleteUser?: (userId: string) => void;
 }
 
-export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRole }: UserDetailModalProps) {
+// In-memory cache for available courses to avoid refetching on every user click
+let cachedCourses: Course[] | null = null;
+
+export default function UserDetailModal({
+  user,
+  isOpen,
+  onClose,
+  onUpdateUserRole,
+  onDeleteUser,
+}: UserDetailModalProps) {
   const toast = useToast();
+  const { data: session } = authClient.useSession();
+  const isSelf = session?.user?.id === user?.id;
+
   const [loading, setLoading] = useState(false);
   const [enrollments, setEnrollments] = useState<UserEnrollment[]>([]);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
   const [selectedRole, setSelectedRole] = useState<User["role"]>(user.role);
-  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
+  const [availableCourses, setAvailableCourses] = useState<Course[]>(cachedCourses || []);
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [courseSearch, setCourseSearch] = useState("");
@@ -51,22 +64,18 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
     variant?: "default" | "destructive";
   }>({ isOpen: false, title: "", description: "", onConfirm: async () => {} });
 
-  const loadAvailableCourses = useCallback(async () => {
-    try {
-      setLoadingCourses(true);
-      const response = await coursesApi.getAll();
-      setAvailableCourses(response.courses || []);
-    } catch (err) {
-      console.error("Ошибка загрузки курсов:", err);
-    } finally {
-      setLoadingCourses(false);
+  // Sync selectedRole whenever user.role updates
+  useEffect(() => {
+    if (isOpen && user?.role) {
+      setSelectedRole(user.role);
     }
-  }, []);
+  }, [isOpen, user?.role]);
 
-  const loadEnrollments = useCallback(async () => {
+  // Load enrollments for specific user
+  const loadEnrollments = useCallback(async (userId: string) => {
     try {
       setLoadingEnrollments(true);
-      const data = await usersApi.getEnrollments(user.id);
+      const data = await usersApi.getEnrollments(userId);
       setEnrollments(data);
     } catch (err) {
       console.error("Ошибка загрузки курсов:", err);
@@ -74,18 +83,42 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
     } finally {
       setLoadingEnrollments(false);
     }
-  }, [user.id, toast]);
+  }, [toast]);
 
+  // Load courses once into cache
+  const loadCourses = useCallback(async () => {
+    if (cachedCourses && cachedCourses.length > 0) {
+      setAvailableCourses(cachedCourses);
+      return;
+    }
+
+    try {
+      setLoadingCourses(true);
+      const response = await coursesApi.getAll();
+      const courses = (response.courses || []).map((c: { _id?: string; id?: string; title: string; level: string }) => ({
+        _id: c._id || c.id || "",
+        title: c.title,
+        level: c.level,
+      }));
+      cachedCourses = courses;
+      setAvailableCourses(courses);
+    } catch (err) {
+      console.error("Ошибка загрузки каталога курсов:", err);
+    } finally {
+      setLoadingCourses(false);
+    }
+  }, []);
+
+  // Effect runs ONLY when modal opens or user ID changes
   useEffect(() => {
-    if (isOpen && user) {
-      setSelectedRole(user.role);
+    if (isOpen && user?.id) {
       setSelectedCourseId("");
       setCourseSearch("");
       setShowCourseDropdown(false);
-      loadEnrollments();
-      loadAvailableCourses();
+      loadEnrollments(user.id);
+      loadCourses();
     }
-  }, [isOpen, user, loadEnrollments, loadAvailableCourses]);
+  }, [isOpen, user?.id, loadEnrollments, loadCourses]);
 
   const handleUpdateRole = async () => {
     if (selectedRole === user.role) {
@@ -93,14 +126,26 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
       return;
     }
 
+    if (isSelf && selectedRole !== "admin") {
+      toast.error("Нельзя понизить свою собственную роль администратора");
+      setSelectedRole(user.role);
+      return;
+    }
+
     try {
       setLoading(true);
-      await usersApi.updateRole(user.id, selectedRole);
+      const updated = await usersApi.updateRole(user.id, selectedRole);
       toast.success("Роль пользователя обновлена");
-      onUpdateUserRole?.();
-    } catch (err) {
+      const updatedUser: User = {
+        ...user,
+        role: selectedRole,
+        ...(updated || {}),
+      };
+      onUpdateUserRole?.(updatedUser);
+    } catch (err: unknown) {
       console.error("Ошибка обновления роли:", err);
-      toast.error("Не удалось обновить роль");
+      toast.error(err instanceof Error ? err.message : "Не удалось обновить роль");
+      setSelectedRole(user.role);
     } finally {
       setLoading(false);
     }
@@ -134,7 +179,7 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
       onConfirm: async () => {
         try {
           await usersApi.resetProgress(user.id, courseId);
-          loadEnrollments();
+          await loadEnrollments(user.id);
           toast.success("Прогресс сброшен");
         } catch (err) {
           console.error("Ошибка сброса прогресса:", err);
@@ -162,7 +207,7 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
           setSelectedCourseId("");
           setCourseSearch("");
           setShowCourseDropdown(false);
-          loadEnrollments();
+          await loadEnrollments(user.id);
           toast.success("Пользователь записан на курс");
         } catch (err: unknown) {
           console.error("Ошибка записи на курс:", err);
@@ -173,6 +218,11 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
   };
 
   const handleDeleteUser = async () => {
+    if (isSelf) {
+      toast.error("Нельзя удалить свой собственный аккаунт");
+      return;
+    }
+
     setConfirmDialog({
       isOpen: true,
       title: "Удалить аккаунт",
@@ -183,7 +233,7 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
           await usersApi.deleteUser(user.id);
           toast.success("Аккаунт пользователя удалён");
           onClose();
-          onUpdateUserRole?.();
+          onDeleteUser?.(user.id);
         } catch (err: unknown) {
           console.error("Ошибка удаления аккаунта:", err);
           toast.error(err instanceof Error ? err.message : "Не удалось удалить аккаунт");
@@ -203,18 +253,6 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
 
   return (
     <>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: {
-            background: "var(--toast-bg)",
-            color: "var(--toast-color)",
-            border: "var(--toast-border)",
-            borderRadius: "0.75rem",
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-          },
-        }}
-      />
 
       {/* Overlay */}
       <div
@@ -286,25 +324,32 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
                         {(["student", "admin"] as const).map((role) => (
                           <button
                             key={role}
+                            disabled={isSelf}
                             onClick={() => setSelectedRole(role)}
+                            title={isSelf ? "Нельзя изменить роль собственного аккаунта" : undefined}
                             className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
                               selectedRole === role
                                 ? role === "admin"
                                   ? "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/30"
                                   : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/30"
                                 : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-300"
-                            }`}
+                            } ${isSelf ? "opacity-60 cursor-not-allowed" : ""}`}
                           >
                             {role === "admin" ? "Администратор" : "Студент"}
                           </button>
                         ))}
                       </div>
-                      {selectedRole !== user.role && (
+                      {isSelf && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                          Это ваш текущий аккаунт. Изменение роли недоступно для безопасности.
+                        </p>
+                      )}
+                      {!isSelf && selectedRole !== user.role && (
                         <div className="pt-2">
-                           <Button
+                          <Button
                             onClick={handleUpdateRole}
                             disabled={loading}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 active:scale-95 transition-all"
                           >
                             {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                             Сохранить роль
@@ -399,15 +444,24 @@ export default function UserDetailModal({ user, isOpen, onClose, onUpdateUserRol
                     </div>
 
                     {/* Удалить аккаунт */}
-                    <div className="pt-4 border-t border-slate-200/50 dark:border-slate-800">
+                    <div className="pt-4 border-t border-slate-200/50 dark:border-slate-800 space-y-2">
                       <Button
                         onClick={handleDeleteUser}
+                        disabled={isSelf}
                         variant="outline"
-                        className="text-rose-600 border-rose-200 bg-rose-50 hover:bg-rose-600 dark:bg-rose-900/10 dark:border-rose-900 hover:text-white font-bold rounded-xl h-12 w-full transition-all shadow-inner"
+                        title={isSelf ? "Нельзя удалить собственный аккаунт" : undefined}
+                        className={`text-rose-600 border-rose-200 bg-rose-50 hover:bg-rose-600 dark:bg-rose-900/10 dark:border-rose-900 hover:text-white font-bold rounded-xl h-12 w-full transition-all shadow-inner ${
+                          isSelf ? "opacity-50 cursor-not-allowed hover:bg-rose-50 hover:text-rose-600" : ""
+                        }`}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
                         Удалить аккаунт навсегда
                       </Button>
+                      {isSelf && (
+                        <p className="text-xs text-center text-slate-400">
+                          Вы не можете удалить собственный аккаунт
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

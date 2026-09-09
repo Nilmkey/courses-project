@@ -13,7 +13,7 @@ import { appConfig } from "./config/app.config";
 
 // Rate limiter конфигурация
 const RATE_WINDOW_MS = 15 * 60 * 1000; // 15 минут
-const GENERAL_RATE_LIMIT = parseInt(process.env.GENERAL_RATE_LIMIT || '100', 10);
+const GENERAL_RATE_LIMIT = parseInt(process.env.GENERAL_RATE_LIMIT || '600', 10);
 const AUTH_RATE_LIMIT = parseInt(process.env.AUTH_RATE_LIMIT || '5', 10);
 
 // Строгий rate limiter для auth endpoints (защита от brute force)
@@ -23,7 +23,7 @@ const authRateLimiter = rateLimit({
   max: 20, // 20 попыток входа за 15 минут (достаточно для защиты от brute force)
   standardHeaders: true,
   legacyHeaders: false,
-  message: "Слишком много попыток авторизации. Попробуйте позже.",
+  message: { message: "Слишком много попыток авторизации. Попробуйте позже." },
   skip: (req) => req.path === "/api/auth/get-session",
 });
 
@@ -34,7 +34,7 @@ const generalRateLimiter = rateLimit({
   max: GENERAL_RATE_LIMIT,
   standardHeaders: true,
   legacyHeaders: false,
-  message: "Слишком много запросов за короткое время. Попробуйте позже.",
+  message: { message: "Слишком много запросов за короткое время. Попробуйте позже." },
   skip: (req) => req.path === "/api/auth/get-session",
 });
 
