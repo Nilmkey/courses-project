@@ -29,13 +29,6 @@ export async function handleCreate() {
     true,
   );
 
-  console.log(
-    "📄 Сессия из API:",
-    session?.user?.email,
-    "Роль:",
-    session?.user?.role,
-  );
-
   if (!session?.user) {
     console.log("❌ Нет пользователя в сессии — редирект на логин");
     return redirect("/login");
