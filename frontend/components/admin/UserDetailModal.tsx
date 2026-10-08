@@ -291,8 +291,11 @@ export default function UserDetailModal({
                       <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full scale-125" />
                       {user.avatar ? (
                         <Image
-                        src={user.avatar}
+                          src={user.avatar}
                           alt={user.name}
+                          width={128}
+                          height={128}
+                          unoptimized
                           className="w-32 h-32 rounded-3xl object-cover relative z-10 shadow-lg border-2 border-white dark:border-slate-800"
                         />
                       ) : (
