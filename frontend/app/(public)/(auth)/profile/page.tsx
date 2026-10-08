@@ -535,17 +535,41 @@ export default function ProfilePage() {
                   const courseId = course.slug || course._id;
                   const info = getCourseInfo(courseId);
                   const isCompleted = enrollment.status === "completed";
-                  const progress = enrollment.progress?.progress || 0;
+                  const rawProgress =
+                    enrollment.progress?.overallProgress ??
+                    (enrollment.progress as any)?.progress;
+                  const progress = isCompleted
+                    ? 100
+                    : (rawProgress !== undefined ? Math.round(rawProgress) : 0);
+
+                  const totalLessons =
+                    enrollment.progress?.stats?.totalLessons ??
+                    (enrollment.progress as any)?.totalLessons ??
+                    course.sections?.reduce(
+                      (acc, s) => acc + (s.lessons?.length || 0),
+                      0,
+                    ) ??
+                    0;
+
+                  const completedLessons = isCompleted
+                    ? totalLessons
+                    : (enrollment.progress?.stats?.completedLessons ??
+                      (enrollment.progress as any)?.completedLessons ??
+                      0);
 
                   const totalSections =
-                    enrollment.progress?.totalSections ||
-                    course.sections?.length ||
+                    enrollment.progress?.stats?.totalSections ??
+                    (enrollment.progress as any)?.totalSections ??
+                    course.sections?.length ??
                     0;
 
                   const completedSections = isCompleted
                     ? totalSections
-                    : (enrollment.progress?.completedSections ??
-                      (totalSections > 0 ? Math.floor((progress / 100) * totalSections) : 0));
+                    : (enrollment.progress?.stats?.completedSections ??
+                      (enrollment.progress as any)?.completedSections ??
+                      (totalSections > 0
+                        ? Math.floor((progress / 100) * totalSections)
+                        : 0));
 
 
                   return (
@@ -580,9 +604,7 @@ export default function ProfilePage() {
                                     className="text-slate-400 dark:text-slate-500"
                                   />
                                   <span>
-                                    {enrollment.progress?.completedLessons || 0}{" "}
-                                    / {enrollment.progress?.totalLessons || 0}{" "}
-                                    уроков
+                                    {completedLessons} / {totalLessons} уроков
                                   </span>
                                 </span>
                               </div>

@@ -258,16 +258,42 @@ async function syncProgressWithCourseStructure(
           (b) => b.completed,
         ).length;
       }
+
+      // Синхронизируем статус завершения урока и блоков с основным массивом lessons
+      const mainLesson = progressDoc.lessons.find(
+        (l) => l.lesson_id.toString() === lesson._id.toString(),
+      );
+      if (mainLesson) {
+        if (mainLesson.completed) {
+          lessonProgress.completed = true;
+          lessonProgress.completedAt = mainLesson.completedAt || new Date();
+        }
+        if (mainLesson.blocks && mainLesson.blocks.length > 0) {
+          for (const mb of mainLesson.blocks) {
+            const b = lessonProgress.blocks.find((x) => x.blockId === mb.blockId);
+            if (b && mb.completed) {
+              b.completed = true;
+              b.completedAt = mb.completedAt;
+            }
+          }
+          lessonProgress.completedBlocksCount = lessonProgress.blocks.filter(
+            (b) => b.completed,
+          ).length;
+        }
+      }
     }
 
     sectionProgress.completedLessonsCount =
       sectionProgress.lessonProgress.filter((l) => l.completed).length;
 
     if (
-      sectionProgress.completedLessonsCount <
+      sectionProgress.completedLessonsCount >=
         sectionProgress.totalLessonsCount &&
-      sectionProgress.completed
+      sectionProgress.totalLessonsCount > 0
     ) {
+      sectionProgress.completed = true;
+      sectionProgress.completedAt = sectionProgress.completedAt || new Date();
+    } else {
       sectionProgress.completed = false;
       sectionProgress.completedAt = undefined;
     }
@@ -338,7 +364,7 @@ async function calculateOverallProgress(
 
   const progress =
     courseStructure.totalLessons > 0
-      ? Math.round((completedLessons / courseStructure.totalLessons) * 100)
+      ? Math.min(100, Math.round((completedLessons / courseStructure.totalLessons) * 100))
       : 0;
 
   return {
@@ -440,7 +466,7 @@ function calculateProgressStats(
 
   progressDoc.overallProgress =
     courseStructure.totalLessons > 0
-      ? Math.round((completedLessons / courseStructure.totalLessons) * 100)
+      ? Math.min(100, Math.round((completedLessons / courseStructure.totalLessons) * 100))
       : 0;
 
   for (const section of progressDoc.sections) {
@@ -471,11 +497,12 @@ async function updateEnrollmentStatus(
   courseId: string,
   progressPercent: number,
 ): Promise<void> {
+  const userObjId = new Types.ObjectId(userId);
   const courseObjId = new Types.ObjectId(courseId);
 
-  if (progressPercent === 100) {
+  if (progressPercent >= 100) {
     await Enrollment.findOneAndUpdate(
-      { user_id: userId, course_id: courseObjId },
+      { user_id: userObjId, course_id: courseObjId },
       {
         status: "completed",
         completedAt: new Date(),
@@ -483,10 +510,10 @@ async function updateEnrollmentStatus(
     );
   } else {
     await Enrollment.findOneAndUpdate(
-      { user_id: userId, course_id: courseObjId },
+      { user_id: userObjId, course_id: courseObjId },
       {
         status: "active",
-        completedAt: undefined,
+        $unset: { completedAt: "" },
       },
     );
   }

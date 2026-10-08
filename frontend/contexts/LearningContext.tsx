@@ -511,9 +511,8 @@ export function LearningContextProvider({
       try {
         const courseId = course._id;
 
-        // Если урок уже завершен, НЕ вызываем API и НЕ триггерим стрик!
+        // Если урок уже завершен, не дублируем вызов
         if (lessonProgress[lessonId]?.isCompleted) {
-          navigateToNextBlock();
           return;
         }
 
@@ -527,6 +526,7 @@ export function LearningContextProvider({
             status: "completed" as LessonStatus,
             isCompleted: true,
             completedBlocks: current.totalBlocks,
+            blocks: current.blocks?.map((b) => ({ ...b, completed: true })),
           };
 
           // Подсчитываем завершенные уроки
@@ -534,8 +534,15 @@ export function LearningContextProvider({
             (l) => l.isCompleted || l.lessonId === lessonId,
           ).length;
 
-          const totalLessons = Object.keys(prev).length;
-          const progress = Math.round((completedLessons / totalLessons) * 100);
+          const totalLessons =
+            Object.keys(prev).length ||
+            sections.reduce((acc, s) => acc + s.lessons.length, 0) ||
+            1;
+
+          const progress = Math.min(
+            100,
+            Math.round((completedLessons / totalLessons) * 100),
+          );
 
           setOverallProgress((prevProgress) => ({
             ...prevProgress,
@@ -552,52 +559,48 @@ export function LearningContextProvider({
 
         toast.success("Урок отмечен как пройденный!");
 
-        // Отправляем на сервер (без await, чтобы не блокировать UI)
-        progressApi
-          .markLessonComplete(lessonId, courseId)
-          .then((response) => {
-            // Обновляем данные о блоках из ответа сервера
-            if (response.blocks && response.blocks.length > 0) {
-              setLessonProgress((prev) => {
-                const current = prev[lessonId];
-                if (!current) return prev;
+        // Отправляем на сервер и ожидаем ответа
+        try {
+          const response = await progressApi.markLessonComplete(
+            lessonId,
+            courseId,
+          );
 
-                return {
-                  ...prev,
-                  [lessonId]: {
-                    ...current,
-                    blocks: response.blocks?.map((b) => ({
-                      ...b,
-                      completed: true,
-                    })),
-                  },
-                };
-              });
-            }
-          })
-          .catch((error) => {
-            // Игнорируем ошибки оптимистической блокировки MongoDB
-            // Данные уже обновлены локально
-            if (
-              error?.data?.code === "VERSION_ERROR" ||
-              error?.message?.includes("version")
-            ) {
-              console.log(
-                "Конфликт версий MongoDB при завершении урока (ожидаемое поведение)",
-              );
-            } else {
-              console.error("Ошибка при сохранении урока:", error);
-            }
-          });
+          if (response.blocks && response.blocks.length > 0) {
+            setLessonProgress((prev) => {
+              const current = prev[lessonId];
+              if (!current) return prev;
 
-        // Автоматический переход к следующему блоку
-        navigateToNextBlock();
+              return {
+                ...prev,
+                [lessonId]: {
+                  ...current,
+                  blocks: response.blocks?.map((b) => ({
+                    ...b,
+                    completed: true,
+                  })),
+                },
+              };
+            });
+          }
+        } catch (error: any) {
+          if (
+            error?.data?.code === "VERSION_ERROR" ||
+            error?.message?.includes("version")
+          ) {
+            console.log(
+              "Конфликт версий MongoDB при завершении урока (ожидаемое поведение)",
+            );
+          } else {
+            console.error("Ошибка при сохранении урока:", error);
+          }
+        }
       } catch (error) {
         console.error("Ошибка при отметке урока:", error);
         toast.error("Не удалось сохранить прогресс");
       }
     },
-    [course._id, lessonProgress, navigateToNextBlock, toast],
+    [course._id, lessonProgress, sections, toast],
   );
 
   // Обновить ответы на quiz (с debounce для оптимизации)
@@ -738,11 +741,19 @@ export function LearningContextProvider({
         const allBlocksCompleted = newCompletedBlocks >= current.totalBlocks;
 
         // Обновляем информацию о блоках
-        const updatedBlocks = current.blocks?.map((b) =>
+        const existingBlocks =
+          current.blocks && current.blocks.length > 0 ? current.blocks : [];
+        let updatedBlocks = existingBlocks.map((b) =>
           b.blockId === blockId
             ? { ...b, completed: true, completedAt: new Date().toISOString() }
             : b,
         );
+        if (!updatedBlocks.some((b) => b.blockId === blockId)) {
+          updatedBlocks = [
+            ...updatedBlocks,
+            { blockId, completed: true, completedAt: new Date().toISOString() },
+          ];
+        }
 
         return {
           ...prev,

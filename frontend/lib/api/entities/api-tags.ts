@@ -56,7 +56,7 @@ export const tagsApi = {
   /**
    * Удалить тег
    */
-  delete: (id: string) => api.delete<void>(`/v1/tags6/${id}`, undefined, true),
+  delete: (id: string) => api.delete<void>(`/v1/tags/${id}`, undefined, true),
 
   /**
    * Получить теги курса

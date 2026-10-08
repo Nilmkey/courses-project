@@ -47,6 +47,8 @@ export function BlockNavigation({
     isCurrentBlockCompleted,
     currentBlockIndex,
     totalBlocksInCurrentLesson,
+    overallProgress,
+    getLessonProgress,
     navigateToPreviousBlock,
     navigateToNextBlock,
     completeBlock,
@@ -54,6 +56,17 @@ export function BlockNavigation({
   } = useLearning();
 
   const [isLoading, setIsLoading] = useState(false);
+
+  const currentLessonProg = currentLessonId
+    ? getLessonProgress(currentLessonId)
+    : undefined;
+
+  const isCourseFullyCompleted =
+    overallProgress.progress === 100 ||
+    (overallProgress.totalLessons > 0 &&
+      overallProgress.completedLessons >= overallProgress.totalLessons);
+
+  const isCurrentLessonCompleted = Boolean(currentLessonProg?.isCompleted);
 
   // Переход к странице сертификата
   const goToCertificate = useCallback(async () => {
@@ -82,34 +95,43 @@ export function BlockNavigation({
         await onProceed();
       }
 
-      // СЛУЧАЙ 1: Блок УЖЕ был пройден ранее
-      if (isCurrentBlockCompleted) {
-        if (isLastBlockInCourse) {
-          await goToCertificate();
-        } else {
-          // Чистый переход БЕЗ вызова API завершения и БЕЗ триггера стрика!
-          navigateToNextBlock();
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      // СЛУЧАЙ 2: Блок завершается ВПЕРВЫЕ
-      if (!currentLessonId || !currentBlockId) {
-        setIsLoading(false);
-        return;
-      }
-
+      // СЛУЧАЙ 1: Финал курса
       if (isLastBlockInCourse) {
-        // Финал курса: отмечаем урок завершённым и идём к сертификату
-        await markLessonComplete(currentLessonId);
+        if (currentLessonId) {
+          if (currentBlockId && !isCurrentBlockCompleted) {
+            await completeBlock(currentLessonId, currentBlockId);
+          }
+          if (!isCurrentLessonCompleted || !isCourseFullyCompleted) {
+            await markLessonComplete(currentLessonId);
+          }
+        }
         await goToCertificate();
-      } else if (isLastBlockInLesson) {
-        // Последний блок в уроке: отмечаем урок пройденным (он сам вызовет navigateToNextBlock)
-        await markLessonComplete(currentLessonId);
+        setIsLoading(false);
+        return;
+      }
+
+      // СЛУЧАЙ 2: Последний блок в уроке
+      if (isLastBlockInLesson) {
+        if (currentLessonId) {
+          if (currentBlockId && !isCurrentBlockCompleted) {
+            await completeBlock(currentLessonId, currentBlockId);
+          }
+          if (!isCurrentLessonCompleted) {
+            await markLessonComplete(currentLessonId);
+          }
+        }
+        navigateToNextBlock();
+        setIsLoading(false);
+        return;
+      }
+
+      // СЛУЧАЙ 3: Обычный шаг внутри урока
+      if (isCurrentBlockCompleted) {
+        navigateToNextBlock();
       } else {
-        // Обычный блок внутри урока: завершаем блок и переходим дальше
-        await completeBlock(currentLessonId, currentBlockId);
+        if (currentLessonId && currentBlockId) {
+          await completeBlock(currentLessonId, currentBlockId);
+        }
         navigateToNextBlock();
       }
     } catch (error) {
@@ -121,15 +143,17 @@ export function BlockNavigation({
     canProceed,
     isLoading,
     onProceed,
-    isCurrentBlockCompleted,
     isLastBlockInCourse,
     isLastBlockInLesson,
+    isCurrentBlockCompleted,
+    isCurrentLessonCompleted,
+    isCourseFullyCompleted,
     currentLessonId,
     currentBlockId,
+    completeBlock,
+    markLessonComplete,
     goToCertificate,
     navigateToNextBlock,
-    markLessonComplete,
-    completeBlock,
   ]);
 
   // Определение текста и внешнего вида кнопки действия
@@ -154,9 +178,9 @@ export function BlockNavigation({
       };
     }
 
-    // Если блок уже пройден:
-    if (isCurrentBlockCompleted) {
-      if (isLastBlockInCourse) {
+    // Финал курса:
+    if (isLastBlockInCourse) {
+      if (isCourseFullyCompleted && isCurrentLessonCompleted) {
         return {
           text: "К сертификату 🎉",
           icon: <Trophy size={18} className="flex-shrink-0 text-yellow-300" />,
@@ -165,6 +189,17 @@ export function BlockNavigation({
           disabled: false,
         };
       }
+      return {
+        text: "Завершить курс 🎉",
+        icon: <Trophy size={18} className="flex-shrink-0 text-yellow-200" />,
+        className:
+          "bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white shadow-xl shadow-emerald-500/25 active:scale-95",
+        disabled: false,
+      };
+    }
+
+    // Если блок уже пройден:
+    if (isCurrentBlockCompleted) {
       if (isLastBlockInLesson) {
         return {
           text: "К следующему уроку",
@@ -184,16 +219,6 @@ export function BlockNavigation({
     }
 
     // Если блок проходится впервые:
-    if (isLastBlockInCourse) {
-      return {
-        text: "Завершить курс 🎉",
-        icon: <Trophy size={18} className="flex-shrink-0 text-yellow-200" />,
-        className:
-          "bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white shadow-xl shadow-emerald-500/25 active:scale-95",
-        disabled: false,
-      };
-    }
-
     if (isLastBlockInLesson) {
       return {
         text: "Завершить урок и далее",
@@ -214,8 +239,10 @@ export function BlockNavigation({
   }, [
     canProceed,
     isLoading,
-    isCurrentBlockCompleted,
     isLastBlockInCourse,
+    isCourseFullyCompleted,
+    isCurrentLessonCompleted,
+    isCurrentBlockCompleted,
     isLastBlockInLesson,
   ]);
 
